@@ -15,41 +15,35 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import lombok.extern.slf4j.Slf4j;
-import ru.yandex.practicum.filmorate.model.Film;
-
-// Для FilmController:
-// добавление фильма;
-// обновление фильма;
-// получение всех фильмов.
+import ru.yandex.practicum.filmorate.model.User;
 
 @Slf4j
 @RestController
-@RequestMapping("/films")
-public class FilmController {
-
-    Map<Integer, Film> films = new HashMap<>();
+@RequestMapping("/users")
+public class UserController {
+    Map<Integer, User> users = new HashMap<>();
 
     @GetMapping
-    public Collection<Film> getAllFilms() {
-        return films.values();
+    public Collection<User> getAllUsers() {
+        return users.values();
     }
 
     @PostMapping 
     @ResponseStatus(HttpStatus.CREATED)
-    public Film createFilm(@RequestBody Film film) {
-        log.info("creating film {}", film);
-        film.setId(films.size());
-        films.put(film.getId(), film);
+    public User createUser(@RequestBody User film) {
+        log.info("creating user {}", film);
+        film.setId(users.size());
+        users.put(film.getId(), film);
         return film;
     }
 
     @PutMapping
-    public Film updateFilm(@RequestBody Film film) {
-        if (film.getId() == null) {
-            throw new RuntimeException("film " + film + " has no id");
+    public User updateUser(@RequestBody User user) {
+        if (user.getId() == null) {
+            throw new RuntimeException("user " + user + " has no id");
         }
-        log.info("updating film {}", film);
-        films.put(film.getId(), film);
-        return film;
+        log.info("updating film {}", user);
+        users.put(user.getId(), user);
+        return user;
     }
 }
