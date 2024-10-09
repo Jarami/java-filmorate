@@ -1,0 +1,14 @@
+{
+    "properties": [
+        {
+            "name": "film.max_desc_size",
+            "type": "java.lang.Integer",
+            "description": "Максимальная длина описания фильма"
+        },
+        {
+            "name": "film.min_release_date",
+            "type": "java.lang.LocalDate",
+            "description": "Минимальная дата релиза фильма"
+        }
+    ]
+}
