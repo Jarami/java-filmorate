@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.server.ResponseStatusException;
 import ru.yandex.practicum.filmorate.dao.UserDao;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
@@ -22,7 +23,7 @@ import ru.yandex.practicum.filmorate.model.User;
 @RequestMapping("/users")
 public class UserController {
     
-    private UserDao dao;
+    private final UserDao dao;
 
     public UserController(UserDao dao) {
         this.dao = dao;
@@ -40,6 +41,7 @@ public class UserController {
         log.info("creating user {}", user);
 
         checkUser(user);
+        setNameIfAbsent(user);
 
         dao.save(user);
         return user;
@@ -52,7 +54,6 @@ public class UserController {
 
         checkId(user);
         checkUser(user);
-        setNameIfabsent(user);
 
         dao.save(user);
         return user;
@@ -60,7 +61,8 @@ public class UserController {
 
     private void checkId(User user) {
         if (user.getId() == null || dao.getById(user.getId()) == null) {
-            throw new ValidationException("user " + user + " has no id");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Пользователя " + user.getLogin()
+                    + " не существует");
         }
     }
 
@@ -87,7 +89,7 @@ public class UserController {
         }
     }
 
-    private void setNameIfabsent(User user) {
+    private void setNameIfAbsent(User user) {
         if (user.getName() == null || user.getName().isEmpty()) {
             user.setName(user.getLogin());
         }

@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.server.ResponseStatusException;
 import ru.yandex.practicum.filmorate.config.FilmConfig;
 import ru.yandex.practicum.filmorate.dao.FilmDao;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
@@ -23,8 +24,8 @@ import ru.yandex.practicum.filmorate.model.Film;
 @RequestMapping("/films")
 public class FilmController {
 
-    private FilmConfig config;
-    private FilmDao dao;
+    private final FilmConfig config;
+    private final FilmDao dao;
 
     public FilmController(FilmConfig config, FilmDao dao) {
         this.config = config;
@@ -62,7 +63,7 @@ public class FilmController {
 
     private void checkFilmId(Film film) {
         if (film.getId() == null || dao.getById(film.getId()) == null) {
-            throw new ValidationException("film " + film + " has no id");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Фильма " + film.getName() + " не существует");
         }
     }
 
@@ -78,7 +79,8 @@ public class FilmController {
         }
 
         if (description != null && description.length() >= config.getMaxDescSize()) {
-            throw new ValidationException("Описание фильма не должно быть больше, чем " + config.getMaxDescSize());
+            throw new ValidationException("Описание фильма не должно быть больше, чем " + config.getMaxDescSize()
+                    + " символов");
         }
 
         if (releaseDate != null && releaseDate.isBefore(config.getMinReleaseDate())) {
