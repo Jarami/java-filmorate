@@ -11,9 +11,8 @@ import lombok.ToString;
  */
 @Data
 @ToString
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@EqualsAndHashCode(of = { "id" })
 public class User {
-    @EqualsAndHashCode.Include
     private Integer id;
     private String email;
     private String login;
