@@ -10,12 +10,15 @@ import ru.yandex.practicum.filmorate.model.Film;
 
 @Repository
 public class FilmDao implements EntityDao<Integer, Film> {
-    private Map<Integer, Film> films = new HashMap<>();
+
+    private static int id = 1;
+    private final Map<Integer, Film> films = new HashMap<>();
 
     public void save(Film film) {
         if (film.getId() == null) {
-            film.setId(films.size());
+            film.setId(generateId());
         }
+
         films.put(film.getId(), film);
     }
 
@@ -29,5 +32,9 @@ public class FilmDao implements EntityDao<Integer, Film> {
 
     public void delete(Film film) {
         films.remove(film.getId());
+    }
+
+    private int generateId() {
+        return id++;
     }
 }

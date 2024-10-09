@@ -10,11 +10,13 @@ import ru.yandex.practicum.filmorate.model.User;
 
 @Repository
 public class UserDao implements EntityDao<Integer, User> {
-    private Map<Integer, User> users = new HashMap<>();
+
+    private static int id = 1;
+    private final Map<Integer, User> users = new HashMap<>();
 
     public void save(User user) {
         if (user.getId() == null) {
-            user.setId(users.size());
+            user.setId(generateId());
         }
         users.put(user.getId(), user);
     }
@@ -29,5 +31,9 @@ public class UserDao implements EntityDao<Integer, User> {
 
     public void delete(User user) {
         users.remove(user.getId());
+    }
+
+    private int generateId() {
+        return id++;
     }
 }
