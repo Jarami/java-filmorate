@@ -13,7 +13,7 @@ public class UserMapper {
                 userDto.getId(),
                 userDto.getEmail(),
                 userDto.getLogin(),
-                userDto.getName(),
+                userDto.getName() == null ? userDto.getLogin() : userDto.getName(),
                 userDto.getBirthday()
         );
     }

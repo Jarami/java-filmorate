@@ -40,7 +40,6 @@ public class UserController {
         User user = fromDto(userDto);
 
         checkUser(user);
-        setNameIfAbsent(user);
 
         dao.save(user);
 
