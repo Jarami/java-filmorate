@@ -1,9 +1,7 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import java.time.LocalDate;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,41 +13,80 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import lombok.extern.slf4j.Slf4j;
+import ru.yandex.practicum.filmorate.config.FilmConfig;
+import ru.yandex.practicum.filmorate.dao.FilmDao;
+import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
-
-// Для FilmController:
-// добавление фильма;
-// обновление фильма;
-// получение всех фильмов.
 
 @Slf4j
 @RestController
 @RequestMapping("/films")
 public class FilmController {
 
-    Map<Integer, Film> films = new HashMap<>();
+    private FilmConfig config;
+    private FilmDao dao;
 
-    @GetMapping
+    public FilmController(FilmConfig config, FilmDao dao) {
+        this.config = config;
+        this.dao = dao;
+    }
+
+    @GetMapping(value = {"", "/"})
     public Collection<Film> getAllFilms() {
-        return films.values();
+        return dao.getAll();
     }
 
     @PostMapping 
     @ResponseStatus(HttpStatus.CREATED)
     public Film createFilm(@RequestBody Film film) {
+
         log.info("creating film {}", film);
-        film.setId(films.size());
-        films.put(film.getId(), film);
+
+        checkFilm(film);
+
+        dao.save(film);
         return film;
     }
 
     @PutMapping
     public Film updateFilm(@RequestBody Film film) {
-        if (film.getId() == null) {
-            throw new RuntimeException("film " + film + " has no id");
-        }
+
         log.info("updating film {}", film);
-        films.put(film.getId(), film);
+
+        checkFilmId(film);
+        checkFilm(film);
+
+        dao.save(film);
         return film;
+    }
+
+    private void checkFilmId(Film film) {
+        if (film.getId() == null || dao.getById(film.getId()) == null) {
+            throw new ValidationException("film " + film + " has no id");
+        }
+    }
+
+    private void checkFilm(Film film) {
+
+        String name = film.getName();
+        String description = film.getDescription();
+        LocalDate releaseDate = film.getReleaseDate();
+        int duration = film.getDuration();
+
+        if (name == null || name.isEmpty()) {
+            throw new ValidationException("Название фильма не должно быть пустым");
+        }
+
+        if (description != null && description.length() >= config.getMaxDescSize()) {
+            throw new ValidationException("Описание фильма не должно быть больше, чем " + config.getMaxDescSize());
+        }
+
+        if (releaseDate != null && releaseDate.isBefore(config.getMinReleaseDate())) {
+            throw new ValidationException("Релиз фильма не должен быть раньше " + config.getMinReleaseDate());
+        }
+
+        if (duration <= 0) {
+            throw new ValidationException("Продолжительность фильма должна быть положительным числом");
+        }
     }
 }

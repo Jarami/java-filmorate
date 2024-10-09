@@ -1,9 +1,7 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import java.time.LocalDate;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,35 +13,92 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import lombok.extern.slf4j.Slf4j;
+import ru.yandex.practicum.filmorate.dao.UserDao;
+import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
 @Slf4j
 @RestController
 @RequestMapping("/users")
 public class UserController {
-    Map<Integer, User> users = new HashMap<>();
+    
+    private UserDao dao;
 
-    @GetMapping
+    public UserController(UserDao dao) {
+        this.dao = dao;
+    }
+
+    @GetMapping(value = {"", "/"})
     public Collection<User> getAllUsers() {
-        return users.values();
+        return dao.getAll();
     }
 
     @PostMapping 
     @ResponseStatus(HttpStatus.CREATED)
-    public User createUser(@RequestBody User film) {
-        log.info("creating user {}", film);
-        film.setId(users.size());
-        users.put(film.getId(), film);
-        return film;
+    public User createUser(@RequestBody User user) {
+
+        log.info("creating user {}", user);
+
+        checkUser(user);
+
+        dao.save(user);
+        return user;
     }
 
     @PutMapping
     public User updateUser(@RequestBody User user) {
-        if (user.getId() == null) {
-            throw new RuntimeException("user " + user + " has no id");
-        }
-        log.info("updating film {}", user);
-        users.put(user.getId(), user);
+
+        log.info("updating user {}", user);
+
+        checkId(user);
+        checkUser(user);
+        setNameIfabsent(user);
+
+        dao.save(user);
         return user;
+    }
+
+    private void checkId(User user) {
+        if (user.getId() == null || dao.getById(user.getId()) == null) {
+            throw new ValidationException("user " + user + " has no id");
+        }
+    }
+
+    private void checkUser(User user) {
+        String email = user.getEmail();
+        String login = user.getLogin();
+        LocalDate birthday = user.getBirthday();
+        LocalDate now = LocalDate.now();
+
+        if (email == null || email.isEmpty()) {
+            throw new ValidationException("Почта пользователя должна быть заполнена");
+        } else if (!email.contains("@")) {
+            throw new ValidationException("Почта пользователя должна содержать @");
+        }
+
+        if (login == null || login.isEmpty()) {
+            throw new ValidationException("Логин пользователя должен быть заполнен");
+        } else if (containsWhitespace(login)) {
+            throw new ValidationException("Логин пользователя не должен содержать пробельные символы");
+        }
+
+        if (birthday.isAfter(now)) {
+            throw new ValidationException("День рождения пользователя не может быть в будущем");
+        }
+    }
+
+    private void setNameIfabsent(User user) {
+        if (user.getName() == null || user.getName().isEmpty()) {
+            user.setName(user.getLogin());
+        }
+    }
+
+    private boolean containsWhitespace(String s) {
+        for (int i = 0; i < s.length(); ++i) {
+            if (Character.isWhitespace(s.charAt(i))) {
+                return true;
+            }
+        }
+        return false;
     }
 }
