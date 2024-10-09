@@ -4,11 +4,13 @@ import java.time.LocalDate;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 /**
  * User.
  */
 @Data
+@ToString
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class User {
     @EqualsAndHashCode.Include
