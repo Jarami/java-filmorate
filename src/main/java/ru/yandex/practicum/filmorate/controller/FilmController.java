@@ -16,7 +16,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.server.ResponseStatusException;
 import ru.yandex.practicum.filmorate.config.FilmConfig;
 import ru.yandex.practicum.filmorate.dao.FilmDao;
+import ru.yandex.practicum.filmorate.dto.FilmDto;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
+import ru.yandex.practicum.filmorate.mappers.FilmMapper;
 import ru.yandex.practicum.filmorate.model.Film;
 
 @Slf4j
@@ -33,38 +35,49 @@ public class FilmController {
     }
 
     @GetMapping(value = {"", "/"})
-    public Collection<Film> getAllFilms() {
-        return dao.getAll();
+    public Collection<FilmDto> getAllFilms() {
+        return dao.getAll().stream()
+                .map(FilmMapper::toDto)
+                .toList();
     }
 
     @PostMapping 
     @ResponseStatus(HttpStatus.CREATED)
-    public Film createFilm(@RequestBody Film film) {
+    public FilmDto createFilm(@RequestBody FilmDto filmDto) {
 
-        log.info("creating film {}", film);
+        log.info("creating film {}", filmDto);
+
+        Film film = fromDto(filmDto);
 
         checkFilm(film);
 
         dao.save(film);
-        return film;
+        return FilmMapper.toDto(film);
     }
 
     @PutMapping
-    public Film updateFilm(@RequestBody Film film) {
+    public FilmDto updateFilm(@RequestBody FilmDto filmDto) {
 
-        log.info("updating film {}", film);
+        log.info("updating film {}", filmDto);
+
+        Film film = fromDto(filmDto);
 
         checkFilmId(film);
         checkFilm(film);
 
         dao.save(film);
-        return film;
+        return FilmMapper.toDto(film);
     }
 
     private void checkFilmId(Film film) {
         if (film.getId() == null || dao.getById(film.getId()) == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Фильма " + film.getName() + " не существует");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Фильма " + film.getName() + " c id = "
+                    + film.getId() + " не существует");
         }
+    }
+
+    private Film fromDto(FilmDto filmDto) {
+        return FilmMapper.fromDto(filmDto);
     }
 
     private void checkFilm(Film film) {

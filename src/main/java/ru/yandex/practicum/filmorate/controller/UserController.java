@@ -1,22 +1,17 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import java.time.LocalDate;
-import java.util.Collection;
-
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
-
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import ru.yandex.practicum.filmorate.dao.UserDao;
+import ru.yandex.practicum.filmorate.dto.UserDto;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
+import ru.yandex.practicum.filmorate.mappers.UserMapper;
 import ru.yandex.practicum.filmorate.model.User;
+
+import java.time.LocalDate;
+import java.util.Collection;
 
 @Slf4j
 @RestController
@@ -30,33 +25,45 @@ public class UserController {
     }
 
     @GetMapping(value = {"", "/"})
-    public Collection<User> getAllUsers() {
-        return dao.getAll();
+    public Collection<UserDto> getAllUsers() {
+        return dao.getAll().stream()
+                .map(UserMapper::toDto)
+                .toList();
     }
 
     @PostMapping 
     @ResponseStatus(HttpStatus.CREATED)
-    public User createUser(@RequestBody User user) {
+    public UserDto createUser(@RequestBody UserDto userDto) {
 
-        log.info("creating user {}", user);
+        log.info("creating user {}", userDto);
+
+        User user = fromDto(userDto);
 
         checkUser(user);
         setNameIfAbsent(user);
 
         dao.save(user);
-        return user;
+
+        return UserMapper.toDto(user);
     }
 
     @PutMapping
-    public User updateUser(@RequestBody User user) {
+    public UserDto updateUser(@RequestBody UserDto userDto) {
 
-        log.info("updating user {}", user);
+        log.info("updating user {}", userDto);
+
+        User user = fromDto(userDto);
 
         checkId(user);
         checkUser(user);
 
         dao.save(user);
-        return user;
+
+        return UserMapper.toDto(user);
+    }
+
+    private User fromDto(UserDto userDto) {
+        return UserMapper.fromDto(userDto);
     }
 
     private void checkId(User user) {

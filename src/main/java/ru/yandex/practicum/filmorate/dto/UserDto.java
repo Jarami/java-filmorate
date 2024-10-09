@@ -1,20 +1,13 @@
-package ru.yandex.practicum.filmorate.model;
-
-import java.time.LocalDate;
+package ru.yandex.practicum.filmorate.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
 
-/**
- * User.
- */
+import java.time.LocalDate;
+
 @Data
-@ToString
-@EqualsAndHashCode(of = { "id" })
 @AllArgsConstructor
-public class User {
+public class UserDto {
     private Integer id;
     private String email;
     private String login;
