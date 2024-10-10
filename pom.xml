@@ -59,6 +59,7 @@
 				<configuration>
 					<configLocation>checkstyle.xml</configLocation>
 					<suppressionsLocation>suppressions.xml</suppressionsLocation>
+					<includeTestSourceDirectory>true</includeTestSourceDirectory>
 				</configuration>
 				<executions>
 					<execution>
