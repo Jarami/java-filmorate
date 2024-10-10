@@ -33,6 +33,12 @@ public class UserDao implements EntityDao<Integer, User> {
         users.remove(user.getId());
     }
 
+    public int deleteAll() {
+        int size = users.size();
+        users.clear();
+        return size;
+    }
+
     private int generateId() {
         return id++;
     }

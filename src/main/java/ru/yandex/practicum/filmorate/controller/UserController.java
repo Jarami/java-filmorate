@@ -1,23 +1,22 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 import ru.yandex.practicum.filmorate.dao.UserDao;
-import ru.yandex.practicum.filmorate.dto.UserDto;
-import ru.yandex.practicum.filmorate.exceptions.ValidationException;
-import ru.yandex.practicum.filmorate.mappers.UserMapper;
+import ru.yandex.practicum.filmorate.exceptions.NoUserFound;
 import ru.yandex.practicum.filmorate.model.User;
 
-import java.time.LocalDate;
 import java.util.Collection;
 
 @Slf4j
+@Validated
 @RestController
 @RequestMapping("/users")
 public class UserController {
-    
+
     private final UserDao dao;
 
     public UserController(UserDao dao) {
@@ -25,74 +24,31 @@ public class UserController {
     }
 
     @GetMapping(value = {"", "/"})
-    public Collection<UserDto> getAllUsers() {
-        return dao.getAll().stream()
-                .map(UserMapper::toDto)
-                .toList();
+    public Collection<User> getAllUsers() {
+        return dao.getAll();
     }
 
-    @PostMapping 
+    @PostMapping(value = {"", "/"})
     @ResponseStatus(HttpStatus.CREATED)
-    public UserDto createUser(@RequestBody UserDto userDto) {
-
-        log.info("creating user {}", userDto);
-
-        User user = fromDto(userDto);
-
-        checkUser(user);
-
+    public User createUser(@Valid @RequestBody User user) {
+        log.info("creating user {}", user);
+        setNameIfAbsent(user);
         dao.save(user);
-
-        return UserMapper.toDto(user);
+        return user;
     }
 
-    @PutMapping
-    public UserDto updateUser(@RequestBody UserDto userDto) {
-
-        log.info("updating user {}", userDto);
-
-        User user = fromDto(userDto);
-
-        checkId(user);
-        checkUser(user);
-
+    @PutMapping(value = {"", "/"})
+    public User updateUser(@Valid @RequestBody User user) throws NoUserFound {
+        log.info("updating user {}", user);
+        checkUserId(user);
         dao.save(user);
-
-        return UserMapper.toDto(user);
+        return user;
     }
 
-    private User fromDto(UserDto userDto) {
-        return UserMapper.fromDto(userDto);
-    }
-
-    private void checkId(User user) {
-        if (user.getId() == null || dao.getById(user.getId()) == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Пользователя " + user.getLogin()
-                    + " не существует");
-        }
-    }
-
-    private void checkUser(User user) {
-        String email = user.getEmail();
-        String login = user.getLogin();
-        LocalDate birthday = user.getBirthday();
-        LocalDate now = LocalDate.now();
-
-        if (email == null || email.isEmpty()) {
-            throw new ValidationException("Почта пользователя должна быть заполнена");
-        } else if (!email.contains("@")) {
-            throw new ValidationException("Почта пользователя должна содержать @");
-        }
-
-        if (login == null || login.isEmpty()) {
-            throw new ValidationException("Логин пользователя должен быть заполнен");
-        } else if (containsWhitespace(login)) {
-            throw new ValidationException("Логин пользователя не должен содержать пробельные символы");
-        }
-
-        if (birthday.isAfter(now)) {
-            throw new ValidationException("День рождения пользователя не может быть в будущем");
-        }
+    @DeleteMapping(value = {"", "/"})
+    public int deleteUsers() {
+        log.info("deleting all users");
+        return dao.deleteAll();
     }
 
     private void setNameIfAbsent(User user) {
@@ -101,12 +57,9 @@ public class UserController {
         }
     }
 
-    private boolean containsWhitespace(String s) {
-        for (int i = 0; i < s.length(); ++i) {
-            if (Character.isWhitespace(s.charAt(i))) {
-                return true;
-            }
+    private void checkUserId(User user) throws NoUserFound {
+        if (user.getId() == null || dao.getById(user.getId()) == null) {
+            throw new NoUserFound("Не найден пользователь с логином " + user.getLogin() + " и id " + user.getId());
         }
-        return false;
     }
 }

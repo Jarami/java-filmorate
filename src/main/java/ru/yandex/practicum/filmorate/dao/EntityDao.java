@@ -7,4 +7,5 @@ public interface EntityDao<K, T> {
     Collection<T> getAll();
     void save(T t);
     void delete(T t);
+    int deleteAll();
 }
