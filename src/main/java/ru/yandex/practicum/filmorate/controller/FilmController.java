@@ -34,8 +34,6 @@ public class FilmController {
 
         log.info("creating film {}", film);
 
-        //checkFilm(film);
-
         dao.save(film);
         return film;
     }
@@ -46,7 +44,6 @@ public class FilmController {
         log.info("updating film {}", film);
 
         checkFilmId(film);
-        //checkFilm(film);
 
         dao.save(film);
         return film;
