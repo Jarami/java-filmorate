@@ -6,8 +6,3 @@ server:
     port: 8080
     error:
         include-stacktrace: never
-
-film:
-    max_desc_size: 200
-    min_release_date: "1895-12-28"
-

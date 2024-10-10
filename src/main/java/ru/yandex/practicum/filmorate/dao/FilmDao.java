@@ -34,6 +34,12 @@ public class FilmDao implements EntityDao<Integer, Film> {
         films.remove(film.getId());
     }
 
+    public int deleteAll() {
+        int size = films.size();
+        films.clear();
+        return size;
+    }
+
     private int generateId() {
         return id++;
     }
