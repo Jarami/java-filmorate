@@ -7,7 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.dao.UserDao;
-import ru.yandex.practicum.filmorate.exceptions.NoUserFound;
+import ru.yandex.practicum.filmorate.exceptions.UserNotFound;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.Collection;
@@ -36,7 +36,7 @@ public class UserController {
     }
 
     @PutMapping(value = {"", "/"})
-    public User updateUser(@Valid @RequestBody User user) throws NoUserFound {
+    public User updateUser(@Valid @RequestBody User user) {
         log.info("updating user {}", user);
         checkUserId(user);
         dao.save(user);
@@ -55,9 +55,9 @@ public class UserController {
         }
     }
 
-    private void checkUserId(User user) throws NoUserFound {
+    private void checkUserId(User user) {
         if (user.getId() == null || dao.getById(user.getId()) == null) {
-            throw new NoUserFound("Не найден пользователь с логином " + user.getLogin() + " и id " + user.getId());
+            throw new UserNotFound("Не найден пользователь с логином " + user.getLogin() + " и id " + user.getId());
         }
     }
 }
