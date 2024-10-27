@@ -57,7 +57,7 @@ public class UserController {
 
     private void checkUserId(User user) {
         if (user.getId() == null || dao.getById(user.getId()) == null) {
-            throw new UserNotFound("Не найден пользователь с логином " + user.getLogin() + " и id " + user.getId());
+            throw new UserNotFound(user);
         }
     }
 }
