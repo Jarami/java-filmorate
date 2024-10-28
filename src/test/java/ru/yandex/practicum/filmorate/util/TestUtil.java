@@ -17,10 +17,10 @@ public class TestUtil {
     }
 
     public static <T> void assertEmpty(Collection<T> collection) {
-        assertTrue(collection.isEmpty());
+        assertTrue(collection.isEmpty(), "Collection must be empty, but has " + collection.size() + " elements");
     }
 
-    public static <T> void assertNotEmpty(Collection<T> collection) {
-        assertFalse(collection.isEmpty());
+    public static <T> void assertEmpty(T[] array) {
+        assertEquals(0, array.length, "Array must be empty, but has " + array.length + " elements");
     }
 }

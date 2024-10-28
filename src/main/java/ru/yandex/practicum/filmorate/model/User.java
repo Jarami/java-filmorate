@@ -1,9 +1,12 @@
 package ru.yandex.practicum.filmorate.model;
 
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Null;
 import jakarta.validation.constraints.Past;
 import lombok.*;
 import org.springframework.validation.annotation.Validated;
+import ru.yandex.practicum.filmorate.validators.Marker;
 import ru.yandex.practicum.filmorate.validators.UserLogin;
 
 import java.time.LocalDate;
@@ -19,17 +22,19 @@ import java.util.stream.Collectors;
 @Validated
 public class User {
 
+    @Null(groups = Marker.OnCreate.class)
+    @NotNull(groups = {Marker.OnUpdate.class, Marker.OnDelete.class})
     private Integer id;
 
-    @Email
+    @Email(groups = {Marker.OnCreate.class, Marker.OnUpdate.class})
     private String email;
 
-    @UserLogin(message = "Логин должен быть заполнен и не должен содержать пробелов")
+    @UserLogin(message = "Логин должен быть заполнен и не должен содержать пробелов", groups = {Marker.OnCreate.class, Marker.OnUpdate.class})
     private String login;
 
     private String name;
 
-    @Past
+    @Past(groups = {Marker.OnCreate.class, Marker.OnUpdate.class})
     private LocalDate birthday;
 
     private Set<Integer> friendsId = new HashSet<>();

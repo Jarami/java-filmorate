@@ -8,6 +8,7 @@ import org.springframework.validation.annotation.Validated;
 import ru.yandex.practicum.filmorate.exceptions.UserNotFound;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
+import ru.yandex.practicum.filmorate.validators.Marker;
 
 import java.util.Collection;
 
@@ -19,6 +20,7 @@ public class UserService {
 
     private final UserStorage userStorage;
 
+    @Validated(Marker.OnCreate.class)
     public User createUser(@Valid User user) {
         log.info("creating user {}", user);
         setNameIfAbsent(user);
@@ -35,6 +37,7 @@ public class UserService {
         return userStorage.getById(id);
     }
 
+    @Validated(Marker.OnUpdate.class)
     public User updateUser(@Valid User user) {
         log.info("updating user {}", user);
         checkUserId(user);
@@ -42,6 +45,7 @@ public class UserService {
         return user;
     }
 
+    @Validated(Marker.OnDelete.class)
     public void deleteUser(@Valid User user) {
         log.info("deleting user {}", user);
         checkUserId(user);

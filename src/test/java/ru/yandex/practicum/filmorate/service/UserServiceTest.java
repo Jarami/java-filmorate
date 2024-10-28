@@ -9,11 +9,10 @@ import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.time.LocalDate;
 import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static ru.yandex.practicum.filmorate.util.TestUtil.*;
+import static ru.yandex.practicum.filmorate.util.TestUtil.assertEmpty;
+import static ru.yandex.practicum.filmorate.util.TestUtil.assertUserEquals;
 
 public class UserServiceTest {
 
@@ -28,8 +27,7 @@ public class UserServiceTest {
 
     @Test
     void givenUserCreateRequest_whenCreated_gotUser() {
-        User userRequest = new User("my@email.com", "login", "name", LocalDate.parse("2024-01-01"));
-
+        User userRequest = parseUser("my@email.com;login;name;2024-01-01");
         User user = userService.createUser(userRequest);
 
         assertNotNull(user.getId());
@@ -39,8 +37,7 @@ public class UserServiceTest {
 
     @Test
     void givenUserCreateRequestWithoutName_whenCreated_gotUser() {
-        User userRequest = new User("my@email.com", "login", null, LocalDate.parse("2024-01-01"));
-
+        User userRequest = parseUser("my@email.com;login;NULL;2024-01-01");
         User user = userService.createUser(userRequest);
 
         assertNotNull(user.getId());
@@ -49,23 +46,21 @@ public class UserServiceTest {
 
     @Test
     void givenUsers_whenGetAll_gotUsers() {
-        Collection<User> users = new ArrayList<>();
-        users.add(userStorage.save(new User("my1@email.com", "login1", "name1", LocalDate.parse("2024-01-01"))));
-        users.add(userStorage.save(new User("my2@email.com", "login2", "name2", LocalDate.parse("2024-01-02"))));
+        Map<String, User> users = new HashMap<>();
+        users.put("login1", createUser("my1@email.com;login1;name1;2024-01-01"));
+        users.put("login2", createUser("my2@email.com;login2;name2;2024-01-02"));
 
-        Map<Integer, User> actualUserById = userService.getAllUsers().stream()
-                .collect(Collectors.toMap(User::getId, Function.identity()));
+        Collection<User> actualUsers = userService.getAllUsers();
 
-        users.forEach(user -> {
-            User actualUser = actualUserById.get(user.getId());
+        actualUsers.forEach(actualUser -> {
+            User user = users.get(actualUser.getLogin());
             assertUserEquals(user, actualUser);
         });
     }
 
     @Test
     void givenExistingUserId_whenGetById_gotUser() {
-        User userRequest = new User("my@email.com", "login", "name", LocalDate.parse("2024-01-01"));
-        User existingUser = userStorage.save(userRequest);
+        User existingUser = createUser("my@email.com;login;name;2024-01-01");
 
         User user = userService.getUserById(existingUser.getId());
 
@@ -75,8 +70,8 @@ public class UserServiceTest {
 
     @Test
     void givenExistingUser_whenUpdate_gotUpdated() {
-        User user1 = userStorage.save(new User("my1@email.com", "login1", "name1", LocalDate.parse("2024-01-01")));
-        User user2 = userStorage.save(new User("my2@email.com", "login2", "name2", LocalDate.parse("2024-02-01")));
+        User user1 = createUser("my1@email.com;login1;name1;2024-01-01");
+        User user2 = createUser("my2@email.com;login2;name2;2024-02-01");
 
         User updatedUser = new User(user1.getId(), "my-new@email.com", "new-login", "new-name",
                 LocalDate.parse("2024-02-02"), List.of(user2));
@@ -119,12 +114,22 @@ public class UserServiceTest {
     private List<User> createAndSaveTestUsers() {
 
         List<User> users = new ArrayList<>();
-        users.add(userStorage.save(
-                new User("my1@email.com", "login1", "name1", LocalDate.parse("2024-01-01"))));
-
-        users.add(userStorage.save(
-                new User("my2@email.com", "login2", "name2", LocalDate.parse("2024-02-01"))));
-
+        users.add(createUser("my1@email.com;login1;name1;2024-01-01"));
+        users.add(createUser("my2@email.com;login2;name2;2024-02-01"));
         return users;
+    }
+
+    private User parseUser(String userString) {
+        String[] chunks = userString.split(";");
+        return new User(
+                chunks[0],
+                chunks[1].equals("NULL") ? null : chunks[1],
+                chunks[2].equals("NULL") ? null : chunks[2],
+                LocalDate.parse(chunks[3])
+        );
+    }
+
+    private User createUser(String userString) {
+        return userStorage.save(parseUser(userString));
     }
 }
