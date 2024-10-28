@@ -1,10 +1,8 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
@@ -12,7 +10,6 @@ import ru.yandex.practicum.filmorate.service.UserService;
 import java.util.Collection;
 
 @Slf4j
-@Validated
 @RestController
 @RequestMapping("/users")
 @RequiredArgsConstructor
@@ -27,12 +24,12 @@ public class UserController {
 
     @PostMapping(value = {"", "/"})
     @ResponseStatus(HttpStatus.CREATED)
-    public User createUser(@Valid @RequestBody User user) {
+    public User createUser(@RequestBody User user) {
         return userService.createUser(user);
     }
 
     @PutMapping(value = {"", "/"})
-    public User updateUser(@Valid @RequestBody User user) {
+    public User updateUser(@RequestBody User user) {
         return userService.updateUser(user);
     }
 
