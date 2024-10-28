@@ -132,7 +132,15 @@ class FilmorateApplicationTests {
 
 			@Test
 			void givenExistingUserId_whenGetById_gotUser() {
-				createUser("bob@mail.ru;bob;Bob;2000-08-20");
+				User user = createUser("bob@mail.ru;bob;Bob;2000-08-20").getBody();
+				createUser("jack@mail.ru;jack;Jack;2010-08-20");
+
+				ResponseEntity<User> resp = getUserById(user.getId());
+				assertStatus(200, resp);
+
+				User actualUser = resp.getBody();
+				assertNotNull(actualUser);
+				assertUserEquals(user, actualUser);
 			}
 		}
 
@@ -196,6 +204,10 @@ class FilmorateApplicationTests {
 
 		private ResponseEntity<User[]> getAllUsers() {
 			return get("/users", User[].class);
+		}
+
+		private ResponseEntity<User> getUserById(long id) {
+			return get("/users/" + id, User.class);
 		}
 
 		private ResponseEntity<User> updateUser(User user) {
