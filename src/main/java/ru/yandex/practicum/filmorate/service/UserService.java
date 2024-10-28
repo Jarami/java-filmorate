@@ -33,7 +33,7 @@ public class UserService {
         return userStorage.getAll();
     }
 
-    public User getUserById(int id) {
+    public User getUserById(long id) {
         return userStorage.getById(id);
     }
 

@@ -156,7 +156,7 @@ class FilmorateApplicationTests {
 
 			@Test
 			void givenNonExistingUser_whenUpdate_gotError() {
-				User user = new User(1, "my@mail.ru", "login", "name",
+				User user = new User(1L, "my@mail.ru", "login", "name",
 						LocalDate.parse("2024-01-01"), new ArrayList<>());
 
 				assertThrows(HttpClientErrorException.NotFound.class, () -> updateUser(user));

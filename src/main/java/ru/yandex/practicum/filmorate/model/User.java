@@ -24,7 +24,7 @@ public class User {
 
     @Null(groups = Marker.OnCreate.class)
     @NotNull(groups = {Marker.OnUpdate.class, Marker.OnDelete.class})
-    private Integer id;
+    private Long id;
 
     @Email(groups = {Marker.OnCreate.class, Marker.OnUpdate.class})
     private String email;
@@ -37,7 +37,7 @@ public class User {
     @Past(groups = {Marker.OnCreate.class, Marker.OnUpdate.class})
     private LocalDate birthday;
 
-    private Set<Integer> friendsId = new HashSet<>();
+    private Set<Long> friendsId = new HashSet<>();
 
     public User() {
         this(null, null, null, null, null, new ArrayList<>());
@@ -47,7 +47,7 @@ public class User {
         this(null, email, login, name, birthday, new ArrayList<>());
     }
 
-    public User(Integer id, String email, String login, String name, LocalDate birthday, List<User> friends) {
+    public User(Long id, String email, String login, String name, LocalDate birthday, List<User> friends) {
         this.id = id;
         this.email = email;
         this.login = login;

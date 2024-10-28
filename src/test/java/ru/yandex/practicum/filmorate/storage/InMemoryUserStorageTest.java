@@ -51,7 +51,7 @@ class InMemoryUserStorageTest {
         User user2 = storage.save(
                 new User("my2@email.com", "login2", "name2", LocalDate.parse("2024-02-01")));
 
-        Map<Integer, User> users = storage.getAll().stream().collect(Collectors.toMap(User::getId, Function.identity()));
+        Map<Long, User> users = storage.getAll().stream().collect(Collectors.toMap(User::getId, Function.identity()));
 
         assertEquals(2, users.size());
         assertUserEquals(user1, users.get(user1.getId()));

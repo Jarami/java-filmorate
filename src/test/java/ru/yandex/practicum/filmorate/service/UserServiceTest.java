@@ -84,7 +84,7 @@ public class UserServiceTest {
 
     @Test
     void givenNonExistingUser_whenUpdate_gotError() {
-        User user = new User(1, "my@mail.ru", "login", "name", LocalDate.parse("2024-01-01"),
+        User user = new User(1L, "my@mail.ru", "login", "name", LocalDate.parse("2024-01-01"),
                 new ArrayList<>());
 
         assertThrows(UserNotFound.class, () -> userService.updateUser(user));

@@ -9,10 +9,10 @@ import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.User;
 
 @Repository
-public class UserDao implements EntityDao<Integer, User> {
+public class UserDao implements EntityDao<Long, User> {
 
-    private static int id = 1;
-    private final Map<Integer, User> users = new HashMap<>();
+    private static long id = 1L;
+    private final Map<Long, User> users = new HashMap<>();
 
     public void save(User user) {
         if (user.getId() == null) {
@@ -25,7 +25,7 @@ public class UserDao implements EntityDao<Integer, User> {
         return users.values();
     }
 
-    public User getById(Integer id) {
+    public User getById(Long id) {
         return users.get(id);
     }
 
@@ -39,7 +39,7 @@ public class UserDao implements EntityDao<Integer, User> {
         return size;
     }
 
-    private int generateId() {
+    private long generateId() {
         return id++;
     }
 }

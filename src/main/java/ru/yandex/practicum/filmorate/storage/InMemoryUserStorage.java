@@ -10,8 +10,8 @@ import java.util.Map;
 @Repository
 public class InMemoryUserStorage implements UserStorage {
 
-    private static int id = 1;
-    private final Map<Integer, User> users = new HashMap<>();
+    private static long id = 1L;
+    private final Map<Long, User> users = new HashMap<>();
 
     @Override
     public User save(User user) {
@@ -29,7 +29,7 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public User getById(int id) {
+    public User getById(long id) {
         return users.get(id);
     }
 
@@ -45,7 +45,7 @@ public class InMemoryUserStorage implements UserStorage {
         return userCount;
     }
 
-    private int generateId() {
+    private long generateId() {
         return id++;
     }
 }
