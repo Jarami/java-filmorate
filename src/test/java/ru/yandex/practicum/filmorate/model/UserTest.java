@@ -22,7 +22,6 @@ public class UserTest {
     @Test
     void givenValidUser_whenSave_gotSuccess() {
         User user = new User(
-                null,
                 "mail@mail.ru",
                 "dolore",
                 "Nick Name",
@@ -34,7 +33,6 @@ public class UserTest {
     @Test
     void givenUserWithoutName_whenSave_gotSuccess() {
         User user = new User(
-                null,
                 "mail@mail.ru",
                 "dolore",
                 null,
@@ -46,7 +44,6 @@ public class UserTest {
     @Test
     void givenNoLogin_whenSave_gotFail() {
         User user = new User(
-                null,
                 "hello@main.ru",
                 null,
                 "Nick Name",
@@ -58,7 +55,6 @@ public class UserTest {
     @Test
     void givenLoginWithSpace_whenSave_gotFail() {
         User user = new User(
-                null,
                 "hello@main.ru",
                 "Chuck Norris",
                 "Nick Name",
@@ -70,7 +66,6 @@ public class UserTest {
     @Test
     void givenLoginWithWrongEmail_whenSave_gotFail() {
         User user = new User(
-                null,
                 "@mail.ru",
                 "dolore",
                 "Nick Name",
@@ -82,7 +77,6 @@ public class UserTest {
     @Test
     void givenLoginWithWrongBirthday_whenSave_gotFail() {
         User user = new User(
-                null,
                 "mail@mail.ru",
                 "dolore",
                 "Nick Name",

@@ -50,7 +50,7 @@ class FilmorateApplicationTests {
 
 	@Test
 	void givenValidUser_whenCreate_gotSuccess() {
-		User userToCreate = new User(null, "mail@mail.ru", "dolore", "Nick Name",
+		User userToCreate = new User("mail@mail.ru", "dolore", "Nick Name",
 				LocalDate.parse("1946-08-20"));
 
 		ResponseEntity<User> resp = post("/users", userToCreate, User.class);
@@ -66,7 +66,7 @@ class FilmorateApplicationTests {
 
 	@Test
 	void givenUserWithSpaceInLogin_whenCreate_gotError() {
-		User userToCreate = new User(null, "mail@mail.ru", "dolore ullamco", "name",
+		User userToCreate = new User("mail@mail.ru", "dolore ullamco", "name",
 				LocalDate.parse("1946-08-20"));
 
 		try {
