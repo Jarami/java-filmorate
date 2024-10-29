@@ -8,6 +8,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import ru.yandex.practicum.filmorate.exceptions.FilmNotFound;
 import ru.yandex.practicum.filmorate.exceptions.UserNotFound;
 
 import java.util.Set;
@@ -26,6 +27,18 @@ public class ErrorHandler {
         return new ErrorResponse(
             "Пользователь не найден",
             "Пользователь с id = " + e.getUserId() + " не найден"
+        );
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorResponse handleFilmNotFound(FilmNotFound e) {
+
+        log.error("Фильм с id = {} не найден", e.getFilmId(), e);
+
+        return new ErrorResponse(
+                "Фильм не найден",
+                "Фильм с id = " + e.getFilmId() + " не найден"
         );
     }
 

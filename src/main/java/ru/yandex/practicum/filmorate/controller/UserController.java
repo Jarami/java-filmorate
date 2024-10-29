@@ -42,4 +42,9 @@ public class UserController {
     public int deleteUsers() {
         return userService.deleteAllUsers();
     }
+
+    @DeleteMapping("/{id}")
+    public void deleteUserById(@PathVariable long id) {
+        userService.deleteUserById(id);
+    }
 }

@@ -15,6 +15,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import static ru.yandex.practicum.filmorate.util.TestUtil.assertEmpty;
 import static ru.yandex.practicum.filmorate.util.TestUtil.assertUserEquals;
 
+// Эти тесты не учитывают валидации
+
 public class UserServiceTest {
 
     UserStorage userStorage;
@@ -39,7 +41,7 @@ public class UserServiceTest {
         }
 
         @Test
-        void givenUserCreateRequestWithoutName_whenCreated_gotUser() {
+        void givenUserCreateRequestWithoutName_whenCreated_gotLoginInsteadOfName() {
             User userRequest = parseUser("my@email.com;login;NULL;2024-01-01");
             User user = userService.createUser(userRequest);
 
@@ -73,6 +75,14 @@ public class UserServiceTest {
             assertEquals(existingUser.getId(), user.getId());
             assertUserEquals(existingUser, user);
         }
+
+        @Test
+        void givenNonExistingUserId_whenGetById_gotNotFound() {
+            User user = new User(1L, "my@mail.ru", "login", "name", LocalDate.parse("2024-01-01"),
+                    new ArrayList<>());
+
+            assertThrows(UserNotFound.class, () -> userService.getUserById(user.getId()));
+        }
     }
 
     @Nested
@@ -98,6 +108,16 @@ public class UserServiceTest {
 
             assertThrows(UserNotFound.class, () -> userService.updateUser(user));
         }
+
+        @Test
+        void givenUserWithoutName_whenUpdate_gotLoginInsteadOfName() {
+            User user = createUser("my@email.com;login;name;2024-01-01");
+            user.setName(null);
+
+            user = userService.updateUser(user);
+
+            assertEquals("login", user.getName());
+        }
     }
 
     @Nested
@@ -115,7 +135,7 @@ public class UserServiceTest {
         void givenUser_whenDelete_gotDeleted() {
             List<User> users = createAndSaveTestUsers();
 
-            userService.deleteUser(users.getFirst());
+            userService.deleteUserById(users.getFirst().getId());
 
             Collection<User> actualUsers = userService.getAllUsers();
             Collection<User> expectedUsers = List.of(users.get(1));

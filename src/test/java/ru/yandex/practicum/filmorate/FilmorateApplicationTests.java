@@ -13,15 +13,18 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static ru.yandex.practicum.filmorate.util.TestUtil.assertEmpty;
-import static ru.yandex.practicum.filmorate.util.TestUtil.assertUserEquals;
+import static ru.yandex.practicum.filmorate.util.TestUtil.*;
 
 @Slf4j
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -51,7 +54,7 @@ class FilmorateApplicationTests {
 		@Nested
 		class CreateTests {
 			@Test
-			void givenValidUser_whenCreate_gotSuccess() {
+			void givenValidUser_whenCreate_getSuccess() {
 				ResponseEntity<User> resp = createUser("mail@mail.ru;dolore;Nick Name;1946-08-20");
 				User user = resp.getBody();
 
@@ -65,7 +68,7 @@ class FilmorateApplicationTests {
 			}
 
 			@Test
-			void givenUserWithoutName_whenCreate_gotUserWithLoginInsteadOfName() {
+			void givenUserWithoutName_whenCreate_getUserWithLoginInsteadOfName() {
 				ResponseEntity<User> resp = createUser("my@email.com;login;NULL;2024-01-01");
 				User user = resp.getBody();
 
@@ -75,25 +78,25 @@ class FilmorateApplicationTests {
 			}
 
 			@Test
-			void givenNoLogin_whenSave_gotFail() {
+			void givenNoLogin_whenSave_getBadRequest() {
 				assertThrows(HttpClientErrorException.BadRequest.class, () ->
 					createUser("hello@main.ru;NULL;Nick Name;1946-08-20"));
 			}
 
 			@Test
-			void givenUserWithSpaceInLogin_whenCreate_gotError() {
+			void givenUserWithSpaceInLogin_whenCreate_getBadRequest() {
 				assertThrows(HttpClientErrorException.BadRequest.class, () ->
 					createUser("mail@main.ru;dolore ullamco;name;1946-08-20"));
 			}
 
 			@Test
-			void givenLoginWithWrongEmail_whenCreate_gotFail() {
+			void givenLoginWithWrongEmail_whenCreate_getBadRequest() {
 				assertThrows(HttpClientErrorException.BadRequest.class, () ->
 					createUser("@main.ru;dolore;Nick Name;1946-08-20"));
 			}
 
 			@Test
-			void givenLoginWithWrongBirthday_whenCreate_gotFail() {
+			void givenLoginWithWrongBirthday_whenCreate_getBadRequest() {
 				assertThrows(HttpClientErrorException.BadRequest.class, () ->
 					createUser("mail@main.ru;dolore;Nick Name;2946-08-20"));
 			}
@@ -103,7 +106,7 @@ class FilmorateApplicationTests {
 		class ReadTests {
 
 			@Test
-			void givenNoUsersYet_whenRequest_gotEmptyArray() {
+			void givenNoUsersYet_whenRequest_getEmptyArray() {
 				ResponseEntity<User[]> resp = getAllUsers();
 				User[] users = resp.getBody();
 
@@ -113,7 +116,7 @@ class FilmorateApplicationTests {
 			}
 
 			@Test
-			void givenUsers_whenGetAll_gotAll() {
+			void givenUsers_whenGetAll_getAll() {
 				createUser("bob@mail.ru;bob;Bob;2000-08-20");
 				createUser("jack@mail.ru;jack;Jack;2010-08-20");
 
@@ -128,7 +131,7 @@ class FilmorateApplicationTests {
 			}
 
 			@Test
-			void givenExistingUserId_whenGetById_gotUser() {
+			void givenExistingUserId_whenGetById_getUser() {
 				User user = createUser("bob@mail.ru;bob;Bob;2000-08-20").getBody();
 				createUser("jack@mail.ru;jack;Jack;2010-08-20");
 
@@ -139,13 +142,21 @@ class FilmorateApplicationTests {
 				assertNotNull(actualUser);
 				assertUserEquals(user, actualUser);
 			}
+
+			@Test
+			void givenNonExistingUserId_whenGetById_getNotFound() {
+				User user = new User(1L, "my@mail.ru", "login", "name",
+						LocalDate.parse("2024-01-01"), new ArrayList<>());
+
+				assertThrows(HttpClientErrorException.NotFound.class, () -> getUserById(user.getId()));
+			}
 		}
 
 		@Nested
 		class UpdateTests {
 
 			@Test
-			void givenExistingUser_whenUpdate_gotUpdated() {
+			void givenExistingUser_whenUpdate_getUpdated() {
 				ResponseEntity<User> resp1 = createUser("my1@email.com;login1;name1;2024-01-01");
 				ResponseEntity<User> resp2 = createUser("my2@email.com;login2;name2;2024-02-01");
 				User user1 = resp1.getBody();
@@ -160,18 +171,62 @@ class FilmorateApplicationTests {
 			}
 
 			@Test
-			void givenNonExistingUser_whenUpdate_gotError() {
+			void givenNonExistingUser_whenUpdate_getNotFound() {
 				User user = new User(1L, "my@mail.ru", "login", "name",
 						LocalDate.parse("2024-01-01"), new ArrayList<>());
 
 				assertThrows(HttpClientErrorException.NotFound.class, () -> updateUser(user));
+			}
+
+			@Test
+			void givenUserWithoutName_whenUpdate_getUserWithLoginInsteadOfName() {
+				User user = createUser("my@email.com;login;name;2024-01-01").getBody();
+				user.setName(null);
+
+				ResponseEntity<User> resp = updateUser(user);
+
+				assertStatus(200, resp);
+				assertNotNull(resp.getBody());
+				assertEquals("login", resp.getBody().getName());
+			}
+
+			@Test
+			void givenNoLogin_whenSave_getBadRequest() {
+				User user = createUser("my@email.com;login;name;2024-01-01").getBody();
+				user.setLogin(null);
+
+				assertThrows(HttpClientErrorException.BadRequest.class, () -> updateUser(user));
+			}
+
+			@Test
+			void givenUserWithSpaceInLogin_whenCreate_getBadRequest() {
+				User user = createUser("my@email.com;login;name;2024-01-01").getBody();
+				user.setLogin("space in login");
+
+				assertThrows(HttpClientErrorException.BadRequest.class, () -> updateUser(user));
+			}
+
+			@Test
+			void givenLoginWithWrongEmail_whenCreate_getBadRequest() {
+				User user = createUser("my@email.com;login;name;2024-01-01").getBody();
+				user.setEmail("@email.com");
+
+				assertThrows(HttpClientErrorException.BadRequest.class, () -> updateUser(user));
+			}
+
+			@Test
+			void givenLoginWithWrongBirthday_whenCreate_getBadRequest() {
+				User user = createUser("my@email.com;login;name;2024-01-01").getBody();
+				user.setBirthday(LocalDate.parse("2946-08-20"));
+
+				assertThrows(HttpClientErrorException.BadRequest.class, () -> updateUser(user));
 			}
 		}
 
 		@Nested
 		class DeleteTests {
 			@Test
-			void givenUsers_whenDeleteAll_gotDeleted() {
+			void givenUsers_whenDeleteAll_getDeleted() {
 				createUser("my1@email.com;login1;name1;2024-01-01");
 				createUser("my2@email.com;login2;name2;2024-02-01");
 
@@ -183,12 +238,32 @@ class FilmorateApplicationTests {
 				User[] users = getAllUsers().getBody();
 				assertEmpty(users);
 			}
+
+			@Test
+			void givenFilm_whenDelete_getDeleted() {
+				User user1 = createUser("my1@email.com;login1;name1;2024-01-01").getBody();
+				User user2 = createUser("my2@email.com;login2;name2;2024-02-01").getBody();
+
+				deleteUser(user1);
+
+				User[] actualUsers = getAllUsers().getBody();
+				assertEquals(1, actualUsers.length);
+				assertEquals("name2", actualUsers[0].getName());
+			}
+
+			@Test
+			void givenNonExistingFilm_whenDelete_getNotFound() {
+				User user = new User(1L, "my@mail.ru", "login", "name",
+						LocalDate.parse("2024-01-01"), new ArrayList<>());
+
+				assertThrows(HttpClientErrorException.NotFound.class, () -> deleteUser(user));
+			}
 		}
 
 		@Nested
 		class FriendTests {
 			@Test
-			void givenExistingUsers_whenAddFriends_gotFriendship() {
+			void givenExistingUsers_whenAddFriends_getFriendship() {
 				User user1 = createUser("my1@email.com;login1;name1;2024-01-01").getBody();
 				User user2 = createUser("my2@email.com;login2;name2;2024-02-01").getBody();
 
@@ -207,7 +282,7 @@ class FilmorateApplicationTests {
 			}
 
 			@Test
-			void givenNonExistingUsers_whenAddFriends_gotNoFriendship() {
+			void givenNonExistingUsers_whenAddFriends_getNoFriendship() {
 				User user1 = createUser("my1@email.com;login1;name1;2024-01-01").getBody();
 
 				assertThrows(HttpClientErrorException.NotFound.class, () ->
@@ -218,7 +293,7 @@ class FilmorateApplicationTests {
 			}
 
 			@Test
-			void givenExistingUsers_whenRemoveFriends_gotNoFriendshipAnyMore() {
+			void givenExistingUsers_whenRemoveFriends_getNoFriendshipAnyMore() {
 				User user1 = createUser("my1@email.com;login1;name1;2024-01-01").getBody();
 				User user2 = createUser("my2@email.com;login2;name2;2024-02-01").getBody();
 				addFriend(user1, user2);
@@ -238,7 +313,7 @@ class FilmorateApplicationTests {
 			}
 
 			@Test
-			void givenUsersWithCommonFriends_whenGetCommon_gotThem() {
+			void givenUsersWithCommonFriends_whenGetCommon_getThem() {
 				User user1 = createUser("my1@email.com;login1;name1;2024-01-01").getBody();
 				User user2 = createUser("my2@email.com;login2;name2;2024-02-01").getBody();
 				User user3 = createUser("my3@email.com;login3;name3;2024-03-01").getBody();
@@ -290,6 +365,10 @@ class FilmorateApplicationTests {
 			return delete("/users", Integer.class);
 		}
 
+		private ResponseEntity<Void> deleteUser(User user) {
+			return delete("/users/" + user.getId());
+		}
+
 		private ResponseEntity<User> addFriend(User user, User friend) {
 			return put("/users/" + user.getId() + "/friends/" + friend.getId(), User.class);
 		}
@@ -311,27 +390,267 @@ class FilmorateApplicationTests {
 		}
 	}
 
+	@Nested
+	class FilmTests {
+
+		@AfterEach
+		void shutdown() {
+			deleteAllFilms();
+		}
+
+		@Nested
+		class CreateTests {
+			@Test
+			void givenValidUser_whenCreate_getSuccess() {
+				ResponseEntity<Film> resp = createFilm("name;desc;2024-01-01;120");
+				Film film = resp.getBody();
+
+				assertStatus(201, resp);
+				assertNotNull(film);
+				assertNotNull(film.getId());
+				assertEquals("name", film.getName());
+				assertEquals("desc", film.getDescription());
+				assertEquals(LocalDate.parse("2024-01-01"), film.getReleaseDate());
+				assertEquals(120, film.getDuration());
+			}
+
+			@Test
+			void givenFilmWithoutName_whenSave_getBadRequest() {
+				assertThrows(HttpClientErrorException.BadRequest.class, () ->
+						createFilm("NULL;desc;2024-01-01;120"));
+			}
+
+			@Test
+			void givenFilmWithEmptyName_whenSave_getBadRequest() {
+				assertThrows(HttpClientErrorException.BadRequest.class, () ->
+						createFilm(";desc;2024-01-01;120"));
+			}
+
+			@Test
+			void givenFilmWithTooLongDesc_whenSave_getBadRequest() {
+
+				String tooLongDesc = "d".repeat(201);
+
+				assertThrows(HttpClientErrorException.BadRequest.class, () ->
+						createFilm("name;" + tooLongDesc + ";2024-01-01;120"));
+			}
+
+			@Test
+			void givenFilmWithNegativeDuration_whenSave_getBadRequest() {
+				assertThrows(HttpClientErrorException.BadRequest.class, () ->
+						createFilm("name;desc;2024-01-01;-1"));
+			}
+		}
+
+		@Nested
+		class ReadTests {
+
+			@Test
+			void givenNoFilms_whenRequest_getEmptyArray() {
+				ResponseEntity<Film[]> resp = getAllFilms();
+				Film[] films = resp.getBody();
+
+				assertStatus(200, resp);
+				assertNotNull(films);
+				assertEmpty(films);
+			}
+
+			@Test
+			void givenFilms_whenGetAll_getAll() {
+				createFilm("name1;desc1;2024-01-01;120");
+				createFilm("name2;desc2;2024-02-01;180");
+
+				ResponseEntity<Film[]> resp = getAllFilms();
+				Film[] films = resp.getBody();
+				Set<String> actualNames = Arrays.stream(films).map(Film::getName).collect(Collectors.toSet());
+				Set<String> expectedNames = Set.of("name1", "name2");
+
+				assertStatus(200, resp);
+				assertNotNull(films);
+				assertEquals(expectedNames, actualNames);
+			}
+
+			@Test
+			void givenExistingFilmId_whenGetById_getIt() {
+				Film film = createFilm("name;desc;2024-01-01;120").getBody();
+				createFilm("name;desc;2024-01-01;120");
+
+				ResponseEntity<Film> resp = getFilmById(film.getId());
+				assertStatus(200, resp);
+
+				Film actualFilm = resp.getBody();
+				assertNotNull(actualFilm);
+				assertFilmEquals(film, actualFilm);
+			}
+
+			@Test
+			void givenNonExistingFilm_whenGetById_getNotFound() {
+				Film film = new Film(1L, "name", "desc", LocalDate.parse("2024-02-02"),
+						180);
+
+				assertThrows(HttpClientErrorException.NotFound.class, () -> getFilmById(film.getId()));
+			}
+		}
+
+		@Nested
+		class UpdateTests {
+
+			@Test
+			void givenExistingFilm_whenUpdate_getUpdated() {
+				ResponseEntity<Film> resp1 = createFilm("name1;desc1;2024-01-01;120");
+				ResponseEntity<Film> resp2 = createFilm("name2;desc2;2024-02-01;180");
+				Film film1 = resp1.getBody();
+				Film film2 = resp2.getBody();
+
+				Film updatedFilm = new Film(film1.getId(), "name", "desc",
+						LocalDate.parse("2024-02-02"), 180);
+
+				ResponseEntity<Film> resp3 = updateFilm(updatedFilm);
+				Film actualFilm = resp3.getBody();
+				assertFilmEquals(updatedFilm, actualFilm);
+			}
+
+			@Test
+			void givenNonExistingUser_whenUpdate_getNotFound() {
+				Film film = new Film(1L, "name", "desc", LocalDate.parse("2024-02-02"),
+						180);
+
+				assertThrows(HttpClientErrorException.NotFound.class, () -> updateFilm(film));
+			}
+
+			@Test
+			void givenFilmWithoutName_whenUpdate_getBadRequest() {
+				Film film = createFilm("name1;desc1;2024-01-01;120").getBody();
+				film.setName(null);
+
+				assertThrows(HttpClientErrorException.BadRequest.class, () -> updateFilm(film));
+			}
+
+			@Test
+			void givenFilmWithEmptyName_whenSave_getBadRequest() {
+				Film film = createFilm("name1;desc1;2024-01-01;120").getBody();
+				film.setName("");
+
+				assertThrows(HttpClientErrorException.BadRequest.class, () -> updateFilm(film));
+			}
+
+			@Test
+			void givenFilmWithTooLongDesc_whenSave_getBadRequest() {
+				Film film = createFilm("name1;desc1;2024-01-01;120").getBody();
+				film.setDescription("d".repeat(201));
+
+				assertThrows(HttpClientErrorException.BadRequest.class, () -> updateFilm(film));
+			}
+
+			@Test
+			void givenFilmWithNegativeDuration_whenSave_getBadRequest() {
+				Film film = createFilm("name1;desc1;2024-01-01;120").getBody();
+				film.setDuration(-1);
+
+				assertThrows(HttpClientErrorException.BadRequest.class, () -> updateFilm(film));
+			}
+		}
+
+		@Nested
+		class DeleteTests {
+			@Test
+			void givenFilms_whenDeleteAll_getDeleted() {
+				createFilm("name1;desc1;2024-01-01;120");
+				createFilm("name2;desc2;2024-02-01;180");
+
+				ResponseEntity<Integer> resp = deleteAllFilms();
+
+				assertStatus(200, resp);
+				assertEquals(2, resp.getBody());
+
+				Film[] films = getAllFilms().getBody();
+				assertEmpty(films);
+			}
+
+			@Test
+			void givenFilm_whenDelete_getDeleted() {
+				Film film1 = createFilm("name1;desc1;2024-01-01;120").getBody();
+				Film film2 = createFilm("name2;desc2;2024-02-01;180").getBody();
+
+				deleteFilm(film1);
+
+				Film[] actualFilms = getAllFilms().getBody();
+				assertEquals(1, actualFilms.length);
+				assertEquals("name2", actualFilms[0].getName());
+			}
+
+			@Test
+			void givenNonExistingFilm_whenDelete_getNotFound() {
+				Film film = new Film(1L, "name", "desc", LocalDate.parse("2024-01-01"),
+						120);
+
+				assertThrows(HttpClientErrorException.NotFound.class, () -> deleteFilm(film));
+			}
+		}
+
+		private Film parseFilm(String filmString) {
+			String[] chunks = filmString.split(";");
+			return new Film(
+					null,
+					chunks[0].equals("NULL") ? null : chunks[0],
+					chunks[1].equals("NULL") ? null : chunks[1],
+					chunks[2].equals("NULL") ? null : LocalDate.parse(chunks[2]),
+					Integer.parseInt(chunks[3])
+			);
+		}
+
+		private ResponseEntity<Film> createFilm(String filmString) {
+			return post("/films", parseFilm(filmString), Film.class);
+		}
+
+		private ResponseEntity<Film[]> getAllFilms() {
+			return get("/films", Film[].class);
+		}
+
+		private ResponseEntity<Film> getFilmById(long id) {
+			return get("/films/" + id, Film.class);
+		}
+
+		private ResponseEntity<Film> updateFilm(Film film) {
+			return put("/films", film, Film.class);
+		}
+
+		private ResponseEntity<Integer> deleteAllFilms() {
+			return delete("/films", Integer.class);
+		}
+
+		private ResponseEntity<Void> deleteFilm(Film film) {
+			return delete("/films/" + film.getId());
+		}
+	}
+
 	private <T> ResponseEntity<T> get(String uri, Class<T> clazz) {
+		log.info("get {}", uri);
 		return client.get().uri(uri).retrieve().toEntity(clazz);
 	}
 
 	private <T> ResponseEntity<T> post(String uri, Object body, Class<T> clazz) {
+		log.info("post {}", uri);
 		return client.post().uri(uri).body(body).retrieve().toEntity(clazz);
 	}
 
 	private <T> ResponseEntity<T> put(String uri, Object body, Class<T> clazz) {
+		log.info("put {}", uri);
 		return client.put().uri(uri).body(body).retrieve().toEntity(clazz);
 	}
 
 	private <T> ResponseEntity<T> put(String uri, Class<T> clazz) {
+		log.info("put {}", uri);
 		return client.put().uri(uri).retrieve().toEntity(clazz);
 	}
 
 	private <T> ResponseEntity<T> delete(String uri, Class<T> clazz) {
+		log.info("delete {}", uri);
 		return client.delete().uri(uri).retrieve().toEntity(clazz);
 	}
 
 	private ResponseEntity<Void> delete(String uri) {
+		log.info("delete {}", uri);
 		return client.delete().uri(uri).retrieve().toBodilessEntity();
 	}
 

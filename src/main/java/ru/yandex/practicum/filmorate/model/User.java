@@ -14,9 +14,6 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
-/**
- * User.
- */
 @Data
 @ToString
 @EqualsAndHashCode(of = { "id" })
@@ -31,7 +28,9 @@ public class User {
     @Email(groups = {Marker.OnCreate.class, Marker.OnUpdate.class})
     private String email;
 
-    @UserLogin(message = "Логин должен быть заполнен и не должен содержать пробелов", groups = {Marker.OnCreate.class, Marker.OnUpdate.class})
+    @UserLogin(
+            message = "Логин должен быть заполнен и не должен содержать пробелов",
+            groups = {Marker.OnCreate.class, Marker.OnUpdate.class})
     private String login;
 
     private String name;
@@ -39,7 +38,7 @@ public class User {
     @Past(groups = {Marker.OnCreate.class, Marker.OnUpdate.class})
     private LocalDate birthday;
 
-    private Set<Long> friendsId = new HashSet<>();
+    private Set<Long> friendsId;
 
     public User() {
         this(null, null, null, null, null, new ArrayList<>());

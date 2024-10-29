@@ -37,6 +37,7 @@ public class UserService {
     }
 
     public User getUserById(long id) {
+        checkUserId(id);
         return userStorage.getById(id);
     }
 
@@ -44,20 +45,27 @@ public class UserService {
     public User updateUser(@Valid User user) {
         log.info("updating user {}", user);
         checkUserId(user.getId());
+        setNameIfAbsent(user);
         userStorage.save(user);
         return user;
     }
 
-    @Validated(Marker.OnDelete.class)
-    public void deleteUser(@Valid User user) {
-        log.info("deleting user {}", user);
-        checkUserId(user.getId());
-        userStorage.delete(user);
-    }
+//    @Validated(Marker.OnDelete.class)
+//    public void deleteUser(@Valid User user) {
+//        log.info("deleting user {}", user);
+//        checkUserId(user.getId());
+//        userStorage.delete(user);
+//    }
 
     public int deleteAllUsers() {
         log.info("deleting all users");
         return userStorage.deleteAll();
+    }
+
+    public void deleteUserById(long userId) {
+        log.info("deleting user with id = {}", userId);
+        checkUserId(userId);
+        userStorage.delete(userStorage.getById(userId));
     }
 
     public User addFriend(long userId, long friendId) {
@@ -101,11 +109,10 @@ public class UserService {
 
         if (user == null) throw new UserNotFound(userId);
         if (otherUser == null) throw new UserNotFound(otherUserId);
-        log.info("user1 friends {}", user.getFriendsId());
-        log.info("user2 friends {}", otherUser.getFriendsId());
+
         Set<Long> intersectSet = new HashSet<>(user.getFriendsId());
         intersectSet.retainAll(otherUser.getFriendsId());
-        log.info("common friends {}", intersectSet);
+
         return intersectSet.stream().map(this::getUserById).toList();
     }
 
