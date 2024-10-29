@@ -16,10 +16,7 @@ import org.springframework.web.client.RestClient;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -188,6 +185,81 @@ class FilmorateApplicationTests {
 			}
 		}
 
+		@Nested
+		class FriendTests {
+			@Test
+			void givenExistingUsers_whenAddFriends_gotFriendship() {
+				User user1 = createUser("my1@email.com;login1;name1;2024-01-01").getBody();
+				User user2 = createUser("my2@email.com;login2;name2;2024-02-01").getBody();
+
+				addFriend(user1.getId(), user2.getId());
+
+				ResponseEntity<User[]> respUser1friends = getFriends(user1);
+				ResponseEntity<User[]> respUser2friends = getFriends(user2);
+
+				assertStatus(200, respUser1friends);
+				assertStatus(200, respUser2friends);
+
+				List<User> user1friends = Arrays.asList(respUser1friends.getBody());
+				List<User> user2friends = Arrays.asList(respUser2friends.getBody());
+				assertTrue(user1friends.contains(user2));
+				assertTrue(user2friends.contains(user1));
+			}
+
+			@Test
+			void givenNonExistingUsers_whenAddFriends_gotNoFriendship() {
+				User user1 = createUser("my1@email.com;login1;name1;2024-01-01").getBody();
+
+				assertThrows(HttpClientErrorException.NotFound.class, () ->
+						addFriend(user1.getId(), user1.getId() + 1));
+
+				assertThrows(HttpClientErrorException.NotFound.class, () ->
+						addFriend(user1.getId() + 1, user1.getId()));
+			}
+
+			@Test
+			void givenExistingUsers_whenRemoveFriends_gotNoFriendshipAnyMore() {
+				User user1 = createUser("my1@email.com;login1;name1;2024-01-01").getBody();
+				User user2 = createUser("my2@email.com;login2;name2;2024-02-01").getBody();
+				addFriend(user1, user2);
+
+				removeFromFriends(user1, user2);
+
+				ResponseEntity<User[]> respUser1friends = getFriends(user1);
+				ResponseEntity<User[]> respUser2friends = getFriends(user2);
+
+				assertStatus(200, respUser1friends);
+				assertStatus(200, respUser2friends);
+
+				List<User> user1friends = Arrays.asList(respUser1friends.getBody());
+				List<User> user2friends = Arrays.asList(respUser2friends.getBody());
+				assertFalse(user1friends.contains(user2));
+				assertFalse(user2friends.contains(user1));
+			}
+
+			@Test
+			void givenUsersWithCommonFriends_whenGetCommon_gotThem() {
+				User user1 = createUser("my1@email.com;login1;name1;2024-01-01").getBody();
+				User user2 = createUser("my2@email.com;login2;name2;2024-02-01").getBody();
+				User user3 = createUser("my3@email.com;login3;name3;2024-03-01").getBody();
+
+				addFriend(user1.getId(), user2.getId());
+				addFriend(user1.getId(), user3.getId());
+				addFriend(user2.getId(), user1.getId());
+				addFriend(user2.getId(), user3.getId());
+
+				ResponseEntity<User[]> respCommonFriends = getCommonFriends(user1, user2);
+				user3 = getUserById(user3.getId()).getBody(); // обновляем список друзей
+
+				assertStatus(200, respCommonFriends);
+
+				List<User> commonFriends = Arrays.asList(respCommonFriends.getBody());
+
+				assertEquals(1, commonFriends.size());
+				assertUserEquals(user3, commonFriends.getFirst());
+			}
+		}
+
 		private User parseUser(String userString) {
 			String[] chunks = userString.split(";");
 			return new User(
@@ -215,11 +287,29 @@ class FilmorateApplicationTests {
 		}
 
 		private ResponseEntity<Integer> deleteAllUsers() {
-			return delete("/users");
+			return delete("/users", Integer.class);
+		}
+
+		private ResponseEntity<User> addFriend(User user, User friend) {
+			return put("/users/" + user.getId() + "/friends/" + friend.getId(), User.class);
+		}
+
+		private ResponseEntity<User> addFriend(Long userId, Long friendId) {
+			return put("/users/" + userId + "/friends/" + friendId, User.class);
+		}
+
+		private ResponseEntity<User[]> getFriends(User user) {
+			return get("/users/" + user.getId() + "/friends", User[].class);
+		}
+
+		private ResponseEntity<Void> removeFromFriends(User user, User friend) {
+			return delete("/users/" + user.getId() + "/friends/" + friend.getId());
+		}
+
+		private ResponseEntity<User[]> getCommonFriends(User user1, User user2) {
+			return get("/users/" + user1.getId() + "/friends/common/" + user2.getId(), User[].class);
 		}
 	}
-
-
 
 	private <T> ResponseEntity<T> get(String uri, Class<T> clazz) {
 		return client.get().uri(uri).retrieve().toEntity(clazz);
@@ -233,8 +323,16 @@ class FilmorateApplicationTests {
 		return client.put().uri(uri).body(body).retrieve().toEntity(clazz);
 	}
 
-	private ResponseEntity<Integer> delete(String uri) {
-		return client.delete().uri(uri).retrieve().toEntity(Integer.class);
+	private <T> ResponseEntity<T> put(String uri, Class<T> clazz) {
+		return client.put().uri(uri).retrieve().toEntity(clazz);
+	}
+
+	private <T> ResponseEntity<T> delete(String uri, Class<T> clazz) {
+		return client.delete().uri(uri).retrieve().toEntity(clazz);
+	}
+
+	private ResponseEntity<Void> delete(String uri) {
+		return client.delete().uri(uri).retrieve().toBodilessEntity();
 	}
 
 	private void assertStatus(int statusCode, ResponseEntity<?> resp) {

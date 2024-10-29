@@ -21,11 +21,11 @@ public class ErrorHandler {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ErrorResponse handleUserNotFound(UserNotFound e) {
 
-        log.error("Пользователь с id = {} не найден", e.getUser().getId(), e);
+        log.error("Пользователь с id = {} не найден", e.getUserId(), e);
 
         return new ErrorResponse(
-                "Пользователь не найден",
-                "Пользователь с id = " + e.getUser().getId() + " не найден"
+            "Пользователь не найден",
+            "Пользователь с id = " + e.getUserId() + " не найден"
         );
     }
 

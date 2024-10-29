@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Null;
 import jakarta.validation.constraints.Past;
 import lombok.*;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import ru.yandex.practicum.filmorate.validators.Marker;
 import ru.yandex.practicum.filmorate.validators.UserLogin;
@@ -20,6 +21,7 @@ import java.util.stream.Collectors;
 @ToString
 @EqualsAndHashCode(of = { "id" })
 @Validated
+@Slf4j
 public class User {
 
     @Null(groups = Marker.OnCreate.class)
@@ -54,5 +56,13 @@ public class User {
         this.name = name;
         this.birthday = birthday;
         this.friendsId = friends.stream().map(User::getId).collect(Collectors.toSet());
+    }
+
+    public void addFriend(User friend) {
+        friendsId.add(friend.getId());
+    }
+
+    public void removeFriend(User friend) {
+        friendsId.removeIf(friendId -> friend.getId().equals(friendId));
     }
 }
