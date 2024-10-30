@@ -50,13 +50,6 @@ public class UserService {
         return user;
     }
 
-//    @Validated(Marker.OnDelete.class)
-//    public void deleteUser(@Valid User user) {
-//        log.info("deleting user {}", user);
-//        checkUserId(user.getId());
-//        userStorage.delete(user);
-//    }
-
     public int deleteAllUsers() {
         log.info("deleting all users");
         return userStorage.deleteAll();

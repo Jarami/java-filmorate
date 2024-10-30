@@ -17,10 +17,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -335,20 +332,6 @@ class FilmorateApplicationTests {
 			}
 		}
 
-		private User parseUser(String userString) {
-			String[] chunks = userString.split(";");
-			return new User(
-					chunks[0],
-					chunks[1].equals("NULL") ? null : chunks[1],
-					chunks[2].equals("NULL") ? null : chunks[2],
-					LocalDate.parse(chunks[3])
-			);
-		}
-
-		private ResponseEntity<User> createUser(String userString) {
-			return post("/users", parseUser(userString), User.class);
-		}
-
 		private ResponseEntity<User[]> getAllUsers() {
 			return get("/users", User[].class);
 		}
@@ -359,10 +342,6 @@ class FilmorateApplicationTests {
 
 		private ResponseEntity<User> updateUser(User user) {
 			return put("/users", user, User.class);
-		}
-
-		private ResponseEntity<Integer> deleteAllUsers() {
-			return delete("/users", Integer.class);
 		}
 
 		private ResponseEntity<Void> deleteUser(User user) {
@@ -588,40 +567,220 @@ class FilmorateApplicationTests {
 			}
 		}
 
-		private Film parseFilm(String filmString) {
-			String[] chunks = filmString.split(";");
-			return new Film(
-					null,
-					chunks[0].equals("NULL") ? null : chunks[0],
-					chunks[1].equals("NULL") ? null : chunks[1],
-					chunks[2].equals("NULL") ? null : LocalDate.parse(chunks[2]),
-					Integer.parseInt(chunks[3])
-			);
-		}
-
-		private ResponseEntity<Film> createFilm(String filmString) {
-			return post("/films", parseFilm(filmString), Film.class);
-		}
-
 		private ResponseEntity<Film[]> getAllFilms() {
 			return get("/films", Film[].class);
-		}
-
-		private ResponseEntity<Film> getFilmById(long id) {
-			return get("/films/" + id, Film.class);
 		}
 
 		private ResponseEntity<Film> updateFilm(Film film) {
 			return put("/films", film, Film.class);
 		}
 
-		private ResponseEntity<Integer> deleteAllFilms() {
-			return delete("/films", Integer.class);
-		}
-
 		private ResponseEntity<Void> deleteFilm(Film film) {
 			return delete("/films/" + film.getId());
 		}
+	}
+
+	@Nested
+	class LikeTests {
+
+		List<User> users;
+		List<Film> films;
+
+		@BeforeEach
+		void setup() {
+
+			users = new ArrayList<>();
+			for (int i = 1; i <= 11; i++) {
+				User user = User.builder()
+						.name("name" + i)
+						.login("login" + i)
+						.email("mail" + i + "@mail.com")
+						.birthday(LocalDate.parse("2000-01-01"))
+						.friendsId(new HashSet<>())
+						.build();
+
+				users.add(createUser(user).getBody());
+			}
+
+			films = new ArrayList<>();
+			for (int i = 1; i <= 11; i++) {
+				Film film = Film.builder()
+						.name("film name " + i)
+						.description("film desc " + i)
+						.releaseDate(LocalDate.parse("2010-01-01"))
+						.duration(10 * i + 10)
+						.likes(new HashSet<>())
+						.build();
+
+				films.add(createFilm(film).getBody());
+			}
+		}
+
+		@AfterEach
+		void shutdown() {
+			deleteAllUsers();
+			deleteAllFilms();
+		}
+
+		@Test
+		void givenUserHasNotLikedFilmYet_whenGetLikeCount_gotZero() {
+			for (Film film : films) {
+				assertEquals(0, film.getLikeCount());
+			}
+		}
+
+		@Test
+		void givenUserHasNotLikedFilmYet_whenLike_gotLikeCountIncrease() {
+
+			ResponseEntity<Film> resp = like(films.get(7), users.get(3));
+
+			assertStatus(200, resp);
+
+			Film film = resp.getBody();
+			assertNotNull(film);
+			assertEquals(films.get(7).getName(), film.getName());
+			assertEquals(1, film.getLikeCount());
+		}
+
+		@Test
+		void givenUserHasAlreadyLikedFilm_whenLike_gotLikeCountNoChange() {
+			like(films.get(7), users.get(3));
+			like(films.get(7), users.get(3));
+
+			Film film = getFilmById(films.get(7).getId()).getBody();
+			assertEquals(1, film.getLikeCount());
+		}
+
+		@Test
+		void givenUserHasNotLikedFilmYet_whenDislike_gotLikeCountNoChange() {
+			like(films.get(7), users.get(3));
+			ResponseEntity<Film> resp = dislike(films.get(7), users.get(8));
+
+			assertStatus(200, resp);
+
+			Film film = resp.getBody();
+			assertNotNull(film);
+			assertEquals(films.get(7).getName(), film.getName());
+			assertEquals(1, film.getLikeCount());
+		}
+
+		@Test
+		void givenUserHasAlreadyLikedFilm_whenDislike_gotLikeCountDecrease() {
+			like(films.get(7), users.get(3));
+			dislike(films.get(7), users.get(3));
+
+			Film film = getFilmById(films.get(7).getId()).getBody();
+			assertNotNull(film);
+			assertEquals(films.get(7).getName(), film.getName());
+			assertEquals(0, film.getLikeCount());
+		}
+
+		@Test
+		void givenNoLikesAtAll_whenAskDefaultPopular_getTenRandomFilms() {
+			ResponseEntity<Film[]> filmsResp = getPopularFilms();
+			Film[] films = filmsResp.getBody();
+
+			assertStatus(200, filmsResp);
+			assertNotNull(films);
+			assertEquals(10, films.length);
+		}
+
+		@Test
+		void givenNoLikesAtAll_whenAskPopularFive_getFiveRandomFilms() {
+			ResponseEntity<Film[]> filmsResp = getPopularFilms(5);
+			Film[] films = filmsResp.getBody();
+
+			assertStatus(200, filmsResp);
+			assertNotNull(films);
+			assertEquals(5, films.length);
+		}
+
+		@Test
+		void givenNineFilmsLiked_whenAskPopular10_getPopular() {
+			// 9-ый фильм лайкаем 9 раз, 8-ой - 8 раз и т.д.
+			for (int j = 9; j > 0; j--) {
+				for (int i = 0; i < j; i++) {
+					like(films.get(j), users.get(i));
+				}
+			}
+
+			Film[] films = getPopularFilms(10).getBody();
+			assertEquals(9, films[0].getLikeCount());
+			assertEquals(8, films[1].getLikeCount());
+			assertEquals(7, films[2].getLikeCount());
+			assertEquals(6, films[3].getLikeCount());
+			assertEquals(5, films[4].getLikeCount());
+			assertEquals(4, films[5].getLikeCount());
+			assertEquals(3, films[6].getLikeCount());
+			assertEquals(2, films[7].getLikeCount());
+			assertEquals(1, films[8].getLikeCount());
+			assertEquals(0, films[9].getLikeCount());
+		}
+	}
+
+	private ResponseEntity<User> createUser(String userString) {
+		return createUser(parseUser(userString));
+	}
+
+	private ResponseEntity<User> createUser(User user) {
+		return post("/users", user, User.class);
+	}
+
+	private ResponseEntity<Film> createFilm(String filmString) {
+		return createFilm(parseFilm(filmString));
+	}
+
+	private ResponseEntity<Film> createFilm(Film film) {
+		return post("/films", film, Film.class);
+	}
+
+	private ResponseEntity<Film> getFilmById(long id) {
+		return get("/films/" + id, Film.class);
+	}
+
+	private ResponseEntity<Integer> deleteAllUsers() {
+		return delete("/users", Integer.class);
+	}
+
+	private ResponseEntity<Integer> deleteAllFilms() {
+		return delete("/films", Integer.class);
+	}
+
+	private ResponseEntity<Film> like(Film film, User user) {
+		return put("/films/" + film.getId() + "/like/" + user.getId(), Film.class);
+	}
+
+	private ResponseEntity<Film> dislike(Film film, User user) {
+		return delete("/films/" + film.getId() + "/like/" + user.getId(), Film.class);
+	}
+
+	private ResponseEntity<Film[]> getPopularFilms() {
+		return get("/films/popular", Film[].class);
+	}
+
+	private ResponseEntity<Film[]> getPopularFilms(int count) {
+		return get("/films/popular?count=" + count, Film[].class);
+	}
+
+	private User parseUser(String userString) {
+		String[] chunks = userString.split(";");
+		return new User(
+				chunks[0],
+				chunks[1].equals("NULL") ? null : chunks[1],
+				chunks[2].equals("NULL") ? null : chunks[2],
+				LocalDate.parse(chunks[3])
+		);
+	}
+
+	private Film parseFilm(String filmString) {
+		String[] chunks = filmString.split(";");
+		return new Film(
+				null,
+				chunks[0].equals("NULL") ? null : chunks[0],
+				chunks[1].equals("NULL") ? null : chunks[1],
+				chunks[2].equals("NULL") ? null : LocalDate.parse(chunks[2]),
+				Integer.parseInt(chunks[3])
+		);
 	}
 
 	private <T> ResponseEntity<T> get(String uri, Class<T> clazz) {

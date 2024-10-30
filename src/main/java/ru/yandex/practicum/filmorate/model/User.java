@@ -19,6 +19,8 @@ import java.util.stream.Collectors;
 @EqualsAndHashCode(of = { "id" })
 @Validated
 @Slf4j
+@Builder
+@AllArgsConstructor
 public class User {
 
     @Null(groups = Marker.OnCreate.class)
