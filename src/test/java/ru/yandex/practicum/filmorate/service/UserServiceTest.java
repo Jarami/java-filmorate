@@ -3,7 +3,7 @@ package ru.yandex.practicum.filmorate.service;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import ru.yandex.practicum.filmorate.exceptions.UserNotFound;
+import ru.yandex.practicum.filmorate.exceptions.UserNotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
@@ -81,7 +81,7 @@ public class UserServiceTest {
             User user = new User(1L, "my@mail.ru", "login", "name", LocalDate.parse("2024-01-01"),
                     new ArrayList<>());
 
-            assertThrows(UserNotFound.class, () -> userService.getUserById(user.getId()));
+            assertThrows(UserNotFoundException.class, () -> userService.getUserById(user.getId()));
         }
     }
 
@@ -106,7 +106,7 @@ public class UserServiceTest {
             User user = new User(1L, "my@mail.ru", "login", "name", LocalDate.parse("2024-01-01"),
                     new ArrayList<>());
 
-            assertThrows(UserNotFound.class, () -> userService.updateUser(user));
+            assertThrows(UserNotFoundException.class, () -> userService.updateUser(user));
         }
 
         @Test
@@ -163,10 +163,10 @@ public class UserServiceTest {
         void givenAbsentUser_whenAddFriends_gotNoFriendship() {
             User user1 = createUser("my1@email.com;login1;name1;2024-01-01");
 
-            assertThrows(UserNotFound.class, () ->
+            assertThrows(UserNotFoundException.class, () ->
                 userService.addFriend(user1.getId() + 1, user1.getId()));
 
-            assertThrows(UserNotFound.class, () ->
+            assertThrows(UserNotFoundException.class, () ->
                     userService.addFriend(user1.getId(), user1.getId() + 1));
         }
 

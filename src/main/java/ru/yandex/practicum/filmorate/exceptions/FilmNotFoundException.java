@@ -8,6 +8,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 @Getter
 @RequiredArgsConstructor
 @ResponseStatus(value = HttpStatus.NOT_FOUND)
-public class FilmNotFound extends RuntimeException {
+public class FilmNotFoundException extends RuntimeException {
     private final Long filmId;
 }

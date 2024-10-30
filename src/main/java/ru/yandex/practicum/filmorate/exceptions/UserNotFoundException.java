@@ -8,6 +8,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 @Getter
 @RequiredArgsConstructor
 @ResponseStatus(value = HttpStatus.NOT_FOUND)
-public class UserNotFound extends RuntimeException {
+public class UserNotFoundException extends RuntimeException {
     private final Long userId;
 }

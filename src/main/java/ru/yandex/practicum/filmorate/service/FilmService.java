@@ -4,7 +4,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
-import ru.yandex.practicum.filmorate.exceptions.FilmNotFound;
+import ru.yandex.practicum.filmorate.exceptions.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.validators.Marker;
@@ -51,7 +51,7 @@ public class FilmService {
 
     private void checkFilmId(Long filmId) {
         if (filmId == null || filmStorage.getById(filmId) == null) {
-            throw new FilmNotFound(filmId);
+            throw new FilmNotFoundException(filmId);
         }
     }
 }

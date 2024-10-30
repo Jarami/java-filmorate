@@ -3,7 +3,7 @@ package ru.yandex.practicum.filmorate.service;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import ru.yandex.practicum.filmorate.exceptions.FilmNotFound;
+import ru.yandex.practicum.filmorate.exceptions.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.InMemoryFilmStorage;
@@ -75,7 +75,7 @@ public class FilmServiceTest {
             Film film = new Film(1L, "name", "desc", LocalDate.parse("2024-01-01"),
                     120);
 
-            assertThrows(FilmNotFound.class, () -> filmService.getFilmById(film.getId()));
+            assertThrows(FilmNotFoundException.class, () -> filmService.getFilmById(film.getId()));
         }
     }
 
@@ -99,7 +99,7 @@ public class FilmServiceTest {
             Film film = new Film(1L, "name", "desc", LocalDate.parse("2024-01-01"),
                     120);
 
-            assertThrows(FilmNotFound.class, () -> filmService.updateFilm(film));
+            assertThrows(FilmNotFoundException.class, () -> filmService.updateFilm(film));
         }
     }
 
@@ -133,7 +133,7 @@ public class FilmServiceTest {
             Film film = new Film(1L, "name", "desc", LocalDate.parse("2024-01-01"),
                     120);
 
-            assertThrows(FilmNotFound.class, () -> filmService.deleteFilmById(film.getId()));
+            assertThrows(FilmNotFoundException.class, () -> filmService.deleteFilmById(film.getId()));
         }
     }
 

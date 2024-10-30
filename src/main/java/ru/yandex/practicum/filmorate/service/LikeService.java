@@ -2,8 +2,8 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exceptions.FilmNotFound;
-import ru.yandex.practicum.filmorate.exceptions.UserNotFound;
+import ru.yandex.practicum.filmorate.exceptions.FilmNotFoundException;
+import ru.yandex.practicum.filmorate.exceptions.UserNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.util.List;
@@ -47,13 +47,13 @@ public class LikeService {
 
     private void checkFilmId(Long filmId) {
         if (filmId == null || filmService.getFilmById(filmId) == null) {
-            throw new FilmNotFound(filmId);
+            throw new FilmNotFoundException(filmId);
         }
     }
 
     private void checkUserId(Long userId) {
         if (userId == null || userService.getUserById(userId) == null) {
-            throw new UserNotFound(userId);
+            throw new UserNotFoundException(userId);
         }
     }
 

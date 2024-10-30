@@ -4,7 +4,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
-import ru.yandex.practicum.filmorate.exceptions.UserNotFound;
+import ru.yandex.practicum.filmorate.exceptions.UserNotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 import ru.yandex.practicum.filmorate.validators.Marker;
@@ -58,8 +58,8 @@ public class UserService {
         User user = userStorage.getById(userId);
         User friend = userStorage.getById(friendId);
 
-        if (user == null) throw new UserNotFound(userId);
-        if (friend == null) throw new UserNotFound(friendId);
+        if (user == null) throw new UserNotFoundException(userId);
+        if (friend == null) throw new UserNotFoundException(friendId);
 
         user.addFriend(friend);
         friend.addFriend(user);
@@ -73,7 +73,7 @@ public class UserService {
     public Collection<User> getFriends(long userId) {
         User user = userStorage.getById(userId);
 
-        if (user == null) throw new UserNotFound(userId);
+        if (user == null) throw new UserNotFoundException(userId);
 
         return user.getFriendsId().stream().map(this::getUserById).collect(Collectors.toList());
     }
@@ -82,8 +82,8 @@ public class UserService {
         User user = userStorage.getById(userId);
         User friend = userStorage.getById(friendId);
 
-        if (user == null) throw new UserNotFound(userId);
-        if (friend == null) throw new UserNotFound(friendId);
+        if (user == null) throw new UserNotFoundException(userId);
+        if (friend == null) throw new UserNotFoundException(friendId);
 
         user.removeFriend(friend);
         friend.removeFriend(user);
@@ -93,8 +93,8 @@ public class UserService {
         User user = userStorage.getById(userId);
         User otherUser = userStorage.getById(otherUserId);
 
-        if (user == null) throw new UserNotFound(userId);
-        if (otherUser == null) throw new UserNotFound(otherUserId);
+        if (user == null) throw new UserNotFoundException(userId);
+        if (otherUser == null) throw new UserNotFoundException(otherUserId);
 
         Set<Long> intersectSet = new HashSet<>(user.getFriendsId());
         intersectSet.retainAll(otherUser.getFriendsId());
@@ -110,7 +110,7 @@ public class UserService {
 
     private void checkUserId(Long userId) {
         if (userId == null || userStorage.getById(userId) == null) {
-            throw new UserNotFound(userId);
+            throw new UserNotFoundException(userId);
         }
     }
 }

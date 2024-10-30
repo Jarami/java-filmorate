@@ -8,8 +8,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import ru.yandex.practicum.filmorate.exceptions.FilmNotFound;
-import ru.yandex.practicum.filmorate.exceptions.UserNotFound;
+import ru.yandex.practicum.filmorate.exceptions.FilmNotFoundException;
+import ru.yandex.practicum.filmorate.exceptions.UserNotFoundException;
 
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -20,7 +20,7 @@ public class ErrorHandler {
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handleUserNotFound(UserNotFound e) {
+    public ErrorResponse handleUserNotFound(UserNotFoundException e) {
 
         log.error("Пользователь с id = {} не найден", e.getUserId(), e);
 
@@ -32,7 +32,7 @@ public class ErrorHandler {
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handleFilmNotFound(FilmNotFound e) {
+    public ErrorResponse handleFilmNotFound(FilmNotFoundException e) {
 
         log.error("Фильм с id = {} не найден", e.getFilmId(), e);
 
