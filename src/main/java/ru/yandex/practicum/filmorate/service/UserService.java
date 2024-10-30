@@ -2,7 +2,6 @@ package ru.yandex.practicum.filmorate.service;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 import ru.yandex.practicum.filmorate.exceptions.UserNotFound;
@@ -15,7 +14,6 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Slf4j
 @Service
 @Validated
 @RequiredArgsConstructor
@@ -25,14 +23,12 @@ public class UserService {
 
     @Validated(Marker.OnCreate.class)
     public User createUser(@Valid User user) {
-        log.info("creating user {}", user);
         setNameIfAbsent(user);
         userStorage.save(user);
         return user;
     }
 
     public Collection<User> getAllUsers() {
-        log.info("getting all user");
         return userStorage.getAll();
     }
 
@@ -43,7 +39,6 @@ public class UserService {
 
     @Validated(Marker.OnUpdate.class)
     public User updateUser(@Valid User user) {
-        log.info("updating user {}", user);
         checkUserId(user.getId());
         setNameIfAbsent(user);
         userStorage.save(user);
@@ -51,12 +46,10 @@ public class UserService {
     }
 
     public int deleteAllUsers() {
-        log.info("deleting all users");
         return userStorage.deleteAll();
     }
 
     public void deleteUserById(long userId) {
-        log.info("deleting user with id = {}", userId);
         checkUserId(userId);
         userStorage.delete(userStorage.getById(userId));
     }

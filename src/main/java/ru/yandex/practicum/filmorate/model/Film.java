@@ -45,12 +45,10 @@ public class Film {
 
     public Film() {
         this(null, null, null, null, 0, new HashSet<>());
-        System.out.println("no args: " + this);
     }
 
     public Film(Long id, String name, String description, LocalDate releaseDate, int duration) {
         this(id, name, description, releaseDate, duration, new HashSet<>());
-        System.out.println("req args: " + this);
     }
 
     public int getLikeCount() {
