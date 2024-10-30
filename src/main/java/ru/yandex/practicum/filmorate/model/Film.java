@@ -41,7 +41,7 @@ public class Film {
     @Positive(groups = {Marker.OnCreate.class, Marker.OnUpdate.class})
     private int duration;
 
-    private Set<Long> likes = new HashSet<>();
+    private Set<Long> likes;
 
     public Film() {
         this(null, null, null, null, 0, new HashSet<>());

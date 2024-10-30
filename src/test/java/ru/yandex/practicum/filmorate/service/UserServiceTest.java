@@ -124,7 +124,7 @@ public class UserServiceTest {
     class DeleteTests {
         @Test
         void givenUsers_whenDeleteAll_gotDeleted() {
-            List<User> users = createAndSaveTestUsers();
+            createAndSaveTestUsers();
 
             userService.deleteAllUsers();
 

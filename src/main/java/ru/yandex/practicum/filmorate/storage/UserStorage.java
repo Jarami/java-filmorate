@@ -2,17 +2,6 @@ package ru.yandex.practicum.filmorate.storage;
 
 import ru.yandex.practicum.filmorate.model.User;
 
-import java.util.Collection;
+public interface UserStorage extends AbstractStorage<Long, User> {
 
-public interface UserStorage {
-
-    User save(User user);
-
-    Collection<User> getAll();
-
-    User getById(long id);
-
-    void delete(User user);
-
-    int deleteAll();
 }
