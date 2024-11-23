@@ -10,7 +10,8 @@ import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 
-@Data
+@Getter
+@Setter
 @Validated
 @ToString
 @EqualsAndHashCode(of = { "id" })
@@ -24,13 +25,17 @@ public class Film {
     @NotBlank(
             message = "Название фильма не должно быть пустым",
             groups = {Marker.OnCreate.class, Marker.OnUpdate.class})
-    private String name;
+    private String title;
 
     @Size(
             max = 200,
             message = "Описание фильма не должно быть больше, чем 200 символов",
             groups = {Marker.OnCreate.class, Marker.OnUpdate.class})
     private String description;
+
+    @NotNull
+    // @Pattern(regexp = "G|PG|PG-13|R|NC-17")
+    private FilmRating rating;
 
     @After(
             after = "1895-12-28",
@@ -44,11 +49,15 @@ public class Film {
     private Set<Long> likes;
 
     public Film() {
-        this(null, null, null, null, 0, new HashSet<>());
+        this(null, null, null, FilmRating.G, null, 0, new HashSet<>());
     }
 
-    public Film(Long id, String name, String description, LocalDate releaseDate, int duration) {
-        this(id, name, description, releaseDate, duration, new HashSet<>());
+    public Film(Long id, String name, String description, String ratingName, LocalDate releaseDate, int duration) {
+        this(id, name, description, ratingName, releaseDate, duration, new HashSet<>());
+    }
+
+    public Film(Long id, String name, String description, String ratingName, LocalDate releaseDate, int duration, Set<Long> likes) {
+        this(id, name, description, FilmRating.getByName(ratingName), releaseDate, duration, likes);
     }
 
     public int getLikeCount() {

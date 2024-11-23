@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -7,6 +8,8 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext;
 import org.springframework.http.HttpStatusCode;
@@ -24,14 +27,14 @@ import static org.junit.jupiter.api.Assertions.*;
 import static ru.yandex.practicum.filmorate.util.TestUtil.*;
 
 @Slf4j
+@JdbcTest
+@AutoConfigureTestDatabase
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class FilmorateApplicationTests {
 
-	@Autowired
-	private ServerProperties serverProperties;
-
-	@Autowired
-	private ServletWebServerApplicationContext webServerAppCtxt;
+	private final ServerProperties serverProperties;
+	private final ServletWebServerApplicationContext webServerAppCtxt;
 
 	private RestClient client;
 
@@ -387,7 +390,7 @@ class FilmorateApplicationTests {
 				assertStatus(201, resp);
 				assertNotNull(film);
 				assertNotNull(film.getId());
-				assertEquals("name", film.getName());
+				assertEquals("name", film.getTitle());
 				assertEquals("desc", film.getDescription());
 				assertEquals(LocalDate.parse("2024-01-01"), film.getReleaseDate());
 				assertEquals(120, film.getDuration());
@@ -441,7 +444,7 @@ class FilmorateApplicationTests {
 
 				ResponseEntity<Film[]> resp = getAllFilms();
 				Film[] films = resp.getBody();
-				Set<String> actualNames = Arrays.stream(films).map(Film::getName).collect(Collectors.toSet());
+				Set<String> actualNames = Arrays.stream(films).map(Film::getTitle).collect(Collectors.toSet());
 				Set<String> expectedNames = Set.of("name1", "name2");
 
 				assertStatus(200, resp);
@@ -464,7 +467,7 @@ class FilmorateApplicationTests {
 
 			@Test
 			void givenNonExistingFilm_whenGetById_getNotFound() {
-				Film film = new Film(1L, "name", "desc", LocalDate.parse("2024-02-02"),
+				Film film = new Film(1L, "name", "desc", "G", LocalDate.parse("2024-02-02"),
 						180);
 
 				assertThrows(HttpClientErrorException.NotFound.class, () -> getFilmById(film.getId()));
@@ -481,7 +484,7 @@ class FilmorateApplicationTests {
 				Film film1 = resp1.getBody();
 				Film film2 = resp2.getBody();
 
-				Film updatedFilm = new Film(film1.getId(), "name", "desc",
+				Film updatedFilm = new Film(film1.getId(), "name", "desc", "G",
 						LocalDate.parse("2024-02-02"), 180);
 
 				ResponseEntity<Film> resp3 = updateFilm(updatedFilm);
@@ -491,8 +494,8 @@ class FilmorateApplicationTests {
 
 			@Test
 			void givenNonExistingUser_whenUpdate_getNotFound() {
-				Film film = new Film(1L, "name", "desc", LocalDate.parse("2024-02-02"),
-						180);
+				Film film = new Film(1L, "name", "desc", "G",
+						LocalDate.parse("2024-02-02"), 180);
 
 				assertThrows(HttpClientErrorException.NotFound.class, () -> updateFilm(film));
 			}
@@ -500,7 +503,7 @@ class FilmorateApplicationTests {
 			@Test
 			void givenFilmWithoutName_whenUpdate_getBadRequest() {
 				Film film = createFilm("name1;desc1;2024-01-01;120").getBody();
-				film.setName(null);
+				film.setTitle(null);
 
 				assertThrows(HttpClientErrorException.BadRequest.class, () -> updateFilm(film));
 			}
@@ -508,7 +511,7 @@ class FilmorateApplicationTests {
 			@Test
 			void givenFilmWithEmptyName_whenSave_getBadRequest() {
 				Film film = createFilm("name1;desc1;2024-01-01;120").getBody();
-				film.setName("");
+				film.setTitle("");
 
 				assertThrows(HttpClientErrorException.BadRequest.class, () -> updateFilm(film));
 			}
@@ -555,13 +558,13 @@ class FilmorateApplicationTests {
 
 				Film[] actualFilms = getAllFilms().getBody();
 				assertEquals(1, actualFilms.length);
-				assertEquals("name2", actualFilms[0].getName());
+				assertEquals("name2", actualFilms[0].getTitle());
 			}
 
 			@Test
 			void givenNonExistingFilm_whenDelete_getNotFound() {
-				Film film = new Film(1L, "name", "desc", LocalDate.parse("2024-01-01"),
-						120);
+				Film film = new Film(1L, "name", "desc", "G",
+						LocalDate.parse("2024-01-01"), 120);
 
 				assertThrows(HttpClientErrorException.NotFound.class, () -> deleteFilm(film));
 			}
@@ -605,7 +608,7 @@ class FilmorateApplicationTests {
 			films = new ArrayList<>();
 			for (int i = 1; i <= 11; i++) {
 				Film film = Film.builder()
-						.name("film name " + i)
+						.title("film name " + i)
 						.description("film desc " + i)
 						.releaseDate(LocalDate.parse("2010-01-01"))
 						.duration(10 * i + 10)
@@ -638,7 +641,7 @@ class FilmorateApplicationTests {
 
 			Film film = resp.getBody();
 			assertNotNull(film);
-			assertEquals(films.get(7).getName(), film.getName());
+			assertEquals(films.get(7).getTitle(), film.getTitle());
 			assertEquals(1, film.getLikeCount());
 		}
 
@@ -660,7 +663,7 @@ class FilmorateApplicationTests {
 
 			Film film = resp.getBody();
 			assertNotNull(film);
-			assertEquals(films.get(7).getName(), film.getName());
+			assertEquals(films.get(7).getTitle(), film.getTitle());
 			assertEquals(1, film.getLikeCount());
 		}
 
@@ -671,7 +674,7 @@ class FilmorateApplicationTests {
 
 			Film film = getFilmById(films.get(7).getId()).getBody();
 			assertNotNull(film);
-			assertEquals(films.get(7).getName(), film.getName());
+			assertEquals(films.get(7).getTitle(), film.getTitle());
 			assertEquals(0, film.getLikeCount());
 		}
 
@@ -778,8 +781,9 @@ class FilmorateApplicationTests {
 				null,
 				chunks[0].equals("NULL") ? null : chunks[0],
 				chunks[1].equals("NULL") ? null : chunks[1],
-				chunks[2].equals("NULL") ? null : LocalDate.parse(chunks[2]),
-				Integer.parseInt(chunks[3])
+				chunks[2],
+				chunks[3].equals("NULL") ? null : LocalDate.parse(chunks[3]),
+				Integer.parseInt(chunks[4])
 		);
 	}
 

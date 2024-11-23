@@ -6,6 +6,7 @@ import ru.yandex.practicum.filmorate.model.User;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @Repository
 public class InMemoryUserStorage implements UserStorage {
@@ -29,8 +30,8 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public User getById(Long id) {
-        return users.get(id);
+    public Optional<User> getById(Long id) {
+        return Optional.ofNullable(users.get(id));
     }
 
     @Override

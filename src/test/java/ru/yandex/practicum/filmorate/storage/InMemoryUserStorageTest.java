@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.storage;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import ru.yandex.practicum.filmorate.exceptions.UserNotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
@@ -39,7 +40,8 @@ class InMemoryUserStorageTest {
         User updatedUser = storage.save(new User(savedUser.getId(), "my2@email.com", "login2",
                 "name2", LocalDate.parse("2024-02-01"), new ArrayList<>()));
 
-        User actualUpdatedUser = storage.getById(savedUser.getId());
+        User actualUpdatedUser = storage.getById(savedUser.getId())
+                .orElseThrow(() -> new UserNotFoundException(savedUser.getId()));
 
         assertUserEquals(updatedUser, actualUpdatedUser);
     }
@@ -65,7 +67,8 @@ class InMemoryUserStorageTest {
         User user2 = storage.save(
                 new User("my2@email.com", "login2", "name2", LocalDate.parse("2024-02-01")));
 
-        User actualUser = storage.getById(user1.getId());
+        User actualUser = storage.getById(user1.getId())
+                .orElseThrow(() -> new UserNotFoundException(user1.getId()));
 
         assertUserEquals(user1, actualUser);
     }
@@ -75,7 +78,8 @@ class InMemoryUserStorageTest {
         User user1 = storage.save(
                 new User("my1@email.com", "login1", "name1", LocalDate.parse("2024-01-01")));
 
-        User actualUser = storage.getById(user1.getId() + 1);
+        User actualUser = storage.getById(user1.getId() + 1)
+                .orElseThrow(() -> new UserNotFoundException(user1.getId() + 1));
 
         assertNull(actualUser);
     }

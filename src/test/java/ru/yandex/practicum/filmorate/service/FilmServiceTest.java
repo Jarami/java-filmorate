@@ -35,7 +35,7 @@ public class FilmServiceTest {
     class CreateTests {
         @Test
         void givenFilmCreateRequest_whenCreate_getCreated() {
-            Film filmToCreate = parseFilm("name;desc;2024-01-01;120");
+            Film filmToCreate = parseFilm("name;desc;G;2024-01-01;120");
 
             Film film = filmService.createFilm(filmToCreate);
 
@@ -55,7 +55,7 @@ public class FilmServiceTest {
             Collection<Film> actualFilms = filmService.getAllFilms();
 
             actualFilms.forEach(actualFilm -> {
-                Film film = films.get(actualFilm.getName());
+                Film film = films.get(actualFilm.getTitle());
                 assertFilmEquals(film, actualFilm);
             });
         }
@@ -72,8 +72,8 @@ public class FilmServiceTest {
 
         @Test
         void givenNonExistingFilm_whenGetById_getFilmNotFound() {
-            Film film = new Film(1L, "name", "desc", LocalDate.parse("2024-01-01"),
-                    120);
+            Film film = new Film(1L, "name", "desc", "G",
+                    LocalDate.parse("2024-01-01"), 120);
 
             assertThrows(FilmNotFoundException.class, () -> filmService.getFilmById(film.getId()));
         }
@@ -85,7 +85,7 @@ public class FilmServiceTest {
         void givenExistingFilm_whenUpdate_getUpdated() {
             Film film1 = createFilm("name1;desc1;2024-01-01;120");
 
-            Film updatedFilm = new Film(film1.getId(), "name2", "desc2",
+            Film updatedFilm = new Film(film1.getId(), "name2", "desc2", "G",
                     LocalDate.parse("2024-02-02"), 180);
 
             filmService.updateFilm(updatedFilm);
@@ -96,8 +96,8 @@ public class FilmServiceTest {
 
         @Test
         void givenNonExistingFilm_whenUpdate_getFilmNotFoundr() {
-            Film film = new Film(1L, "name", "desc", LocalDate.parse("2024-01-01"),
-                    120);
+            Film film = new Film(1L, "name", "desc", "G",
+                    LocalDate.parse("2024-01-01"), 120);
 
             assertThrows(FilmNotFoundException.class, () -> filmService.updateFilm(film));
         }
@@ -130,8 +130,8 @@ public class FilmServiceTest {
 
         @Test
         void givenNonExistingFilm_whenDelete_getFilmNotFound() {
-            Film film = new Film(1L, "name", "desc", LocalDate.parse("2024-01-01"),
-                    120);
+            Film film = new Film(1L, "name", "desc", "G",
+                    LocalDate.parse("2024-01-01"), 120);
 
             assertThrows(FilmNotFoundException.class, () -> filmService.deleteFilmById(film.getId()));
         }
@@ -143,8 +143,9 @@ public class FilmServiceTest {
                 null,
                 chunks[0].equals("NULL") ? null : chunks[0],
                 chunks[1].equals("NULL") ? null : chunks[1],
-                chunks[2].equals("NULL") ? null : LocalDate.parse(chunks[2]),
-                Integer.parseInt(chunks[3])
+                chunks[2],
+                chunks[3].equals("NULL") ? null : LocalDate.parse(chunks[3]),
+                Integer.parseInt(chunks[4])
         );
     }
 
