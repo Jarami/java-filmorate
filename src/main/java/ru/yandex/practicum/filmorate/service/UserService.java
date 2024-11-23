@@ -6,7 +6,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
+import ru.yandex.practicum.filmorate.dto.NewUserRequest;
+import ru.yandex.practicum.filmorate.dto.UpdateUserRequest;
 import ru.yandex.practicum.filmorate.exceptions.UserNotFoundException;
+import ru.yandex.practicum.filmorate.mapper.UserMapper;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserDbStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
@@ -28,13 +31,12 @@ public class UserService {
         this.userStorage = userStorage;
     }
 
-    @Validated(Marker.OnCreate.class)
-    public User createUser(@Valid User user) {
-        setNameIfAbsent(user);
+    public User createUser(@Valid NewUserRequest newUserRequest) {
+        setNameIfAbsent(newUserRequest);
 
-        log.info("creating user {}", user);
-        userStorage.save(user);
-        return user;
+        log.info("creating user {}", newUserRequest);
+
+        return userStorage.save(UserMapper.mapToUser(newUserRequest));
     }
 
     public Collection<User> getAllUsers() {
@@ -47,13 +49,13 @@ public class UserService {
                 .orElseThrow(() -> new UserNotFoundException(id));
     }
 
-    @Validated(Marker.OnUpdate.class)
-    public User updateUser(@Valid User user) {
-        checkUserId(user.getId());
+    public User updateUser(@Valid UpdateUserRequest updateUserRequest) {
 
-        if (userStorage.getById(user.getId()).isEmpty()) {
-            throw new UserNotFoundException(user.getId());
+        if (userStorage.getById(updateUserRequest.getId()).isEmpty()) {
+            throw new UserNotFoundException(updateUserRequest.getId());
         }
+
+        User user = UserMapper.mapToUser(updateUserRequest);
 
         userStorage.save(user);
         return user;
@@ -113,7 +115,7 @@ public class UserService {
         return intersectSet.stream().map(this::getUserById).toList();
     }
 
-    private void setNameIfAbsent(User user) {
+    private void setNameIfAbsent(NewUserRequest user) {
         if (user.getName() == null || user.getName().isEmpty()) {
             user.setName(user.getLogin());
         }

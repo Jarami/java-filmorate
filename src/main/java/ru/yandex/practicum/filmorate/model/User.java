@@ -16,7 +16,6 @@ import java.util.stream.Collectors;
 
 @Data
 @ToString
-@EqualsAndHashCode(of = { "id" })
 @Validated
 @Slf4j
 @Builder

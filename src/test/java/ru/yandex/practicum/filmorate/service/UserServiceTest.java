@@ -3,7 +3,11 @@ package ru.yandex.practicum.filmorate.service;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.springframework.scripting.bsh.BshScriptUtils;
+import ru.yandex.practicum.filmorate.dto.NewUserRequest;
+import ru.yandex.practicum.filmorate.dto.UpdateUserRequest;
 import ru.yandex.practicum.filmorate.exceptions.UserNotFoundException;
+import ru.yandex.practicum.filmorate.mapper.UserMapper;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
@@ -32,21 +36,21 @@ public class UserServiceTest {
     class CreateTests {
         @Test
         void givenUserCreateRequest_whenCreated_gotUser() {
-            User userRequest = parseUser("my@email.com;login;name;2024-01-01");
+            NewUserRequest userRequest = parseUser("my@email.com;login;name;2024-01-01");
             User user = userService.createUser(userRequest);
 
             assertNotNull(user.getId());
-            assertUserEquals(userRequest, user);
+            assertUserEquals(UserMapper.mapToUser(userRequest), user);
             assertEmpty(user.getFriendsId());
         }
 
         @Test
         void givenUserCreateRequestWithoutName_whenCreated_gotLoginInsteadOfName() {
-            User userRequest = parseUser("my@email.com;login;NULL;2024-01-01");
+            NewUserRequest userRequest = parseUser("my@email.com;login;NULL;2024-01-01");
             User user = userService.createUser(userRequest);
 
             assertNotNull(user.getId());
-            assertUserEquals(userRequest, user);
+            assertUserEquals(UserMapper.mapToUser(userRequest), user);
         }
     }
 
@@ -92,19 +96,28 @@ public class UserServiceTest {
             User user1 = createUser("my1@email.com;login1;name1;2024-01-01");
             User user2 = createUser("my2@email.com;login2;name2;2024-02-01");
 
-            User updatedUser = new User(user1.getId(), "my-new@email.com", "new-login", "new-name",
-                    LocalDate.parse("2024-02-02"), List.of(user2));
+            UpdateUserRequest updatedUser = UpdateUserRequest.builder()
+                    .id(user1.getId())
+                    .email("my-new@email.com")
+                    .login("new-login")
+                    .name("new-name")
+                    .build();
 
             userService.updateUser(updatedUser);
 
             User actualUser = userService.getUserById(user1.getId());
-            assertUserEquals(updatedUser, actualUser);
+            assertUserEquals(UserMapper.mapToUser(updatedUser), actualUser);
         }
 
         @Test
         void givenNonExistingUser_whenUpdate_gotError() {
-            User user = new User(1L, "my@mail.ru", "login", "name", LocalDate.parse("2024-01-01"),
-                    new ArrayList<>());
+            UpdateUserRequest user = UpdateUserRequest.builder()
+                            .id(1L)
+                            .email("my@mail.ru")
+                            .login("login")
+                            .name("name")
+                            .birthday(LocalDate.parse("2024-01-01"))
+                            .build();
 
             assertThrows(UserNotFoundException.class, () -> userService.updateUser(user));
         }
@@ -112,9 +125,12 @@ public class UserServiceTest {
         @Test
         void givenUserWithoutName_whenUpdate_gotLoginInsteadOfName() {
             User user = createUser("my@email.com;login;name;2024-01-01");
-            user.setName(null);
 
-            user = userService.updateUser(user);
+            UpdateUserRequest updatedUser = UpdateUserRequest.from(user)
+                    .name(null)
+                    .build();
+
+            user = userService.updateUser(updatedUser);
 
             assertEquals("login", user.getName());
         }
@@ -212,17 +228,18 @@ public class UserServiceTest {
         return users;
     }
 
-    private User parseUser(String userString) {
+    private NewUserRequest parseUser(String userString) {
         String[] chunks = userString.split(";");
-        return new User(
-                chunks[0],
-                chunks[1].equals("NULL") ? null : chunks[1],
-                chunks[2].equals("NULL") ? null : chunks[2],
-                LocalDate.parse(chunks[3])
-        );
+        return NewUserRequest.builder()
+                .email(chunks[0])
+                .login(chunks[1].equals("NULL") ? null : chunks[1])
+                .name(chunks[2].equals("NULL") ? null : chunks[2])
+                .birthday(chunks[3].equals("NULL") ? null : LocalDate.parse(chunks[3]))
+                .build();
     }
 
     private User createUser(String userString) {
-        return userStorage.save(parseUser(userString));
+        NewUserRequest newUserRequest = parseUser(userString);
+        return userStorage.save(UserMapper.mapToUser(newUserRequest));
     }
 }
