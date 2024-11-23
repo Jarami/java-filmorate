@@ -390,7 +390,7 @@ class FilmorateApplicationTests {
 				assertStatus(201, resp);
 				assertNotNull(film);
 				assertNotNull(film.getId());
-				assertEquals("name", film.getTitle());
+				assertEquals("name", film.getName());
 				assertEquals("desc", film.getDescription());
 				assertEquals(LocalDate.parse("2024-01-01"), film.getReleaseDate());
 				assertEquals(120, film.getDuration());
@@ -444,7 +444,7 @@ class FilmorateApplicationTests {
 
 				ResponseEntity<Film[]> resp = getAllFilms();
 				Film[] films = resp.getBody();
-				Set<String> actualNames = Arrays.stream(films).map(Film::getTitle).collect(Collectors.toSet());
+				Set<String> actualNames = Arrays.stream(films).map(Film::getName).collect(Collectors.toSet());
 				Set<String> expectedNames = Set.of("name1", "name2");
 
 				assertStatus(200, resp);
@@ -503,7 +503,7 @@ class FilmorateApplicationTests {
 			@Test
 			void givenFilmWithoutName_whenUpdate_getBadRequest() {
 				Film film = createFilm("name1;desc1;2024-01-01;120").getBody();
-				film.setTitle(null);
+				film.setName(null);
 
 				assertThrows(HttpClientErrorException.BadRequest.class, () -> updateFilm(film));
 			}
@@ -511,7 +511,7 @@ class FilmorateApplicationTests {
 			@Test
 			void givenFilmWithEmptyName_whenSave_getBadRequest() {
 				Film film = createFilm("name1;desc1;2024-01-01;120").getBody();
-				film.setTitle("");
+				film.setName("");
 
 				assertThrows(HttpClientErrorException.BadRequest.class, () -> updateFilm(film));
 			}
@@ -558,7 +558,7 @@ class FilmorateApplicationTests {
 
 				Film[] actualFilms = getAllFilms().getBody();
 				assertEquals(1, actualFilms.length);
-				assertEquals("name2", actualFilms[0].getTitle());
+				assertEquals("name2", actualFilms[0].getName());
 			}
 
 			@Test
@@ -608,7 +608,7 @@ class FilmorateApplicationTests {
 			films = new ArrayList<>();
 			for (int i = 1; i <= 11; i++) {
 				Film film = Film.builder()
-						.title("film name " + i)
+						.name("film name " + i)
 						.description("film desc " + i)
 						.releaseDate(LocalDate.parse("2010-01-01"))
 						.duration(10 * i + 10)
@@ -641,7 +641,7 @@ class FilmorateApplicationTests {
 
 			Film film = resp.getBody();
 			assertNotNull(film);
-			assertEquals(films.get(7).getTitle(), film.getTitle());
+			assertEquals(films.get(7).getName(), film.getName());
 			assertEquals(1, film.getLikeCount());
 		}
 
@@ -663,7 +663,7 @@ class FilmorateApplicationTests {
 
 			Film film = resp.getBody();
 			assertNotNull(film);
-			assertEquals(films.get(7).getTitle(), film.getTitle());
+			assertEquals(films.get(7).getName(), film.getName());
 			assertEquals(1, film.getLikeCount());
 		}
 
@@ -674,7 +674,7 @@ class FilmorateApplicationTests {
 
 			Film film = getFilmById(films.get(7).getId()).getBody();
 			assertNotNull(film);
-			assertEquals(films.get(7).getTitle(), film.getTitle());
+			assertEquals(films.get(7).getName(), film.getName());
 			assertEquals(0, film.getLikeCount());
 		}
 

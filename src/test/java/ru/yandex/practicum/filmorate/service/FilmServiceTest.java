@@ -3,16 +3,20 @@ package ru.yandex.practicum.filmorate.service;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import ru.yandex.practicum.filmorate.dto.FilmRatingDto;
+import ru.yandex.practicum.filmorate.dto.NewFilmRequest;
 import ru.yandex.practicum.filmorate.exceptions.FilmNotFoundException;
+import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
+import ru.yandex.practicum.filmorate.mapper.FilmMapper;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.FilmRating;
+import ru.yandex.practicum.filmorate.storage.FilmRatingStorage;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.InMemoryFilmRatingStorage;
 import ru.yandex.practicum.filmorate.storage.InMemoryFilmStorage;
 
 import java.time.LocalDate;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static ru.yandex.practicum.filmorate.util.TestUtil.assertEmpty;
@@ -24,23 +28,25 @@ public class FilmServiceTest {
 
     FilmService filmService;
     FilmStorage filmStorage;
+    FilmRatingStorage filmRatingStorage;
 
     @BeforeEach
     void setup() {
         filmStorage = new InMemoryFilmStorage();
-        filmService = new FilmService(filmStorage);
+        filmRatingStorage = new InMemoryFilmRatingStorage();
+        filmService = new FilmService(filmStorage, filmRatingStorage);
     }
 
     @Nested
     class CreateTests {
         @Test
         void givenFilmCreateRequest_whenCreate_getCreated() {
-            Film filmToCreate = parseFilm("name;desc;G;2024-01-01;120");
+            NewFilmRequest filmToCreate = parseFilm("name;desc;G;2024-01-01;120");
 
             Film film = filmService.createFilm(filmToCreate);
 
             assertNotNull(film.getId());
-            assertFilmEquals(filmToCreate, film);
+            assertFilmEquals(FilmMapper.mapToFilm(filmToCreate), film);
         }
     }
 
@@ -55,7 +61,7 @@ public class FilmServiceTest {
             Collection<Film> actualFilms = filmService.getAllFilms();
 
             actualFilms.forEach(actualFilm -> {
-                Film film = films.get(actualFilm.getTitle());
+                Film film = films.get(actualFilm.getName());
                 assertFilmEquals(film, actualFilm);
             });
         }
@@ -137,19 +143,20 @@ public class FilmServiceTest {
         }
     }
 
-    private Film parseFilm(String filmString) {
+    // Film filmToCreate = parseFilm("name;desc;G;2024-01-01;120");
+    private NewFilmRequest parseFilm(String filmString) {
         String[] chunks = filmString.split(";");
-        return new Film(
-                null,
-                chunks[0].equals("NULL") ? null : chunks[0],
-                chunks[1].equals("NULL") ? null : chunks[1],
-                chunks[2],
-                chunks[3].equals("NULL") ? null : LocalDate.parse(chunks[3]),
-                Integer.parseInt(chunks[4])
-        );
+
+        return NewFilmRequest.builder()
+                .name(chunks[0].equals("NULL") ? null : chunks[0])
+                .description(chunks[1].equals("NULL") ? null : chunks[1])
+                .rating(new FilmRatingDto(0))
+                .genres(new ArrayList<>())
+                .build();
     }
 
     private Film createFilm(String filmString) {
-        return filmService.createFilm(parseFilm(filmString));
+        NewFilmRequest request = parseFilm(filmString);
+        return filmService.createFilm(request);
     }
 }

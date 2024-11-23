@@ -48,7 +48,7 @@ public class BaseRepository<T> {
         }
     }
 
-    protected long insert(String query, Object... params) {
+    protected Number insert(String query, Object... params) {
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
         jdbc.update(connection -> {
             PreparedStatement ps = connection
@@ -63,7 +63,7 @@ public class BaseRepository<T> {
             return ps;
         }, keyHolder);
 
-        Long id = keyHolder.getKeyAs(Long.class);
+        Number id = keyHolder.getKey();
 
         // Возвращаем id
         if (id != null) {

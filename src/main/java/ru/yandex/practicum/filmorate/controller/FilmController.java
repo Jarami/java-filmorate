@@ -5,6 +5,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.dto.FilmDto;
+import ru.yandex.practicum.filmorate.dto.NewFilmRequest;
+import ru.yandex.practicum.filmorate.mapper.FilmMapper;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
@@ -28,10 +31,19 @@ public class FilmController {
         return filmService.getFilmById(id);
     }
 
+    // {
+    // "name":"c0JttkwNlsgb7ez",
+    // "description":"XZygrtk7d2UO4xXukuaxHvyLpkDNhDHkEGgUWQdVdFRrjaogV4",
+    // "releaseDate":"1975-01-30",
+    // "duration":70,
+    // "mpa":{"id":3},
+    // "genres":[{"id":5}]
+    // }
     @PostMapping(value = {"", "/"})
     @ResponseStatus(HttpStatus.CREATED)
-    public Film createFilm(@RequestBody Film film) {
-        return filmService.createFilm(film);
+    public FilmDto createFilm(@RequestBody NewFilmRequest newFilmRequest) {
+        Film film = filmService.createFilm(newFilmRequest);
+        return FilmMapper.mapToDto(film);
     }
 
     @PutMapping(value = {"", "/"})

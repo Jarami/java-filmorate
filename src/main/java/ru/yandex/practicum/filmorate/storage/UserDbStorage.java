@@ -55,14 +55,14 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
     public User save(User user) {
 
         if (user.getId() == null) {
-            long id = insert(
+            Number id = insert(
                     INSERT_QUERY,
                     user.getName(),
                     user.getEmail(),
                     user.getLogin(),
                     user.getBirthday()
             );
-            user.setId(id);
+            user.setId((long)id);
 
         } else {
             update(

@@ -19,7 +19,7 @@ public class TestUtil {
 
     public static void assertFilmEquals(Film expectedFilm, Film actualFilm) {
         assertNotNull(actualFilm);
-        assertEquals(expectedFilm.getTitle(), actualFilm.getTitle());
+        assertEquals(expectedFilm.getName(), actualFilm.getName());
         assertEquals(expectedFilm.getDescription(), actualFilm.getDescription());
         assertEquals(expectedFilm.getReleaseDate(), actualFilm.getReleaseDate());
         assertEquals(expectedFilm.getDuration(), actualFilm.getDuration());

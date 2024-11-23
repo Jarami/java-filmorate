@@ -7,7 +7,9 @@ import ru.yandex.practicum.filmorate.validators.After;
 import ru.yandex.practicum.filmorate.validators.Marker;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Getter
@@ -18,47 +20,27 @@ import java.util.Set;
 @AllArgsConstructor
 @Builder
 public class Film {
-    @Null(groups = Marker.OnCreate.class)
-    @NotNull(groups = {Marker.OnUpdate.class, Marker.OnDelete.class})
+
     private Long id;
-
-    @NotBlank(
-            message = "Название фильма не должно быть пустым",
-            groups = {Marker.OnCreate.class, Marker.OnUpdate.class})
-    private String title;
-
-    @Size(
-            max = 200,
-            message = "Описание фильма не должно быть больше, чем 200 символов",
-            groups = {Marker.OnCreate.class, Marker.OnUpdate.class})
+    private String name;
     private String description;
-
-    @NotNull
-    // @Pattern(regexp = "G|PG|PG-13|R|NC-17")
-    private FilmRating rating;
-
-    @After(
-            after = "1895-12-28",
-            message = "Релиз фильма не должен быть раньше {after}",
-            groups = {Marker.OnCreate.class, Marker.OnUpdate.class})
     private LocalDate releaseDate;
-
-    @Positive(groups = {Marker.OnCreate.class, Marker.OnUpdate.class})
     private int duration;
-
+    private FilmRating rating;
+    private List<Genre> genres;
     private Set<Long> likes;
 
     public Film() {
-        this(null, null, null, FilmRating.G, null, 0, new HashSet<>());
+        this(null, null, null, null, 0, null, new ArrayList<>(), new HashSet<>());
     }
 
     public Film(Long id, String name, String description, String ratingName, LocalDate releaseDate, int duration) {
-        this(id, name, description, ratingName, releaseDate, duration, new HashSet<>());
+        this(id, name, description, releaseDate, duration, null, new ArrayList<>(), new HashSet<>());
     }
 
-    public Film(Long id, String name, String description, String ratingName, LocalDate releaseDate, int duration, Set<Long> likes) {
-        this(id, name, description, FilmRating.getByName(ratingName), releaseDate, duration, likes);
-    }
+//    public Film(Long id, String name, String description, String ratingName, LocalDate releaseDate, int duration, Set<Long> likes) {
+//        this(id, name, description, null, releaseDate, duration, likes);
+//    }
 
     public int getLikeCount() {
         return likes.size();

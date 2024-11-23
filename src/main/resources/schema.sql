@@ -3,40 +3,49 @@ DROP TABLE IF EXISTS friendship;
 DROP TABLE IF EXISTS film_likes;
 DROP TABLE IF EXISTS films;
 DROP TABLE IF EXISTS users;
-DROP TABLE IF EXISTS genres;
+DROP TABLE IF EXISTS film_genres;
+DROP TABLE IF EXISTS film_ratings;
+
+CREATE TABLE IF NOT EXISTS film_ratings (
+    rating_id SERIAL PRIMARY KEY,
+    rating_name VARCHAR(10) NOT NULL,
+
+    CONSTRAINT ratings_name_in_list CHECK (rating_name in ('G', 'PG', 'PG-13', 'R', 'NC-17'))
+);
+COMMENT ON TABLE film_ratings IS 'Таблица рейтингов MPA';
+COMMENT ON COLUMN film_ratings.rating_id IS 'Идентификатор рейтинга';
+COMMENT ON COLUMN film_ratings.rating_name IS 'Название рейтинга';
 
 CREATE TABLE IF NOT EXISTS films (
   film_id BIGSERIAL PRIMARY KEY,
-  rating varchar NOT NULL,
-  title varchar NOT NULL,
+  film_name varchar NOT NULL,
   description varchar(200) NOT NULL,
   release_date date NOT NULL,
   duration integer NOT NULL,
+  rating_id INTEGER REFERENCES film_ratings (rating_id),
 
-  CONSTRAINT films_rating_in_list CHECK (rating in ('G', 'PG', 'PG-13', 'R', 'NC-17')),
   CONSTRAINT films_release_date_after CHECK (release_date >= '1895-12-28'),
   CONSTRAINT films_duration_positive CHECK (duration > 0)
 );
 COMMENT ON TABLE films IS 'Таблица фильмов';
-COMMENT ON COLUMN films.rating IS 'Рейтинг фильма MPA';
-COMMENT ON COLUMN films.title IS 'Название фильма';
+COMMENT ON COLUMN films.film_name IS 'Название фильма';
 COMMENT ON COLUMN films.description IS 'Описание фильма';
 COMMENT ON COLUMN films.release_date IS 'Дата выхода фильма';
 COMMENT ON COLUMN films.duration IS 'Продолжительность фильма (в минутах)';
 
-CREATE TABLE IF NOT EXISTS genres (
+CREATE TABLE IF NOT EXISTS film_genres (
   genre_id SERIAL PRIMARY KEY,
-  name varchar NOT NULL,
+  genre_name varchar NOT NULL,
 
-  CONSTRAINT genres_name_in_list CHECK (name in ('comedy', 'drama', 'cartoon', 'thriller', 'documentary', 'action'))
+  CONSTRAINT genres_name_in_list CHECK (genre_name in ('comedy', 'drama', 'cartoon', 'thriller', 'documentary', 'action'))
 );
-COMMENT ON TABLE genres IS 'Таблица жанров';
-COMMENT ON COLUMN genres.name IS 'Название жанра';
+COMMENT ON TABLE film_genres IS 'Таблица жанров';
+COMMENT ON COLUMN film_genres.genre_name IS 'Название жанра';
 
 
 CREATE TABLE IF NOT EXISTS films_genres_relation (
   film_id bigint REFERENCES films (film_id),
-  genre_id integer REFERENCES genres (genre_id),
+  genre_id integer REFERENCES film_genres (genre_id),
   PRIMARY KEY (film_id, genre_id)
 );
 COMMENT ON TABLE films_genres_relation IS 'Таблица связи фильмов и жанров';
@@ -57,7 +66,6 @@ COMMENT ON COLUMN users.name IS 'Имя пользователя';
 COMMENT ON COLUMN users.email IS 'Почта пользователя';
 COMMENT ON COLUMN users.login IS 'Логин пользователя';
 COMMENT ON COLUMN users.birthday IS 'Дата рождения пользователя';
-
 
 CREATE TABLE IF NOT EXISTS friendship (
   friendship_id BIGINT PRIMARY KEY,
