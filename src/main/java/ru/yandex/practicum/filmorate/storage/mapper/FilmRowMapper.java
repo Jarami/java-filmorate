@@ -13,21 +13,21 @@ import java.util.HashSet;
 @Component
 public class FilmRowMapper implements RowMapper<Film> {
     @Override
-    public Film mapRow(ResultSet resultSet, int rowNum) throws SQLException {
+    public Film mapRow(ResultSet rs, int rowNum) throws SQLException {
 
         FilmRating rating = new FilmRating(
-                resultSet.getInt("rating_id"),
-                resultSet.getString("rating_name"));
+                rs.getInt("rating_id"),
+                rs.getString("rating_name"));
 
         return Film.builder()
-                .id(resultSet.getLong("film_id"))
-                .name(resultSet.getString("film_name"))
-                .description(resultSet.getString("description"))
-                .releaseDate(resultSet.getDate("release_date").toLocalDate())
-                .duration(resultSet.getInt("duration"))
+                .id(rs.getLong("film_id"))
+                .name(rs.getString("film_name"))
+                .description(rs.getString("description"))
+                .releaseDate(rs.getDate("release_date").toLocalDate())
+                .duration(rs.getInt("duration"))
                 .rating(rating)
+                .rate(rs.getInt("rate"))
                 .genres(new ArrayList<>())
-                .likes(new HashSet<>())
                 .build();
     }
 }

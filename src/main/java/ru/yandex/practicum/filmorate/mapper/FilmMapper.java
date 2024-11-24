@@ -37,8 +37,9 @@ public class FilmMapper {
                 .description(film.getDescription())
                 .releaseDate(film.getReleaseDate())
                 .duration(film.getDuration())
-                .mpa(FilmRatingMapper.mapToDto(film.getRating()))
-                .genres(film.getGenres().stream().map(FilmGenreMapper::mapToDto).toList())
+                .mpa(film.getRating())
+                .genres(film.getGenres())
+                .rate(film.getRate())
                 .build();
     }
 }

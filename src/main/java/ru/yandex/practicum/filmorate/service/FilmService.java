@@ -49,11 +49,13 @@ public class FilmService {
         Film film = FilmMapper.mapToFilm(newFilmRequest);
         film.setRating(getFilmRating(newFilmRequest));
 
-        List<FilmGenre> genres = getFilmGenres(newFilmRequest);
-        if (genres.isEmpty()) {
-            throw new BadRequestException("неуспешный запрос", "пустой список жанров");
+        if (newFilmRequest.getGenres() != null) {
+            List<FilmGenre> genres = getFilmGenres(newFilmRequest);
+            if (genres.isEmpty()) {
+                throw new BadRequestException("неуспешный запрос", "пустой список жанров");
+            }
+            film.setGenres(genres);
         }
-        film.setGenres(genres);
 
         log.info("saving film {}", film);
         return filmStorage.save(film);
@@ -64,7 +66,7 @@ public class FilmService {
 
         return filmRatingStorage.getById(ratingId)
                 .orElseThrow(() ->
-                        new NotFoundException("не найден рейтинг", "не найден рейтинг по id " + ratingId));
+                        new BadRequestException("не найден рейтинг", "не найден рейтинг по id " + ratingId));
     }
 
     private FilmRating getFilmRating(UpdateFilmRequest updateFilmRequest) {
@@ -92,7 +94,7 @@ public class FilmService {
     public Film getFilmById(long id) {
         checkFilmId(id);
         return filmStorage.getById(id)
-                .orElseThrow(() -> new UserNotFoundException(id));
+                .orElseThrow(() -> new NotFoundException("не найден фильм", "не найден фильм с id = " + id));
     }
 
     public Film updateFilm(@Valid UpdateFilmRequest updateFilmRequest) {

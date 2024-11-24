@@ -1,8 +1,6 @@
 package ru.yandex.practicum.filmorate.storage;
 
-import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.FilmGenre;
-import ru.yandex.practicum.filmorate.model.FilmRating;
 
 import java.util.*;
 
@@ -64,14 +62,6 @@ public class InMemoryFilmGenreStorage implements FilmGenreStorage {
                 .filter(entry -> name.equals(entry.getValue()))
                 .map(entry -> new FilmGenre(entry.getKey(), entry.getValue()))
                 .findFirst();
-
-//        for (Map.Entry<Integer, String> entry : genres.entrySet()) {
-//            if (entry.getValue().equals(name)) {
-//                return Optional.of(new FilmGenre(entry.getKey(), entry.getValue()));
-//            }
-//        }
-//
-//        return Optional.empty();
     }
 
     @Override

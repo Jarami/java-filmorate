@@ -11,11 +11,11 @@ import java.util.Optional;
 
 @Repository
 @Qualifier("db")
-public class UserDbStorage extends BaseRepository<User> implements UserStorage {
+public class DbUserStorage extends BaseRepository<User> implements UserStorage {
 
     private static final String FIND_ALL_QUERY = """
         SELECT user_id as "user_id",
-               name as "name",
+               user_name as "user_name",
                email as "email",
                login as "login",
                birthday as "birthday"
@@ -26,11 +26,11 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
         WHERE user_id = ?""";
 
     private static final String INSERT_QUERY = """
-        INSERT INTO users(name, email, login, birthday)
+        INSERT INTO users(user_name, email, login, birthday)
         VALUES (?, ?, ?, ?)""";
 
     private static final String UPDATE_QUERY = """
-        UPDATE users SET name = ?, email = ?, login = ?, birthday = ?
+        UPDATE users SET user_name = ?, email = ?, login = ?, birthday = ?
         WHERE user_id = ?""";
 
     private static final String DELETE_QUERY = """
@@ -40,7 +40,7 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
     private static final String DELETE_ALL_QUERY = """
         DELETE FROM users""";
 
-    public UserDbStorage(JdbcTemplate jdbc, UserRowMapper mapper) {
+    public DbUserStorage(JdbcTemplate jdbc, UserRowMapper mapper) {
         super(jdbc, mapper);
     }
 

@@ -52,7 +52,7 @@ COMMENT ON TABLE films_genres_relation IS 'Таблица связи фильм�
 
 CREATE TABLE IF NOT EXISTS users (
   user_id BIGSERIAL PRIMARY KEY,
-  name varchar,
+  user_name varchar,
   email varchar NOT NULL UNIQUE,
   login varchar NOT NULL,
   birthday date NOT NULL,
@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS users (
   CONSTRAINT users_email_valid CHECK ( email ~ '^[a-zA-Z0-9.!#$%&''*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$' )
 );
 COMMENT ON TABLE users IS 'Таблица пользователей';
-COMMENT ON COLUMN users.name IS 'Имя пользователя';
+COMMENT ON COLUMN users.user_name IS 'Имя пользователя';
 COMMENT ON COLUMN users.email IS 'Почта пользователя';
 COMMENT ON COLUMN users.login IS 'Логин пользователя';
 COMMENT ON COLUMN users.birthday IS 'Дата рождения пользователя';

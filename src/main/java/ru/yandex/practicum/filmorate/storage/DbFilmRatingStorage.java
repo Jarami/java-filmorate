@@ -3,70 +3,66 @@ package ru.yandex.practicum.filmorate.storage;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
-import ru.yandex.practicum.filmorate.model.FilmGenre;
-import ru.yandex.practicum.filmorate.storage.mapper.FilmGenreMapper;
+import ru.yandex.practicum.filmorate.model.FilmRating;
+import ru.yandex.practicum.filmorate.storage.mapper.FilmRatingMapper;
 
 import java.util.List;
 import java.util.Optional;
 
 @Repository
 @Qualifier("db")
-public class FilmGenreDbStorage extends BaseRepository<FilmGenre> implements FilmGenreStorage {
+public class DbFilmRatingStorage extends BaseRepository<FilmRating> implements FilmRatingStorage {
 
     private static final String FIND_ALL_QUERY = """
-        SELECT genre_id as "genre_id",
-               genre_name as "genre_name"
-        FROM film_genres""";
+        SELECT rating_id as "rating_id",
+               rating_name as "rating_name"
+        FROM film_ratings""";
 
     private static final String FIND_BY_ID_QUERY = """
-        SELECT genre_id as "genre_id",
-               genre_name as "genre_name"
-        FROM film_genres
-        WHERE genre_id = ?""";
+        SELECT rating_id as "rating_id",
+               rating_name as "rating_name"
+        FROM film_ratings
+        WHERE rating_id = ?""";
 
     private static final String FIND_BY_NAME_QUERY = """
-        SELECT genre_id as "genre_id",
-               genre_name as "genre_name"
-        FROM film_genres
-        WHERE genre_name = ?""";
+        SELECT rating_id as "rating_id",
+               rating_name as "rating_name"
+        FROM film_ratings
+        WHERE rating_name = ?""";
 
     private static final String INSERT_QUERY = """
-        INSERT INTO film_genres(genre_name)
+        INSERT INTO film_ratings(rating_name)
         VALUES (?, ?, ?, ?, ?)""";
 
     private static final String UPDATE_QUERY = """
-        UPDATE film_genres
-        SET genre_name = ?
-        WHERE genre_id = ?""";
+        UPDATE film_ratings
+        SET rating_name = ?
+        WHERE rating_id = ?""";
 
     private static final String DELETE_QUERY = """
-        DELETE FROM film_genres
-        WHERE genre_id = ?""";
+        DELETE FROM film_ratings
+        WHERE rating_id = ?""";
 
     private static final String DELETE_ALL_QUERY = """
-        DELETE FROM film_genres""";
+        DELETE FROM film_ratings""";
 
-    public FilmGenreDbStorage(JdbcTemplate jdbc, FilmGenreMapper mapper) {
+    public DbFilmRatingStorage(JdbcTemplate jdbc, FilmRatingMapper mapper) {
         super(jdbc, mapper);
     }
 
-    public List<FilmGenre> getAll() {
+    public List<FilmRating> getAll() {
         return findMany(FIND_ALL_QUERY);
     }
 
-    public Optional<FilmGenre> getById(Integer genreId) {
-        return findOne(FIND_BY_ID_QUERY, genreId);
-    }
-    
-    public List<FilmGenre> getById(List<Integer> ids) {
-        return getAll().stream().filter(genre -> ids.contains(genre.getId())).toList();
+    public Optional<FilmRating> getById(Integer filmId) {
+        return findOne(FIND_BY_ID_QUERY, filmId);
     }
 
-    public Optional<FilmGenre> getByName(String filmRatingName) {
+    public Optional<FilmRating> getByName(String filmRatingName) {
         return findOne(FIND_BY_NAME_QUERY, filmRatingName);
     }
 
-    public FilmGenre save(FilmGenre rating) {
+    public FilmRating save(FilmRating rating) {
 
         if (rating.getId() == null) {
             Number id = insert(
@@ -86,7 +82,7 @@ public class FilmGenreDbStorage extends BaseRepository<FilmGenre> implements Fil
         return rating;
     }
 
-    public void delete(FilmGenre rating) {
+    public void delete(FilmRating rating) {
         delete(DELETE_QUERY, rating.getId());
     }
 
@@ -95,4 +91,3 @@ public class FilmGenreDbStorage extends BaseRepository<FilmGenre> implements Fil
     }
 
 }
-

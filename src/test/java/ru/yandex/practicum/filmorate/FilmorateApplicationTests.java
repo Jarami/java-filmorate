@@ -612,7 +612,7 @@ class FilmorateApplicationTests {
 						.description("film desc " + i)
 						.releaseDate(LocalDate.parse("2010-01-01"))
 						.duration(10 * i + 10)
-						.likes(new HashSet<>())
+						.rate(0)
 						.build();
 
 				films.add(createFilm(film).getBody());

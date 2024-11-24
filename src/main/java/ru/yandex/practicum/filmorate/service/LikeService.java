@@ -1,40 +1,58 @@
 package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.dto.FilmDto;
 import ru.yandex.practicum.filmorate.exceptions.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.UserNotFoundException;
+import ru.yandex.practicum.filmorate.mapper.FilmMapper;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.FilmLikeStorage;
 
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class LikeService {
 
     private final FilmService filmService;
     private final UserService userService;
 
-    public Film like(long filmId, long userId) {
-        checkFilmId(filmId);
-        checkUserId(userId);
+    private final FilmLikeStorage filmLikeStorage;
 
-        Film film = filmService.getFilmById(filmId);
+    public LikeService(FilmService filmService, UserService userService,
+                       @Qualifier("db") FilmLikeStorage filmLikeStorage) {
 
-        film.addLike(userId);
+        this.filmService = filmService;
+        this.userService = userService;
+        this.filmLikeStorage = filmLikeStorage;
 
-        return film;
     }
 
-    public Film dislike(long filmId, long userId) {
+    public FilmDto like(long filmId, long userId) {
         checkFilmId(filmId);
         checkUserId(userId);
 
         Film film = filmService.getFilmById(filmId);
+        User user = userService.getUserById(userId);
 
-        film.removeLike(userId);
+        filmLikeStorage.like(film, user);
 
-        return film;
+        return FilmMapper.mapToDto(film);
+    }
+
+    public FilmDto dislike(long filmId, long userId) {
+
+        checkFilmId(filmId);
+        checkUserId(userId);
+
+        Film film = filmService.getFilmById(filmId);
+        User user = userService.getUserById(userId);
+
+        filmLikeStorage.dislike(film, user);
+
+        return FilmMapper.mapToDto(film);
     }
 
     public List<Film> getPopularFilms(int count) {
@@ -56,6 +74,4 @@ public class LikeService {
             throw new UserNotFoundException(userId);
         }
     }
-
-
 }

@@ -2,7 +2,6 @@ package ru.yandex.practicum.filmorate.storage.mapper;
 
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Component;
-import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.sql.ResultSet;
@@ -15,7 +14,7 @@ public class UserRowMapper  implements RowMapper<User> {
     public User mapRow(ResultSet resultSet, int rowNum) throws SQLException {
         return User.builder()
                 .id(resultSet.getLong("user_id"))
-                .name(resultSet.getString("name"))
+                .name(resultSet.getString("user_name"))
                 .email(resultSet.getString("email"))
                 .login(resultSet.getString("login"))
                 .birthday(resultSet.getDate("birthday").toLocalDate())

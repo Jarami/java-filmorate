@@ -1,6 +1,5 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -12,7 +11,7 @@ import ru.yandex.practicum.filmorate.mapper.FilmMapper;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
-import java.util.Collection;
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -23,13 +22,18 @@ public class FilmController {
     private final FilmService filmService;
 
     @GetMapping(value = {"", "/"})
-    public Collection<Film> getAllFilms() {
-        return filmService.getAllFilms();
+    public List<FilmDto> getAllFilms() {
+        filmService.getAllFilms().forEach(film ->
+                log.info("film = {}", film));
+
+        return filmService.getAllFilms().stream()
+                .map(FilmMapper::mapToDto)
+                .toList();
     }
 
     @GetMapping("/{id}")
-    public Film getFilmById(@PathVariable int id) {
-        return filmService.getFilmById(id);
+    public FilmDto getFilmById(@PathVariable int id) {
+        return FilmMapper.mapToDto(filmService.getFilmById(id));
     }
 
     // {
