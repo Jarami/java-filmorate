@@ -8,6 +8,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import ru.yandex.practicum.filmorate.exceptions.BadRequestException;
 import ru.yandex.practicum.filmorate.exceptions.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.UserNotFoundException;
@@ -18,6 +19,15 @@ import java.util.stream.Collectors;
 @Slf4j
 @RestControllerAdvice
 public class ErrorHandler {
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleNotFound(BadRequestException e) {
+
+        log.error("Плохой запрос", e);
+
+        return new ErrorResponse(e.getMessage(), e.getDescription());
+    }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.NOT_FOUND)

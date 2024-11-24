@@ -1,11 +1,15 @@
 package ru.yandex.practicum.filmorate.storage;
 
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.FilmGenre;
 import ru.yandex.practicum.filmorate.storage.mapper.FilmRowMapper;
 
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 
@@ -52,6 +56,14 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
     private static final String DELETE_ALL_QUERY = """
         DELETE FROM films""";
 
+    private static final String INSERT_FILM_GENRE_REL_QUERY = """
+        INSERT INTO films_genres_relation (film_id, genre_id)
+        VALUES (?, ?)""";
+
+    private static final String DELETE_FILM_GENRE_REL_QUERY = """
+        DELETE FROM films_genres_relation
+        WHERE film_id = ?""";
+
     public FilmDbStorage(JdbcTemplate jdbc, FilmRowMapper mapper) {
         super(jdbc, mapper);
     }
@@ -89,7 +101,30 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
             );
         }
 
+        saveGenres(film);
+
         return film;
+    }
+
+    private void saveGenres(Film film) {
+
+        delete(DELETE_FILM_GENRE_REL_QUERY, film.getId());
+
+        List<FilmGenre> genres = film.getGenres();
+
+        jdbc.batchUpdate(INSERT_FILM_GENRE_REL_QUERY, new BatchPreparedStatementSetter() {
+            @Override
+            public void setValues(PreparedStatement ps, int i) throws SQLException {
+                FilmGenre genre = genres.get(i);
+                ps.setLong(1, film.getId());
+                ps.setInt(2, genre.getId());
+            }
+
+            @Override
+            public int getBatchSize() {
+                return genres.size();
+            }
+        });
     }
 
     public void delete(Film film) {

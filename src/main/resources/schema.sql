@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS film_genres (
   genre_id SERIAL PRIMARY KEY,
   genre_name varchar NOT NULL,
 
-  CONSTRAINT genres_name_in_list CHECK (genre_name in ('comedy', 'drama', 'cartoon', 'thriller', 'documentary', 'action'))
+  CONSTRAINT genres_name_in_list CHECK (genre_name in ('Комедия', 'Драма', 'Мультфильм', 'Триллер', 'Документальный', 'Боевик'))
 );
 COMMENT ON TABLE film_genres IS 'Таблица жанров';
 COMMENT ON COLUMN film_genres.genre_name IS 'Название жанра';

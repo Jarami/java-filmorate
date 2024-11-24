@@ -27,7 +27,7 @@ public class Film {
     private LocalDate releaseDate;
     private int duration;
     private FilmRating rating;
-    private List<Genre> genres;
+    private List<FilmGenre> genres;
     private Set<Long> likes;
 
     public Film() {

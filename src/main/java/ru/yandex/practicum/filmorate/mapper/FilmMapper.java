@@ -4,6 +4,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import ru.yandex.practicum.filmorate.dto.FilmDto;
 import ru.yandex.practicum.filmorate.dto.NewFilmRequest;
+import ru.yandex.practicum.filmorate.dto.UpdateFilmRequest;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.util.ArrayList;
@@ -20,6 +21,15 @@ public class FilmMapper {
                 .build();
     }
 
+    public static Film mapToFilm(UpdateFilmRequest request) {
+        return Film.builder()
+                .name(request.getName())
+                .description(request.getDescription())
+                .releaseDate(request.getReleaseDate())
+                .duration(request.getDuration())
+                .build();
+    }
+
     public static FilmDto mapToDto(Film film) {
         return FilmDto.builder()
                 .id(film.getId())
@@ -28,7 +38,7 @@ public class FilmMapper {
                 .releaseDate(film.getReleaseDate())
                 .duration(film.getDuration())
                 .mpa(FilmRatingMapper.mapToDto(film.getRating()))
-                .genres(new ArrayList<>())
+                .genres(film.getGenres().stream().map(FilmGenreMapper::mapToDto).toList())
                 .build();
     }
 }

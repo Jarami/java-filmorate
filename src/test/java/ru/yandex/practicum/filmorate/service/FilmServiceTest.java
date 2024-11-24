@@ -5,15 +5,13 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.dto.FilmRatingDto;
 import ru.yandex.practicum.filmorate.dto.NewFilmRequest;
+import ru.yandex.practicum.filmorate.dto.UpdateFilmRequest;
 import ru.yandex.practicum.filmorate.exceptions.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.mapper.FilmMapper;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.FilmRating;
-import ru.yandex.practicum.filmorate.storage.FilmRatingStorage;
-import ru.yandex.practicum.filmorate.storage.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.InMemoryFilmRatingStorage;
-import ru.yandex.practicum.filmorate.storage.InMemoryFilmStorage;
+import ru.yandex.practicum.filmorate.storage.*;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -29,12 +27,14 @@ public class FilmServiceTest {
     FilmService filmService;
     FilmStorage filmStorage;
     FilmRatingStorage filmRatingStorage;
+    FilmGenreStorage filmGenreStorage;
 
     @BeforeEach
     void setup() {
         filmStorage = new InMemoryFilmStorage();
         filmRatingStorage = new InMemoryFilmRatingStorage();
-        filmService = new FilmService(filmStorage, filmRatingStorage);
+        filmGenreStorage = new InMemoryFilmGenreStorage();
+        filmService = new FilmService(filmStorage, filmRatingStorage, filmGenreStorage);
     }
 
     @Nested
@@ -91,21 +91,33 @@ public class FilmServiceTest {
         void givenExistingFilm_whenUpdate_getUpdated() {
             Film film1 = createFilm("name1;desc1;2024-01-01;120");
 
-            Film updatedFilm = new Film(film1.getId(), "name2", "desc2", "G",
-                    LocalDate.parse("2024-02-02"), 180);
+            UpdateFilmRequest updateFilmRequest = UpdateFilmRequest.builder()
+                    .name("name2")
+                    .description("desc2")
+                    .rating(new FilmRatingDto(1))
+                    .releaseDate(LocalDate.parse("2024-02-02"))
+                    .duration(180)
+                    .build();
 
-            filmService.updateFilm(updatedFilm);
+            filmService.updateFilm(updateFilmRequest);
 
             Film actualUser = filmService.getFilmById(film1.getId());
-            assertFilmEquals(updatedFilm, actualUser);
+            assertFilmEquals(FilmMapper.mapToFilm(updateFilmRequest), actualUser);
         }
 
         @Test
         void givenNonExistingFilm_whenUpdate_getFilmNotFoundr() {
-            Film film = new Film(1L, "name", "desc", "G",
-                    LocalDate.parse("2024-01-01"), 120);
 
-            assertThrows(FilmNotFoundException.class, () -> filmService.updateFilm(film));
+            UpdateFilmRequest updateFilmRequest = UpdateFilmRequest.builder()
+                    .id(1L)
+                    .name("name")
+                    .description("desc")
+                    .rating(new FilmRatingDto(1))
+                    .releaseDate(LocalDate.parse("2024-01-01"))
+                    .duration(120)
+                    .build();
+
+            assertThrows(FilmNotFoundException.class, () -> filmService.updateFilm(updateFilmRequest));
         }
     }
 

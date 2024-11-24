@@ -20,7 +20,7 @@ public class FilmRowMapper implements RowMapper<Film> {
                 resultSet.getString("rating_name"));
 
         return Film.builder()
-                .id(resultSet.getLong("id"))
+                .id(resultSet.getLong("film_id"))
                 .name(resultSet.getString("film_name"))
                 .description(resultSet.getString("description"))
                 .releaseDate(resultSet.getDate("release_date").toLocalDate())
