@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.storage;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -14,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+@Slf4j
 @Repository
 @Qualifier("db")
 public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage {
@@ -128,6 +130,7 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
             if (id == null) {
                 throw new FailedToCreateEntity("не удалось создать фильм " + film);
             } else {
+                log.debug("Фильм {} сохранен с id = {}", film.getName(), film.getId());
                 film.setId(id);
             }
 
