@@ -2,7 +2,6 @@ package ru.yandex.practicum.filmorate.storage;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
@@ -13,7 +12,6 @@ import ru.yandex.practicum.filmorate.storage.mapper.UserRowMapper;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 
 @Slf4j
 @Repository
@@ -47,42 +45,16 @@ public class DbUserStorage extends NamedRepository<User> implements UserStorage 
     private static final String DELETE_ALL_QUERY = """
         DELETE FROM users""";
 
-    private static final String GET_FRIENDS_ID = """
-        SELECT friend_id as "friend_id"
-        FROM friendship
-        WHERE user_id = :id
-
-        UNION
-
-        SELECT user_id as "friend_id"
-        FROM friendship
-        WHERE friend_id = :id AND status = 'accepted'""";
-
     public DbUserStorage(NamedParameterJdbcTemplate namedTemplate, UserRowMapper mapper) {
         super(namedTemplate, mapper);
     }
 
     public List<User> getAll() {
-        List<User> users = super.getAll(FIND_ALL_QUERY);
-
-//        users.forEach(user -> {
-//            List<Long> friendsId = jdbc.queryForList(GET_FRIENDS_ID, Long.class, user.getId(), user.getId());
-//            user.setFriendsId(Set.copyOf(friendsId));
-//        });
-
-        return users;
+        return super.getAll(FIND_ALL_QUERY);
     }
 
     public Optional<User> getById(Long userId) {
-
-        Optional<User> user = findOne(FIND_BY_ID_QUERY, Map.of("id", userId));
-
-//        user.ifPresent(u -> {
-//            List<Long> friendsId = jdbc.queryForList(GET_FRIENDS_ID, Long.class, u.getId(), u.getId());
-//            u.setFriendsId(Set.copyOf(friendsId));
-//        });
-
-        return user;
+        return findOne(FIND_BY_ID_QUERY, Map.of("id", userId));
     }
 
     public User save(User user) {
