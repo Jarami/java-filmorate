@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.service;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import ru.yandex.practicum.filmorate.dto.FilmGenreDto;
 import ru.yandex.practicum.filmorate.dto.FilmMpaDto;
 import ru.yandex.practicum.filmorate.dto.NewFilmRequest;
 import ru.yandex.practicum.filmorate.dto.UpdateFilmRequest;
@@ -43,6 +44,8 @@ public class FilmServiceTest {
         @Test
         void givenFilmCreateRequest_whenCreate_getCreated() {
             NewFilmRequest filmToCreate = parseFilm("name;desc;G;2024-01-01;120");
+            filmToCreate.setMpa(new FilmMpaDto(1));
+            filmToCreate.setGenres(List.of(new FilmGenreDto(1)));
 
             Film film = filmService.createFilm(filmToCreate);
 
@@ -93,6 +96,7 @@ public class FilmServiceTest {
             Film film1 = createFilm("name1;desc1;2024-01-01;120");
 
             UpdateFilmRequest updateFilmRequest = UpdateFilmRequest.builder()
+                    .id(film1.getId())
                     .name("name2")
                     .description("desc2")
                     .mpa(new FilmMpaDto(1))
@@ -170,6 +174,8 @@ public class FilmServiceTest {
 
     private Film createFilm(String filmString) {
         NewFilmRequest request = parseFilm(filmString);
+        request.setMpa(new FilmMpaDto(1));
+        request.setGenres(List.of(new FilmGenreDto(1)));
         return filmService.createFilm(request);
     }
 }

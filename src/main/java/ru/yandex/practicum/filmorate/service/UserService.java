@@ -51,15 +51,30 @@ public class UserService {
 
     public User updateUser(@Valid UpdateUserRequest updateUserRequest) {
 
-        long userId = updateUserRequest.getId();
-        if (userStorage.getById(userId).isEmpty()) {
-            throw new NotFoundException("не найден пользователь", "не найден пользователь с id = " + userId);
+        Long userId = updateUserRequest.getId();
+
+        User user = userStorage.getById(userId)
+                .orElseThrow(() ->
+                        new NotFoundException("не найден пользователь", "не найден пользователь по id = " + userId));
+
+        if (updateUserRequest.getName() != null) {
+            user.setName(updateUserRequest.getName());
         }
 
-        User user = UserMapper.mapToUser(updateUserRequest);
+        if (updateUserRequest.getLogin() != null) {
+            user.setLogin(updateUserRequest.getLogin());
+        }
 
-        userStorage.save(user);
-        return user;
+        if (updateUserRequest.getEmail() != null) {
+            user.setEmail(updateUserRequest.getEmail());
+        }
+
+        if (updateUserRequest.getBirthday() != null) {
+            user.setBirthday(updateUserRequest.getBirthday());
+        }
+
+        log.debug("updating user {}", user);
+        return userStorage.save(user);
     }
 
     public int deleteAllUsers() {

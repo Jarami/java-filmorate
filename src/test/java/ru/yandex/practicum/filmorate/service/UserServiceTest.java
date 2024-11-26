@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -25,6 +26,7 @@ import static ru.yandex.practicum.filmorate.util.TestUtil.assertUserEquals;
 
 // Эти тесты не учитывают валидации
 
+@Slf4j
 public class UserServiceTest {
 
     UserStorage userStorage;
@@ -105,6 +107,7 @@ public class UserServiceTest {
                     .email("my-new@email.com")
                     .login("new-login")
                     .name("new-name")
+                    .birthday(LocalDate.parse("2024-05-05"))
                     .build();
 
             userService.updateUser(updatedUser);
@@ -124,19 +127,6 @@ public class UserServiceTest {
                             .build();
 
             assertThrows(NotFoundException.class, () -> userService.updateUser(user));
-        }
-
-        @Test
-        void givenUserWithoutName_whenUpdate_gotLoginInsteadOfName() {
-            User user = createUser("my@email.com;login;name;2024-01-01");
-
-            UpdateUserRequest updatedUser = UpdateUserRequest.from(user)
-                    .name(null)
-                    .build();
-
-            user = userService.updateUser(updatedUser);
-
-            assertEquals("login", user.getName());
         }
     }
 
@@ -176,7 +166,7 @@ public class UserServiceTest {
             List<User> user2friends = userService.getFriends(user2.getId());
 
             assertTrue(user1friends.contains(user2));
-            assertTrue(user2friends.contains(user1));
+            assertFalse(user2friends.contains(user1));
         }
 
         @Test

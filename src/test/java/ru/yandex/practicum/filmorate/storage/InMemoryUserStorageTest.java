@@ -6,7 +6,6 @@ import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -86,9 +85,7 @@ class InMemoryUserStorageTest {
 
         long userId = user1.getId() + 1;
 
-        User actualUser = storage.getById(user1.getId() + 1)
-                .orElseThrow(() ->
-                        new NotFoundException("не найден пользователь", "не найден пользователь с id = " + userId));
+        User actualUser = storage.getById(user1.getId() + 1).orElse(null);
 
         assertNull(actualUser);
     }
@@ -102,8 +99,8 @@ class InMemoryUserStorageTest {
 
         storage.delete(user1);
 
-        assertNull(storage.getById(user1.getId()));
-        assertNotNull(storage.getById(user2.getId()));
+        assertTrue(storage.getById(user1.getId()).isEmpty());
+        assertFalse(storage.getById(user2.getId()).isEmpty());
     }
 
     @Test

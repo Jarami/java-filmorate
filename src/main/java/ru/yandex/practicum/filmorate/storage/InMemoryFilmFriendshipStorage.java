@@ -31,11 +31,11 @@ public class InMemoryFilmFriendshipStorage implements FriendshipStorage {
     public List<Long> getFriends(User user) {
 
         Stream<Long> receivingIds = friendships.stream()
-                .filter(f -> f.getUserId().equals(user.getId()) && f.getStatus().equals(ACCEPTED))
+                .filter(f -> f.getUserId().equals(user.getId()))
                 .map(Friendship::getFriendId);
 
         Stream<Long> sendingIds = friendships.stream()
-                .filter(f -> f.getUserId().equals(user.getId()) && (f.getStatus().equals(ACCEPTED) || f.getStatus().equals(PENDING)))
+                .filter(f -> f.getFriendId().equals(user.getId()) && f.getStatus().equals(ACCEPTED))
                 .map(Friendship::getUserId);
 
         return Stream.concat(receivingIds, sendingIds).toList();
@@ -53,11 +53,14 @@ public class InMemoryFilmFriendshipStorage implements FriendshipStorage {
     @Override
     public boolean addFriend(User user, User friend) {
 
+        log.debug("add friend: {} and {}", user, friend);
+
         // Запрос дружбы, посланный пользователем user пользователю friend
         Friendship friendshipRequest = getFriendshipForUsers(user, friend);
 
         // Это повтор запроса дружбы => игнорируем
         if (friendshipRequest != null) {
+            log.debug("friendship request {}->{} already exists", user.getLogin(), friend.getLogin());
             return false;
         }
 
@@ -67,11 +70,15 @@ public class InMemoryFilmFriendshipStorage implements FriendshipStorage {
 
         // Это повтор принятия запроса на дружбу => игнорируем
         if (friendshipResponse != null && friendshipResponse.isAccepted()) {
+            log.debug("friendship request {}->{} already accepted", friend.getLogin(), user.getLogin());
             return false;
         }
 
         // Это подтверждение запроса на дружбу => меняем статус на accepted
         if (friendshipResponse != null) {
+
+            log.debug("accepting friendship request {}->{}", friend.getLogin(), user.getLogin());
+
             // user и friend поменяны местами, ведь на самом деле это friend
             // отправил запрос, а user его подтверждает
             if (acceptFriendship(friend, user)) {
@@ -84,8 +91,8 @@ public class InMemoryFilmFriendshipStorage implements FriendshipStorage {
         }
 
         Friendship friendship = Friendship.builder()
-                .userId(friend.getId())
-                .friendId(user.getId())
+                .userId(user.getId())
+                .friendId(friend.getId())
                 .status(PENDING)
                 .requestedAt(LocalDateTime.now())
                 .build();
@@ -119,9 +126,9 @@ public class InMemoryFilmFriendshipStorage implements FriendshipStorage {
                 .orElse(null);
     }
 
-    private boolean acceptFriendship(User acceptor, User sender) {
+    private boolean acceptFriendship(User user, User friend) {
 
-        Friendship friendshipResponse = getFriendshipForUsers(sender, acceptor);
+        Friendship friendshipResponse = getFriendshipForUsers(user, friend);
 
         friendshipResponse.setStatus(ACCEPTED);
         friendshipResponse.setAcceptedAt(LocalDateTime.now());
