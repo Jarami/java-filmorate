@@ -92,8 +92,8 @@ public class DbFilmGenreStorage extends NamedRepository<FilmGenre> implements Fi
     }
 
     @Override
-    public void delete(FilmGenre mpa) {
-        delete(DELETE_QUERY, Map.of("id", mpa.getId()));
+    public void delete(FilmGenre genre) {
+        delete(DELETE_QUERY, Map.of("id", genre.getId()));
     }
 
     @Override
