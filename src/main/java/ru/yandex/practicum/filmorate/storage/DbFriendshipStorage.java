@@ -46,21 +46,21 @@ public class DbFriendshipStorage extends NamedRepository<Friendship> implements 
         (SELECT friend_id
         FROM friendship
         WHERE user_id = :id1
-    
+
         UNION
-    
+
         SELECT user_id
         FROM friendship
         WHERE friend_id = :id1 AND status = 'accepted')
-    
+
         INTERSECT
-    
+
         (SELECT friend_id
         FROM friendship
         WHERE user_id = :id2
-    
+
         UNION
-    
+
         SELECT user_id
         FROM friendship
         WHERE friend_id = :id2 AND status = 'accepted')""";
