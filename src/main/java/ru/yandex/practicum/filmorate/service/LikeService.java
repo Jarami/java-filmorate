@@ -33,7 +33,11 @@ public class LikeService {
         Film film = filmService.getFilmById(filmId);
         User user = userService.getUserById(userId);
 
-        return filmLikeStorage.like(film, user);
+        boolean result = filmLikeStorage.like(film, user);
+        if (result) {
+            film.setRate(film.getRate() + 1);
+        }
+        return result;
     }
 
     public boolean dislike(long filmId, long userId) {
@@ -44,7 +48,11 @@ public class LikeService {
         Film film = filmService.getFilmById(filmId);
         User user = userService.getUserById(userId);
 
-        return filmLikeStorage.dislike(film, user);
+        boolean result = filmLikeStorage.dislike(film, user);
+        if (result) {
+            film.setRate(film.getRate() - 1);
+        }
+        return result;
     }
 
     public List<Film> getPopularFilms(int count) {

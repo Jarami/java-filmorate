@@ -3,12 +3,13 @@ package ru.yandex.practicum.filmorate.storage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 
-import java.sql.PreparedStatement;
+import java.util.Map;
 
 @Slf4j
 @Repository
@@ -19,50 +20,71 @@ public class DbFilmLikeStorage implements FilmLikeStorage {
     private static final String COUNT_QUERY = """
         SELECT COUNT(*) as "cnt"
         FROM film_likes
-        WHERE film_id = ? AND user_id = ?""";
+        WHERE film_id = :filmId AND user_id = :userId""";
 
     private static final String INSERT_QUERY = """
         INSERT INTO film_likes (film_id, user_id)
-        VALUES (?, ?)""";
+        VALUES (:filmId, :userId)""";
 
     private static final String DELETE_QUERY = """
         DELETE FROM film_likes
-        WHERE film_id = ? AND user_id = ?""";
+        WHERE film_id = :filmId AND user_id = :userId""";
 
-    protected final JdbcTemplate jdbc;
+    protected final NamedParameterJdbcTemplate namedTemplate;
 
     @Override
     public boolean like(Film film, User user) {
-        log.debug("liking film = {}, {}", film, count(film, user));
+
         if (count(film, user) == 0) {
-            jdbc.update(connection -> {
-                PreparedStatement ps = connection.prepareStatement(INSERT_QUERY);
-                ps.setLong(1, film.getId());
-                ps.setLong(2, user.getId());
-                return ps;
-            });
-            log.info("liking film1 = {}", film);
-            film.setRate(film.getRate() + 1);
+            log.debug("liking film {} by {}", film.getName(), user.getLogin());
+
+            namedTemplate.update(INSERT_QUERY,
+                    Map.of("filmId", film.getId(), "userId", user.getId()));
+
+            log.debug("liking film {} by {} done", film.getName(), user.getLogin());
+
             return true;
+
+        } else {
+
+            log.debug("film {} was already liked by {}", film.getName(), user.getLogin());
+            return false;
         }
 
-        return false;
     }
 
     @Override
     public boolean dislike(Film film, User user) {
 
         if (count(film, user) > 0) {
-            jdbc.update(DELETE_QUERY, film.getId(), user.getId());
-            film.setRate(film.getRate() - 1);
+
+            log.debug("disliking film {} by {}", film.getName(), user.getLogin());
+
+            namedTemplate.update(DELETE_QUERY,
+                    Map.of("filmId", film.getId(), "userId", user.getId()));
+
+            log.debug("disliking film {} by {} done", film.getName(), user.getLogin());
+
             return true;
+        } else {
+
+            log.debug("film {} was not liked by {}, skipping", film.getName(), user.getLogin());
+            return false;
         }
 
-        return false;
     }
 
     private int count(Film film, User user) {
-        return jdbc.queryForObject(COUNT_QUERY, Integer.class, film.getId(), user.getId());
+        try {
+            Integer result = namedTemplate.queryForObject(COUNT_QUERY,
+                    Map.of("filmId", film.getId(), "userId", user.getId()),
+                    Integer.class);
+
+            return result == null ? 0 : result;
+
+        } catch (EmptyResultDataAccessException ignored) {
+            return 0;
+        }
     }
 }
 

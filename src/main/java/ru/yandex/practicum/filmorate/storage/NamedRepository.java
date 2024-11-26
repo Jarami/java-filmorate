@@ -29,6 +29,10 @@ public class NamedRepository<T> {
         }
     }
 
+    protected <K> K queryForObject(String query, Map<String, Object> params, Class<K> clazz) {
+        return namedTemplate.queryForObject(query, params, clazz);
+    }
+
     protected List<T> findMany(String query, Map<String, Object> params) {
         return namedTemplate.query(query, params, mapper);
     }
@@ -54,7 +58,6 @@ public class NamedRepository<T> {
     }
 
     protected int batchUpdate(String query, List<Map<String, Object>> batchValues) {
-
         Map<String, Object>[] array = new Map[batchValues.size()];
         batchValues.toArray(array);
 
