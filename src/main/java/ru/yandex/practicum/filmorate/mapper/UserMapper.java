@@ -32,13 +32,4 @@ public class UserMapper {
                 .friendsId(new HashSet<>())
                 .build();
     }
-
-    public static NewUserRequest mapToNewUserRequest(User user) {
-        return NewUserRequest.builder()
-                .email(user.getEmail())
-                .login(user.getLogin())
-                .name(user.getName())
-                .birthday(user.getBirthday())
-                .build();
-    }
 }

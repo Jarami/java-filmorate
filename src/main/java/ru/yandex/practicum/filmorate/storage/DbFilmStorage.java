@@ -11,6 +11,7 @@ import ru.yandex.practicum.filmorate.storage.mapper.FilmRowMapper;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -87,19 +88,19 @@ public class DbFilmStorage extends BaseRepository<Film> implements FilmStorage {
 
         films.forEach(film -> {
             List<FilmGenre> genres = jdbc.query(FIND_FILM_GENRES_QUERY,
-                    new BeanPropertyRowMapper<FilmGenre>(FilmGenre.class), film.getId());
+                    new BeanPropertyRowMapper<>(FilmGenre.class), film.getId());
             film.setGenres(genres);
         });
 
         return films;
     }
 
-    public Optional<Film> getById(Long FilmId) {
-        Optional<Film> film = findOne(FIND_BY_ID_QUERY, FilmId);
+    public Optional<Film> getById(Long filmId) {
+        Optional<Film> film = findOne(FIND_BY_ID_QUERY, filmId);
 
         film.ifPresent(f -> {
             List<FilmGenre> genres = jdbc.query(FIND_FILM_GENRES_QUERY,
-                    new BeanPropertyRowMapper<FilmGenre>(FilmGenre.class), f.getId());
+                    new BeanPropertyRowMapper<>(FilmGenre.class), f.getId());
             f.setGenres(genres);
         });
 
@@ -142,7 +143,7 @@ public class DbFilmStorage extends BaseRepository<Film> implements FilmStorage {
 
         delete(DELETE_FILM_GENRE_REL_QUERY, film.getId());
 
-        List<FilmGenre> genres = film.getGenres();
+        List<FilmGenre> genres = new ArrayList<>(film.getGenres());
 
         jdbc.batchUpdate(INSERT_FILM_GENRE_REL_QUERY, new BatchPreparedStatementSetter() {
             @Override

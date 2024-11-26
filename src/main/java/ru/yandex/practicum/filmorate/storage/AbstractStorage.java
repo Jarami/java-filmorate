@@ -1,12 +1,12 @@
 package ru.yandex.practicum.filmorate.storage;
 
-import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 public interface AbstractStorage<K, T> {
     T save(T t);
 
-    Collection<T> getAll();
+    List<T> getAll();
 
     Optional<T> getById(K id);
 

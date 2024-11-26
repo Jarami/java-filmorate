@@ -7,7 +7,7 @@ import lombok.ToString;
 @ToString
 public class NotFoundException extends RuntimeException {
 
-    private String description;
+    private final String description;
 
     public NotFoundException(String message, String description) {
         super(message);

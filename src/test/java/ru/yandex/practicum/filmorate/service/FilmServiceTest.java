@@ -7,14 +7,15 @@ import ru.yandex.practicum.filmorate.dto.FilmRatingDto;
 import ru.yandex.practicum.filmorate.dto.NewFilmRequest;
 import ru.yandex.practicum.filmorate.dto.UpdateFilmRequest;
 import ru.yandex.practicum.filmorate.exceptions.FilmNotFoundException;
-import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.mapper.FilmMapper;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.FilmRating;
 import ru.yandex.practicum.filmorate.storage.*;
 
 import java.time.LocalDate;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static ru.yandex.practicum.filmorate.util.TestUtil.assertEmpty;
@@ -58,7 +59,7 @@ public class FilmServiceTest {
             films.put("name1", createFilm("name1;desc1;2024-01-01;120"));
             films.put("name2", createFilm("name2;desc2;2024-02-01;180"));
 
-            Collection<Film> actualFilms = filmService.getAllFilms();
+            List<Film> actualFilms = filmService.getAllFilms();
 
             actualFilms.forEach(actualFilm -> {
                 Film film = films.get(actualFilm.getName());
@@ -140,8 +141,8 @@ public class FilmServiceTest {
 
             filmService.deleteFilmById(film1.getId());
 
-            Collection<Film> actualFilms = filmService.getAllFilms();
-            Collection<Film> expectedFilms = List.of(film2);
+            List<Film> actualFilms = filmService.getAllFilms();
+            List<Film> expectedFilms = List.of(film2);
 
             assertIterableEquals(expectedFilms, actualFilms);
         }

@@ -24,12 +24,6 @@ public class DbFilmGenreStorage extends BaseRepository<FilmGenre> implements Fil
         FROM film_genres
         WHERE genre_id = ?""";
 
-    private static final String FIND_BY_NAME_QUERY = """
-        SELECT genre_id as "genre_id",
-               genre_name as "genre_name"
-        FROM film_genres
-        WHERE genre_name = ?""";
-
     private static final String INSERT_QUERY = """
         INSERT INTO film_genres(genre_name)
         VALUES (?, ?, ?, ?, ?)""";
@@ -50,22 +44,22 @@ public class DbFilmGenreStorage extends BaseRepository<FilmGenre> implements Fil
         super(jdbc, mapper);
     }
 
+    @Override
     public List<FilmGenre> getAll() {
         return findMany(FIND_ALL_QUERY);
     }
 
+    @Override
     public Optional<FilmGenre> getById(Integer genreId) {
         return findOne(FIND_BY_ID_QUERY, genreId);
     }
-    
+
+    @Override
     public List<FilmGenre> getById(List<Integer> ids) {
         return getAll().stream().filter(genre -> ids.contains(genre.getId())).toList();
     }
 
-    public Optional<FilmGenre> getByName(String filmRatingName) {
-        return findOne(FIND_BY_NAME_QUERY, filmRatingName);
-    }
-
+    @Override
     public FilmGenre save(FilmGenre rating) {
 
         if (rating.getId() == null) {
@@ -86,10 +80,12 @@ public class DbFilmGenreStorage extends BaseRepository<FilmGenre> implements Fil
         return rating;
     }
 
+    @Override
     public void delete(FilmGenre rating) {
         delete(DELETE_QUERY, rating.getId());
     }
 
+    @Override
     public int deleteAll() {
         return executeUpdate(DELETE_ALL_QUERY);
     }

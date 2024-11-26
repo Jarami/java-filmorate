@@ -11,7 +11,6 @@ import ru.yandex.practicum.filmorate.dto.UpdateFilmRequest;
 import ru.yandex.practicum.filmorate.exceptions.BadRequestException;
 import ru.yandex.practicum.filmorate.exceptions.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
-import ru.yandex.practicum.filmorate.exceptions.UserNotFoundException;
 import ru.yandex.practicum.filmorate.mapper.FilmMapper;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.FilmGenre;
@@ -20,7 +19,6 @@ import ru.yandex.practicum.filmorate.storage.FilmGenreStorage;
 import ru.yandex.practicum.filmorate.storage.FilmRatingStorage;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
-import java.util.Collection;
 import java.util.List;
 
 @Slf4j
@@ -87,7 +85,7 @@ public class FilmService {
         return filmGenreStorage.getById(ids);
     }
 
-    public Collection<Film> getAllFilms() {
+    public List<Film> getAllFilms() {
         return filmStorage.getAll();
     }
 
@@ -132,7 +130,7 @@ public class FilmService {
             film.setGenres(genres);
         }
 
-        log.info("saving film {}", film);
+        log.debug("updating film {}", film);
         return filmStorage.save(film);
     }
 

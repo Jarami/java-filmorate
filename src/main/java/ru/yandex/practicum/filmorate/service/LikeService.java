@@ -1,12 +1,9 @@
 package ru.yandex.practicum.filmorate.service;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.dto.FilmDto;
 import ru.yandex.practicum.filmorate.exceptions.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.UserNotFoundException;
-import ru.yandex.practicum.filmorate.mapper.FilmMapper;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.FilmLikeStorage;
@@ -30,19 +27,17 @@ public class LikeService {
 
     }
 
-    public FilmDto like(long filmId, long userId) {
+    public boolean like(long filmId, long userId) {
         checkFilmId(filmId);
         checkUserId(userId);
 
         Film film = filmService.getFilmById(filmId);
         User user = userService.getUserById(userId);
 
-        filmLikeStorage.like(film, user);
-
-        return FilmMapper.mapToDto(film);
+        return filmLikeStorage.like(film, user);
     }
 
-    public FilmDto dislike(long filmId, long userId) {
+    public boolean dislike(long filmId, long userId) {
 
         checkFilmId(filmId);
         checkUserId(userId);
@@ -50,9 +45,7 @@ public class LikeService {
         Film film = filmService.getFilmById(filmId);
         User user = userService.getUserById(userId);
 
-        filmLikeStorage.dislike(film, user);
-
-        return FilmMapper.mapToDto(film);
+        return filmLikeStorage.dislike(film, user);
     }
 
     public List<Film> getPopularFilms(int count) {

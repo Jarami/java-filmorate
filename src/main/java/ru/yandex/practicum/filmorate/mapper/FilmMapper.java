@@ -7,8 +7,6 @@ import ru.yandex.practicum.filmorate.dto.NewFilmRequest;
 import ru.yandex.practicum.filmorate.dto.UpdateFilmRequest;
 import ru.yandex.practicum.filmorate.model.Film;
 
-import java.util.ArrayList;
-
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public class FilmMapper {
 

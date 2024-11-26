@@ -32,9 +32,9 @@ public class InMemoryFilmGenreStorage implements FilmGenreStorage {
     }
 
     @Override
-    public Collection<FilmGenre> getAll() {
+    public List<FilmGenre> getAll() {
         List<FilmGenre> result = new ArrayList<>();
-        genres.forEach( (id, name) -> result.add(new FilmGenre(id, name)));
+        genres.forEach((id, name) -> result.add(new FilmGenre(id, name)));
         return result;
     }
 
@@ -53,15 +53,6 @@ public class InMemoryFilmGenreStorage implements FilmGenreStorage {
         return ids.stream()
                 .map(id -> new FilmGenre(id, genres.get(id)))
                 .toList();
-    }
-
-    @Override
-    public Optional<FilmGenre> getByName(String name) {
-
-        return genres.entrySet().stream()
-                .filter(entry -> name.equals(entry.getValue()))
-                .map(entry -> new FilmGenre(entry.getKey(), entry.getValue()))
-                .findFirst();
     }
 
     @Override

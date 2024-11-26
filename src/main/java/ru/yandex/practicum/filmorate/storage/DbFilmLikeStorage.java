@@ -31,6 +31,7 @@ public class DbFilmLikeStorage implements FilmLikeStorage {
 
     protected final JdbcTemplate jdbc;
 
+    @Override
     public boolean like(Film film, User user) {
         log.debug("liking film = {}, {}", film, count(film, user));
         if (count(film, user) == 0) {
@@ -46,8 +47,9 @@ public class DbFilmLikeStorage implements FilmLikeStorage {
         }
 
         return false;
-    };
+    }
 
+    @Override
     public boolean dislike(Film film, User user) {
 
         if (count(film, user) > 0) {
@@ -57,7 +59,7 @@ public class DbFilmLikeStorage implements FilmLikeStorage {
         }
 
         return false;
-    };
+    }
 
     private int count(Film film, User user) {
         return jdbc.queryForObject(COUNT_QUERY, Integer.class, film.getId(), user.getId());

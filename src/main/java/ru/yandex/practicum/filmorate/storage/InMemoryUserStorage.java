@@ -3,10 +3,7 @@ package ru.yandex.practicum.filmorate.storage;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.User;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Repository
 public class InMemoryUserStorage implements UserStorage {
@@ -25,8 +22,8 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public Collection<User> getAll() {
-        return users.values();
+    public List<User> getAll() {
+        return new ArrayList<>(users.values());
     }
 
     @Override

@@ -45,9 +45,9 @@ public class DbUserStorage extends BaseRepository<User> implements UserStorage {
         SELECT receiving_user_id as "friend_id"
         FROM friendship
         WHERE sending_user_id = ? AND status = 'accepted'
-        
+
         UNION
-        
+
         SELECT sending_user_id as "friend_id"
         FROM friendship
         WHERE receiving_user_id = ? AND status = 'accepted'""";
@@ -67,9 +67,9 @@ public class DbUserStorage extends BaseRepository<User> implements UserStorage {
         return users;
     }
 
-    public Optional<User> getById(Long UserId) {
+    public Optional<User> getById(Long userId) {
 
-        Optional<User> user = findOne(FIND_BY_ID_QUERY, UserId);
+        Optional<User> user = findOne(FIND_BY_ID_QUERY, userId);
 
         user.ifPresent(u -> {
             List<Long> friendsId = jdbc.queryForList(GET_FRIENDS_ID, Long.class, u.getId(), u.getId());

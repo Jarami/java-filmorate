@@ -8,7 +8,6 @@ import ru.yandex.practicum.filmorate.model.FilmRating;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashSet;
 
 @Component
 public class FilmRowMapper implements RowMapper<Film> {

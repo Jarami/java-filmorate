@@ -1,17 +1,16 @@
 package ru.yandex.practicum.filmorate.model;
 
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Null;
-import jakarta.validation.constraints.Past;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
-import ru.yandex.practicum.filmorate.validators.Marker;
-import ru.yandex.practicum.filmorate.validators.UserLogin;
 
 import java.time.LocalDate;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Data
@@ -22,21 +21,11 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class User {
 
-    @Null(groups = Marker.OnCreate.class)
-    @NotNull(groups = {Marker.OnUpdate.class, Marker.OnDelete.class})
     private Long id;
-
-    @Email(groups = {Marker.OnCreate.class, Marker.OnUpdate.class})
     private String email;
-
-    @UserLogin(
-            message = "Логин должен быть заполнен и не должен содержать пробелов",
-            groups = {Marker.OnCreate.class, Marker.OnUpdate.class})
     private String login;
 
     private String name;
-
-    @Past(groups = {Marker.OnCreate.class, Marker.OnUpdate.class})
     private LocalDate birthday;
 
     private Set<Long> friendsId;
@@ -56,13 +45,5 @@ public class User {
         this.name = name;
         this.birthday = birthday;
         this.friendsId = friends.stream().map(User::getId).collect(Collectors.toSet());
-    }
-
-    public void addFriend(User friend) {
-        friendsId.add(friend.getId());
-    }
-
-    public void removeFriend(User friend) {
-        friendsId.removeIf(friendId -> friend.getId().equals(friendId));
     }
 }

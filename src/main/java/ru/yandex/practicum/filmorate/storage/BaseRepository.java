@@ -41,14 +41,6 @@ public class BaseRepository<T> {
         return jdbc.update(query);
     }
 
-    protected int executeUpdate(String query, Object... params) {
-        int rowsUpdated = jdbc.update(query, params);
-        if (rowsUpdated == 0) {
-            throw new InternalServerException("Не удалось обновить данные");
-        }
-        return rowsUpdated;
-    }
-
     protected void update(String query, Object... params) {
         int rowsUpdated = jdbc.update(query, params);
         if (rowsUpdated == 0) {

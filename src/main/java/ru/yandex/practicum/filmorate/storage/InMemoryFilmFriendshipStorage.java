@@ -6,7 +6,8 @@ import ru.yandex.practicum.filmorate.model.Friendship;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Stream;
 
 import static ru.yandex.practicum.filmorate.model.FriendshipStatus.ACCEPTED;
@@ -27,7 +28,7 @@ public class InMemoryFilmFriendshipStorage implements FriendshipStorage {
     }
 
     @Override
-    public Collection<Long> getFriends(User user) {
+    public List<Long> getFriends(User user) {
 
         Stream<Long> receivingIds = friendships.stream()
                 .filter(f -> f.getSendingUserId().equals(user.getId()) && f.getStatus().equals(ACCEPTED))
@@ -41,10 +42,12 @@ public class InMemoryFilmFriendshipStorage implements FriendshipStorage {
     }
 
     @Override
-    public Collection<Long> getCommonFriends(User user1, User user2) {
-        Set<Long> intersectSet = new HashSet<>(getFriends(user1));
-        intersectSet.retainAll(getFriends(user2));
-        return intersectSet;
+    public List<Long> getCommonFriends(User user1, User user2) {
+
+        List<Long> commonFriends = new ArrayList<>(getFriends(user1));
+        commonFriends.retainAll(getFriends(user2));
+
+        return commonFriends;
     }
 
     @Override

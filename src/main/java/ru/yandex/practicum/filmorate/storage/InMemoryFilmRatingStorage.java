@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate.storage;
 
 import org.springframework.stereotype.Repository;
-import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.FilmRating;
 
 import java.util.*;
@@ -13,14 +12,14 @@ public class InMemoryFilmRatingStorage implements FilmRatingStorage {
     private final Map<Integer, String> ratings;
 
     public InMemoryFilmRatingStorage() {
-        
+
         ratings = new HashMap<>();
         ratings.put(1, "G");
         ratings.put(2, "PG");
         ratings.put(3, "PG-13");
         ratings.put(4, "R");
         ratings.put(5, "NC-17");
-        
+
         id = 6;
     }
 
@@ -35,9 +34,9 @@ public class InMemoryFilmRatingStorage implements FilmRatingStorage {
     }
 
     @Override
-    public Collection<FilmRating> getAll() {
+    public List<FilmRating> getAll() {
         List<FilmRating> result = new ArrayList<>();
-        ratings.forEach( (id, name) -> result.add(new FilmRating(id, name)));
+        ratings.forEach((id, name) -> result.add(new FilmRating(id, name)));
         return result;
     }
 
@@ -49,18 +48,6 @@ public class InMemoryFilmRatingStorage implements FilmRatingStorage {
         } else {
             return Optional.of(new FilmRating(id, name));
         }
-    }
-
-    @Override
-    public Optional<FilmRating> getByName(String name) {
-
-        for (Map.Entry<Integer, String> entry : ratings.entrySet()) {
-            if (entry.getValue().equals(name)) {
-                return Optional.of(new FilmRating(entry.getKey(), entry.getValue()));
-            }
-        }
-
-        return Optional.empty();
     }
 
     @Override

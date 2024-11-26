@@ -6,7 +6,7 @@ import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.FilmRating;
 import ru.yandex.practicum.filmorate.storage.FilmRatingStorage;
 
-import java.util.Collection;
+import java.util.List;
 
 @Service
 public class MpaService {
@@ -17,7 +17,7 @@ public class MpaService {
         this.filmRatingStorage = filmRatingStorage;
     }
 
-    public Collection<FilmRating> getAll() {
+    public List<FilmRating> getAll() {
         return filmRatingStorage.getAll();
     }
 

@@ -3,7 +3,6 @@ package ru.yandex.practicum.filmorate.service;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.springframework.scripting.bsh.BshScriptUtils;
 import ru.yandex.practicum.filmorate.dto.NewUserRequest;
 import ru.yandex.practicum.filmorate.dto.UpdateUserRequest;
 import ru.yandex.practicum.filmorate.exceptions.UserNotFoundException;
@@ -15,7 +14,10 @@ import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.time.LocalDate;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static ru.yandex.practicum.filmorate.util.TestUtil.assertEmpty;
@@ -66,7 +68,7 @@ public class UserServiceTest {
             users.put("login1", createUser("my1@email.com;login1;name1;2024-01-01"));
             users.put("login2", createUser("my2@email.com;login2;name2;2024-01-02"));
 
-            Collection<User> actualUsers = userService.getAllUsers();
+            List<User> actualUsers = userService.getAllUsers();
 
             actualUsers.forEach(actualUser -> {
                 User user = users.get(actualUser.getLogin());
@@ -157,8 +159,8 @@ public class UserServiceTest {
 
             userService.deleteUserById(users.getFirst().getId());
 
-            Collection<User> actualUsers = userService.getAllUsers();
-            Collection<User> expectedUsers = List.of(users.get(1));
+            List<User> actualUsers = userService.getAllUsers();
+            List<User> expectedUsers = List.of(users.get(1));
 
             assertIterableEquals(expectedUsers, actualUsers);
         }
@@ -172,8 +174,8 @@ public class UserServiceTest {
             User user2 = createUser("my2@email.com;login2;name2;2024-02-01");
             userService.addFriend(user1.getId(), user2.getId());
 
-            Collection<User> user1friends = userService.getFriends(user1.getId());
-            Collection<User> user2friends = userService.getFriends(user2.getId());
+            List<User> user1friends = userService.getFriends(user1.getId());
+            List<User> user2friends = userService.getFriends(user2.getId());
 
             assertTrue(user1friends.contains(user2));
             assertTrue(user2friends.contains(user1));
@@ -198,8 +200,8 @@ public class UserServiceTest {
 
             userService.removeFromFriends(user1.getId(), user2.getId());
 
-            Collection<User> user1friends = userService.getFriends(user1.getId());
-            Collection<User> user2friends = userService.getFriends(user2.getId());
+            List<User> user1friends = userService.getFriends(user1.getId());
+            List<User> user2friends = userService.getFriends(user2.getId());
 
             assertFalse(user1friends.contains(user2));
             assertFalse(user2friends.contains(user1));
@@ -216,11 +218,11 @@ public class UserServiceTest {
             userService.addFriend(user2.getId(), user1.getId());
             userService.addFriend(user2.getId(), user3.getId());
 
-            Collection<User> commonFriends = userService.getCommonFriends(user1.getId(), user2.getId());
+            List<User> commonFriends = userService.getCommonFriends(user1.getId(), user2.getId());
             user3 = userService.getUserById(user3.getId());
 
             assertEquals(1, commonFriends.size());
-            assertUserEquals(user3, commonFriends.iterator().next());
+            assertUserEquals(user3, commonFriends.getFirst());
         }
     }
 

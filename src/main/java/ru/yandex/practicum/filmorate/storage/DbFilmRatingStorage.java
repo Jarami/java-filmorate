@@ -24,12 +24,6 @@ public class DbFilmRatingStorage extends BaseRepository<FilmRating> implements F
         FROM film_ratings
         WHERE rating_id = ?""";
 
-    private static final String FIND_BY_NAME_QUERY = """
-        SELECT rating_id as "rating_id",
-               rating_name as "rating_name"
-        FROM film_ratings
-        WHERE rating_name = ?""";
-
     private static final String INSERT_QUERY = """
         INSERT INTO film_ratings(rating_name)
         VALUES (?, ?, ?, ?, ?)""";
@@ -50,18 +44,17 @@ public class DbFilmRatingStorage extends BaseRepository<FilmRating> implements F
         super(jdbc, mapper);
     }
 
+    @Override
     public List<FilmRating> getAll() {
         return findMany(FIND_ALL_QUERY);
     }
 
+    @Override
     public Optional<FilmRating> getById(Integer filmId) {
         return findOne(FIND_BY_ID_QUERY, filmId);
     }
 
-    public Optional<FilmRating> getByName(String filmRatingName) {
-        return findOne(FIND_BY_NAME_QUERY, filmRatingName);
-    }
-
+    @Override
     public FilmRating save(FilmRating rating) {
 
         if (rating.getId() == null) {
@@ -82,12 +75,13 @@ public class DbFilmRatingStorage extends BaseRepository<FilmRating> implements F
         return rating;
     }
 
+    @Override
     public void delete(FilmRating rating) {
         delete(DELETE_QUERY, rating.getId());
     }
 
+    @Override
     public int deleteAll() {
         return executeUpdate(DELETE_ALL_QUERY);
     }
-
 }

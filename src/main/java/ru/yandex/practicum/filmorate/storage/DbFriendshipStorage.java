@@ -12,7 +12,7 @@ import ru.yandex.practicum.filmorate.storage.mapper.FriendshipRowMapper;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -30,9 +30,9 @@ public class DbFriendshipStorage extends NamedRepository<Friendship> implements 
         SELECT receiving_user_id
         FROM friendship
         WHERE sending_user_id = :userId
-        
+
         UNION
-        
+
         SELECT sending_user_id
         FROM friendship
         WHERE receiving_user_id = :userId AND status = 'accepted'""";
@@ -46,9 +46,9 @@ public class DbFriendshipStorage extends NamedRepository<Friendship> implements 
         (SELECT receiving_user_id
         FROM friendship
         WHERE sending_user_id = :id1
-        
+
         UNION
-        
+
         SELECT sending_user_id
         FROM friendship
         WHERE receiving_user_id = :id1 AND status = 'accepted')
@@ -58,9 +58,9 @@ public class DbFriendshipStorage extends NamedRepository<Friendship> implements 
         (SELECT receiving_user_id
         FROM friendship
         WHERE sending_user_id = :id2
-        
+
         UNION
-        
+
         SELECT sending_user_id
         FROM friendship
         WHERE receiving_user_id = :id2 AND status = 'accepted')""";
@@ -83,12 +83,12 @@ public class DbFriendshipStorage extends NamedRepository<Friendship> implements 
     }
 
     @Override
-    public Collection<Long> getFriends(User user) {
+    public List<Long> getFriends(User user) {
         return namedTemplate.queryForList(FIND_FRIENDS_ID, Map.of("userId", user.getId()), Long.class);
     }
 
     @Override
-    public Collection<Long> getCommonFriends(User user1, User user2) {
+    public List<Long> getCommonFriends(User user1, User user2) {
 
         log.debug("get common friends: {} and {}", user1, user2);
 
@@ -172,11 +172,11 @@ public class DbFriendshipStorage extends NamedRepository<Friendship> implements 
     private Optional<Friendship> getFriendshipForUsers(User user, User friend) {
         return findOne(FIND_FRIENDSHIP, Map.of("userId", user.getId(), "friendId", friend.getId()));
     }
-    
+
     private boolean acceptFriendship(User user, User friend) {
         Map<String, Object> params = Map.of("userId", user.getId(), "friendId", friend.getId(),
                 "acceptedAt", LocalDateTime.now());
-        
+
         int rowsUpdated = update(ACCEPT_FRIENDSHIP_QUERY, params);
         return rowsUpdated > 0;
     }

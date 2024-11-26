@@ -6,7 +6,7 @@ import ru.yandex.practicum.filmorate.dto.ResponseDto;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
 
-import java.util.Collection;
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -16,12 +16,12 @@ public class FriendController {
     private final UserService userService;
 
     @GetMapping(value = {"", "/"})
-    public Collection<User> getFriends(@PathVariable long id) {
+    public List<User> getFriends(@PathVariable long id) {
         return userService.getFriends(id);
     }
 
     @GetMapping("/common/{otherId}")
-    public Collection<User> getCommonFriends(@PathVariable long id, @PathVariable long otherId) {
+    public List<User> getCommonFriends(@PathVariable long id, @PathVariable long otherId) {
         return userService.getCommonFriends(id, otherId);
     }
 

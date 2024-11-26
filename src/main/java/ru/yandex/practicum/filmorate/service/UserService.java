@@ -13,10 +13,7 @@ import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.FriendshipStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -42,7 +39,7 @@ public class UserService {
         return userStorage.save(UserMapper.mapToUser(newUserRequest));
     }
 
-    public Collection<User> getAllUsers() {
+    public List<User> getAllUsers() {
         return userStorage.getAll();
     }
 
@@ -74,13 +71,13 @@ public class UserService {
             .ifPresent(userStorage::delete);
     }
 
-    public Collection<User> getFriends(long userId) {
+    public List<User> getFriends(long userId) {
         User user = getById(userId);
 
         return friendshipStorage.getFriends(user).stream().map(this::getUserById).toList();
     }
 
-    public Collection<User> getCommonFriends(long userId, long otherUserId) {
+    public List<User> getCommonFriends(long userId, long otherUserId) {
         User user = getById(userId);
         User otherUser = getById(otherUserId);
 

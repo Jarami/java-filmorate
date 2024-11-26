@@ -7,7 +7,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import ru.yandex.practicum.filmorate.validators.Marker;
 import ru.yandex.practicum.filmorate.validators.UserLogin;
 
 import java.time.LocalDate;
