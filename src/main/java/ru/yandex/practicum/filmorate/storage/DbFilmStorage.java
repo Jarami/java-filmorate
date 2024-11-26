@@ -128,7 +128,7 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
             if (id == null) {
                 throw new FailedToCreateEntity("не удалось создать фильм " + film);
             } else {
-                film.setId((long) id);
+                film.setId(id);
             }
 
         } else {
