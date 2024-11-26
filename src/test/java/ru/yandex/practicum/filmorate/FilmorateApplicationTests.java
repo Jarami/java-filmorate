@@ -7,11 +7,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
@@ -36,22 +34,18 @@ import static ru.yandex.practicum.filmorate.util.TestUtil.*;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class FilmorateApplicationTests {
 
-	private final ServerProperties serverProperties;
 	private final ServletWebServerApplicationContext webServerAppCtxt;
 
 	private RestClient client;
-	private List<FilmGenre> allGenres;
-	private List<FilmMpa> allMpa;
+
 	private Map<String, FilmGenre> genreByName;
-	private Map<Integer, FilmGenre> genreById;
 	private Map<String, FilmMpa> mpaByName;
-	private Map<Integer, FilmMpa> mpaById;
 
 	@BeforeEach
 	void init() {
 		client = RestClient.create("http://localhost:" + webServerAppCtxt.getWebServer().getPort());
-		allGenres = getAllGenres();
-		allMpa = getAllMpa();
+		List<FilmGenre> allGenres = getAllGenres();
+		List<FilmMpa> allMpa = getAllMpa();
 		genreByName = new HashMap<>();
 		allGenres.forEach(g -> genreByName.put(g.getName(), g));
 		mpaByName = new HashMap<>();
@@ -348,11 +342,6 @@ class FilmorateApplicationTests {
 
 		private User getUserById(long id) {
 			return get("/users/" + id, User.class).getBody();
-		}
-
-		private User updateUser(String userString) {
-			UpdateUserRequest updateUserRequest = parseUpdateUserRequest(userString);
-			return updateUser(updateUserRequest);
 		}
 
 		private User updateUser(UpdateUserRequest updateUserRequest) {
@@ -765,18 +754,6 @@ class FilmorateApplicationTests {
 		return post("/users", newUserRequest, User.class).getBody();
 	}
 
-	private User createUser(User user) {
-		return createUser(getUserString(user));
-	}
-
-//	private ResponseEntity<User> createUserResp(String userString) {
-//		return createUserResp(parseUser(userString));
-//	}
-//
-//	private ResponseEntity<User> createUserResp(User user) {
-//		return post("/users", user, User.class);
-//	}
-
 	private Film createFilm(String filmString) {
 		NewFilmRequest newFilmRequest = parseNewFilmRequest(filmString);
 		return createFilm(newFilmRequest);
@@ -875,52 +852,6 @@ class FilmorateApplicationTests {
 				.build();
 	}
 
-	private UpdateUserRequest parseUpdateUserRequest(String userString) {
-
-		String[] chunks = userString.split(";");
-		return UpdateUserRequest.builder()
-				.email(chunks[0].equals("NULL") ? null : chunks[0])
-				.login(chunks[1].equals("NULL") ? null : chunks[1])
-				.name(chunks[2].equals("NULL") ? null : chunks[2])
-				.birthday(chunks[3].equals("NULL") ? null : LocalDate.parse(chunks[3]))
-				.build();
-	}
-
-//	private ResponseEntity<FilmDto> sendNewFilmRequestResp(String requestString) {
-//		NewFilmRequest newFilmRequest = parseNewFilmRequest(requestString);
-//		return post("/films", newFilmRequest, FilmDto.class);
-//	}
-//
-//	private FilmDto sendNewFilmRequest(String requestString) {
-//		return sendNewFilmRequestResp(requestString).getBody();
-//	}
-//
-//	private ResponseEntity<FilmDto> sendUpdateFilmRequestResp(String requestString) {
-//		UpdateFilmRequest updateFilmRequest = parseUpdateFilmRequest(requestString);
-//		return put("/films", updateFilmRequest, FilmDto.class);
-//	}
-//
-//	private FilmDto sendUpdateFilmRequest(String requestString) {
-//		return sendUpdateFilmRequestResp(requestString).getBody();
-//	}
-
-//	private Film parseFilm(String filmString) {
-//		String[] chunks = filmString.split(";");
-//
-//		FilmMpa filmMpa = chunks[4].equals("NULL") ? null : mpaByName.get(chunks[4]);
-//		List<FilmGenre> filmGenres = chunks[5].equals("NULL") ? null :
-//				Arrays.stream(chunks[5].split(",")).map(g -> genreByName.get(g)).toList();
-//
-//		return Film.builder()
-//				.name(chunks[0].equals("NULL") ? null : chunks[0])
-//				.description(chunks[1].equals("NULL") ? null : chunks[1])
-//				.releaseDate(chunks[2].equals("NULL") ? null : LocalDate.parse(chunks[2]))
-//				.duration(Integer.parseInt(chunks[3]))
-//				.mpa(filmMpa)
-//				.genres(filmGenres)
-//				.build();
-//	}
-
 	private NewFilmRequest parseNewFilmRequest(String requestString) {
 		String[] chunks = requestString.split(";");
 
@@ -928,22 +859,6 @@ class FilmorateApplicationTests {
 		String genreNames = chunks[5].equals("NULL") ? null : chunks[5];
 
 		return NewFilmRequest.builder()
-				.name(chunks[0].equals("NULL") ? null : chunks[0])
-				.description(chunks[1].equals("NULL") ? null : chunks[1])
-				.releaseDate(chunks[2].equals("NULL") ? null : LocalDate.parse(chunks[2]))
-				.duration(Integer.parseInt(chunks[3]))
-				.mpa(mpaDto(mpaName))
-				.genres(genreDto(genreNames))
-				.build();
-	}
-
-	private UpdateFilmRequest parseUpdateFilmRequest(String requestString) {
-		String[] chunks = requestString.split(";");
-
-		String mpaName = chunks[4].equals("NULL") ? null : chunks[4];
-		String genreNames = chunks[5].equals("NULL") ? null : chunks[5];
-
-		return UpdateFilmRequest.builder()
 				.name(chunks[0].equals("NULL") ? null : chunks[0])
 				.description(chunks[1].equals("NULL") ? null : chunks[1])
 				.releaseDate(chunks[2].equals("NULL") ? null : LocalDate.parse(chunks[2]))
@@ -974,29 +889,8 @@ class FilmorateApplicationTests {
 				.toList();
 	}
 
-	private String getGenresString(Film film) {
-		return film.getGenres().stream().map(FilmGenre::getName).collect(Collectors.joining(","));
-	}
-
 	private Set<String> getGenreNames(Film film) {
 		return film.getGenres().stream().map(FilmGenre::getName).collect(Collectors.toSet());
-	}
-
-	private String getFilmString(Film f) {
-		return String.join(";", f.getName(), f.getDescription(), f.getReleaseDate().toString(),
-				String.valueOf(f.getDuration()), f.getMpa().getName(), getGenresString(f));
-	}
-
-	private String getUserString(User u) {
-		return String.join(";", u.getEmail(), u.getLogin(), u.getName(), u.getBirthday().toString());
-	}
-
-	private String getUserString(NewUserRequest u) {
-		return String.join(";", u.getEmail(), u.getLogin(), u.getName(), u.getBirthday().toString());
-	}
-
-	private String getUserString(UpdateUserRequest u) {
-		return String.join(";", u.getEmail(), u.getLogin(), u.getName(), u.getBirthday().toString());
 	}
 
 	private <T> ResponseEntity<T> get(String uri, Class<T> clazz) {
@@ -1027,9 +921,5 @@ class FilmorateApplicationTests {
 	private ResponseEntity<Void> delete(String uri) {
 		log.info("delete {}", uri);
 		return client.delete().uri(uri).retrieve().toBodilessEntity();
-	}
-
-	private void assertStatus(int statusCode, ResponseEntity<?> resp) {
-		assertEquals(HttpStatusCode.valueOf(statusCode), resp.getStatusCode());
 	}
 }
