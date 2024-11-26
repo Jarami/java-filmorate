@@ -1,7 +1,9 @@
 package ru.yandex.practicum.filmorate.storage;
 
+import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.FilmGenre;
 
 import java.util.*;
 
@@ -24,6 +26,15 @@ public class InMemoryFilmStorage implements FilmStorage {
     @Override
     public List<Film> getAll() {
         return new ArrayList<>(films.values());
+    }
+
+    @Override
+    public List<Film> getPopularFilms(int count) {
+        return getAll()
+            .stream()
+            .sorted((film1, film2) -> Integer.compare(film2.getRate(), film1.getRate()))
+            .limit(count)
+            .toList();
     }
 
     @Override

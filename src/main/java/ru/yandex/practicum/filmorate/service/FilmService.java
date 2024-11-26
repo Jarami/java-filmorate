@@ -88,6 +88,10 @@ public class FilmService {
         return filmStorage.getAll();
     }
 
+    public List<Film> getPopularFilms(int count) {
+        return filmStorage.getPopularFilms(count);
+    }
+
     public Film getFilmById(long id) {
         return filmStorage.getById(id)
                 .orElseThrow(() -> new NotFoundException("не найден фильм", "не найден фильм с id = " + id));

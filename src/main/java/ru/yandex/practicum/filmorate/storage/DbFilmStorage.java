@@ -34,6 +34,22 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
             LEFT JOIN film_likes fl ON fl.film_id = f.film_id
             GROUP BY f.film_id, fr.mpa_id""";
 
+    private static final String FIND_TOP_QUERY = """
+            SELECT f.film_id as "film_id",
+                   f.film_name as "film_name",
+                   f.description as "description",
+                   f.release_date as "release_date",
+                   f.duration as "duration",
+                   fr.mpa_id as "mpa_id",
+                   fr.mpa_name as "mpa_name",
+                   count(fl.film_id) as "rate"
+            FROM films f
+            INNER JOIN film_mpa fr ON f.mpa_id = fr.mpa_id
+            LEFT JOIN film_likes fl ON fl.film_id = f.film_id
+            GROUP BY f.film_id, fr.mpa_id
+            ORDER BY count(fl.film_id) desc
+            LIMIT :count""";
+
     private static final String FIND_BY_ID_QUERY = """
         SELECT f.film_id as "film_id",
                f.film_name as "film_name",
@@ -90,6 +106,19 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
 
     public List<Film> getAll() {
         List<Film> films = getAll(FIND_ALL_QUERY);
+
+        films.forEach(film -> {
+            List<FilmGenre> genres = findMany(FIND_FILM_GENRES_QUERY,
+                    Map.of("filmId", film.getId()), new BeanPropertyRowMapper<>(FilmGenre.class));
+            film.setGenres(genres);
+        });
+
+        return films;
+    }
+
+    @Override
+    public List<Film> getPopularFilms(int count) {
+        List<Film> films = findMany(FIND_TOP_QUERY, Map.of("count", count));
 
         films.forEach(film -> {
             List<FilmGenre> genres = findMany(FIND_FILM_GENRES_QUERY,

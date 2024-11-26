@@ -56,11 +56,7 @@ public class LikeService {
     }
 
     public List<Film> getPopularFilms(int count) {
-        return filmService.getAllFilms()
-                .stream()
-                .sorted((film1, film2) -> Integer.compare(film2.getRate(), film1.getRate()))
-                .limit(count)
-                .toList();
+        return filmService.getPopularFilms(count);
     }
 
     private void checkFilmId(Long filmId) {
