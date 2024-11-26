@@ -1,23 +1,22 @@
 package ru.yandex.practicum.filmorate.storage;
 
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
-import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.exceptions.FailedToCreateEntity;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.FilmGenre;
 import ru.yandex.practicum.filmorate.storage.mapper.FilmRowMapper;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Repository
 @Qualifier("db")
-public class DbFilmStorage extends BaseRepository<Film> implements FilmStorage {
+public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage {
 
     private static final String FIND_ALL_QUERY = """
             SELECT f.film_id as "film_id",
@@ -45,7 +44,7 @@ public class DbFilmStorage extends BaseRepository<Film> implements FilmStorage {
         FROM films f
         INNER JOIN film_mpa fr ON f.mpa_id = fr.mpa_id
         LEFT JOIN film_likes fl ON fl.film_id = f.film_id
-        WHERE f.film_id = ?
+        WHERE f.film_id = :filmId
         GROUP BY f.film_id, fr.mpa_id""";
 
     private static final String FIND_FILM_GENRES_QUERY = """
@@ -53,42 +52,46 @@ public class DbFilmStorage extends BaseRepository<Film> implements FilmStorage {
                g.genre_name as "name"
         FROM film_genres g
         INNER JOIN films_genres_relation r ON g.genre_id = r.genre_id
-        WHERE r.film_id = ?""";
+        WHERE r.film_id = :filmId""";
 
     private static final String INSERT_QUERY = """
         INSERT INTO films(film_name, description, release_date, duration, mpa_id)
-        VALUES (?, ?, ?, ?, ?)""";
+        VALUES (:name, :description, :releaseDate, :duration, :mpaId)""";
 
     private static final String UPDATE_QUERY = """
         UPDATE films
-        SET film_name = ?, description = ?, release_date = ?, duration = ?, mpa_id = ?
-        WHERE film_id = ?""";
+        SET film_name = :name,
+            description = :description,
+            release_date = :releaseDate,
+            duration = :duration,
+            mpa_id = :mpaId
+        WHERE film_id = :filmId""";
 
     private static final String DELETE_QUERY = """
         DELETE FROM films
-        WHERE film_id = ?""";
+        WHERE film_id = :filmId""";
 
     private static final String DELETE_ALL_QUERY = """
         DELETE FROM films""";
 
     private static final String INSERT_FILM_GENRE_REL_QUERY = """
         INSERT INTO films_genres_relation (film_id, genre_id)
-        VALUES (?, ?)""";
+        VALUES (:filmId, :genreId)""";
 
     private static final String DELETE_FILM_GENRE_REL_QUERY = """
         DELETE FROM films_genres_relation
-        WHERE film_id = ?""";
+        WHERE film_id = :filmId""";
 
-    public DbFilmStorage(JdbcTemplate jdbc, FilmRowMapper mapper) {
-        super(jdbc, mapper);
+    public DbFilmStorage(NamedParameterJdbcTemplate namedTemplate, FilmRowMapper mapper) {
+        super(namedTemplate, mapper);
     }
 
     public List<Film> getAll() {
-        List<Film> films = findMany(FIND_ALL_QUERY);
+        List<Film> films = getAll(FIND_ALL_QUERY);
 
         films.forEach(film -> {
-            List<FilmGenre> genres = jdbc.query(FIND_FILM_GENRES_QUERY,
-                    new BeanPropertyRowMapper<>(FilmGenre.class), film.getId());
+            List<FilmGenre> genres = findMany(FIND_FILM_GENRES_QUERY,
+                    Map.of("filmId", film.getId()), new BeanPropertyRowMapper<>(FilmGenre.class));
             film.setGenres(genres);
         });
 
@@ -96,11 +99,11 @@ public class DbFilmStorage extends BaseRepository<Film> implements FilmStorage {
     }
 
     public Optional<Film> getById(Long filmId) {
-        Optional<Film> film = findOne(FIND_BY_ID_QUERY, filmId);
+        Optional<Film> film = findOne(FIND_BY_ID_QUERY, Map.of("filmId", filmId));
 
         film.ifPresent(f -> {
-            List<FilmGenre> genres = jdbc.query(FIND_FILM_GENRES_QUERY,
-                    new BeanPropertyRowMapper<>(FilmGenre.class), f.getId());
+            List<FilmGenre> genres = namedTemplate.query(FIND_FILM_GENRES_QUERY,
+                    Map.of("filmId", filmId), new BeanPropertyRowMapper<>(FilmGenre.class));
             f.setGenres(genres);
         });
 
@@ -110,25 +113,35 @@ public class DbFilmStorage extends BaseRepository<Film> implements FilmStorage {
     public Film save(Film film) {
 
         if (film.getId() == null) {
-            Number id = insert(
-                    INSERT_QUERY,
-                    film.getName(),
-                    film.getDescription(),
-                    film.getReleaseDate(),
-                    film.getDuration(),
-                    film.getMpa().getId());
 
-            film.setId((long)id);
+            KeyHolder keyHolder = insert(
+                    INSERT_QUERY,
+                    Map.of(
+                        "name", film.getName(),
+                        "description", film.getDescription(),
+                        "releaseDate", film.getReleaseDate(),
+                        "duration", film.getDuration(),
+                        "mpaId", film.getMpa().getId()),
+                    new String[]{"film_id"}
+            );
+            Long id = keyHolder.getKeyAs(Long.class);
+            if (id == null) {
+                throw new FailedToCreateEntity("не удалось создать фильм " + film);
+            } else {
+                film.setId((long) id);
+            }
 
         } else {
+
             update(
                     UPDATE_QUERY,
-                    film.getName(),
-                    film.getDescription(),
-                    film.getReleaseDate(),
-                    film.getDuration(),
-                    film.getMpa().getId(),
-                    film.getId()
+                    Map.of(
+                        "name", film.getName(),
+                        "description", film.getDescription(),
+                        "releaseDate", film.getReleaseDate(),
+                        "duration", film.getDuration(),
+                        "mpaId", film.getMpa().getId(),
+                        "filmId", film.getId())
             );
         }
 
@@ -141,30 +154,26 @@ public class DbFilmStorage extends BaseRepository<Film> implements FilmStorage {
 
     private void saveGenres(Film film) {
 
-        delete(DELETE_FILM_GENRE_REL_QUERY, film.getId());
+        delete(DELETE_FILM_GENRE_REL_QUERY, Map.of("filmId", film.getId()));
 
-        List<FilmGenre> genres = new ArrayList<>(film.getGenres());
+        List<FilmGenre> genres = film.getGenres();
 
-        jdbc.batchUpdate(INSERT_FILM_GENRE_REL_QUERY, new BatchPreparedStatementSetter() {
-            @Override
-            public void setValues(PreparedStatement ps, int i) throws SQLException {
-                FilmGenre genre = genres.get(i);
-                ps.setLong(1, film.getId());
-                ps.setInt(2, genre.getId());
-            }
+        List<Map<String, Object>> batchValues = film.getGenres().stream()
+                .map(genre -> createFilmGenreMap(film, genre))
+                .toList();
 
-            @Override
-            public int getBatchSize() {
-                return genres.size();
-            }
-        });
+        batchUpdate(INSERT_FILM_GENRE_REL_QUERY, batchValues);
+    }
+
+    private Map<String, Object> createFilmGenreMap(Film film, FilmGenre genre) {
+        return Map.of("filmId", film.getId(), "genreId", genre.getId());
     }
 
     public void delete(Film film) {
-        delete(DELETE_QUERY, film.getId());
+         delete(DELETE_QUERY, Map.of("filmId", film.getId()));
     }
 
     public int deleteAll() {
-        return executeUpdate(DELETE_ALL_QUERY);
+         return delete(DELETE_ALL_QUERY);
     }
 }
