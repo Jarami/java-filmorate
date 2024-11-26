@@ -32,7 +32,7 @@ public class DbFilmLikeStorage implements FilmLikeStorage {
     protected final JdbcTemplate jdbc;
 
     public boolean like(Film film, User user) {
-        log.info("liking film = {}, {}", film, count(film, user));
+        log.debug("liking film = {}, {}", film, count(film, user));
         if (count(film, user) == 0) {
             jdbc.update(connection -> {
                 PreparedStatement ps = connection.prepareStatement(INSERT_QUERY);

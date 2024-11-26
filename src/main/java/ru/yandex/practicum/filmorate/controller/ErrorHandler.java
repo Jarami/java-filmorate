@@ -38,17 +38,17 @@ public class ErrorHandler {
         return new ErrorResponse(e.getMessage(), e.getDescription());
     }
 
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handleUserNotFound(UserNotFoundException e) {
-
-        log.error("Пользователь с id = {} не найден", e.getUserId(), e);
-
-        return new ErrorResponse(
-            "Пользователь не найден",
-            "Пользователь с id = " + e.getUserId() + " не найден"
-        );
-    }
+//    @ExceptionHandler
+//    @ResponseStatus(HttpStatus.NOT_FOUND)
+//    public ErrorResponse handleUserNotFound(UserNotFoundException e) {
+//
+//        log.error("Пользователь с id = {} не найден", e.getUserId(), e);
+//
+//        return new ErrorResponse(
+//            "Пользователь не найден",
+//            "Пользователь с id = " + e.getUserId() + " не найден"
+//        );
+//    }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.NOT_FOUND)

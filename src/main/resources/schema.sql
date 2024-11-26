@@ -68,18 +68,21 @@ COMMENT ON COLUMN users.login IS 'Логин пользователя';
 COMMENT ON COLUMN users.birthday IS 'Дата рождения пользователя';
 
 CREATE TABLE IF NOT EXISTS friendship (
-  friendship_id BIGINT PRIMARY KEY,
+  friendship_id BIGSERIAL PRIMARY KEY,
   sending_user_id bigint NOT NULL REFERENCES users (user_id),
   receiving_user_id bigint NOT NULL REFERENCES users (user_id),
   status varchar NOT NULL,
   requested_at timestamp NOT NULL,
   accepted_at timestamp,
-  declined_at timestamp,
   CONSTRAINT friendship_users_differ CHECK (sending_user_id != receiving_user_id),
   CONSTRAINT friendship_unique UNIQUE (sending_user_id, receiving_user_id)
 );
 COMMENT ON TABLE friendship IS 'Таблица друзей';
-COMMENT ON COLUMN friendship.status IS 'pending, accepted, declined';
+COMMENT ON COLUMN friendship.sending_user_id IS 'ID пользователя, отправившего запрос дружбы';
+COMMENT ON COLUMN friendship.receiving_user_id IS 'ID пользователя, кому отправили запрос дружбы';
+COMMENT ON COLUMN friendship.status IS 'Статус запроса дружбы (pending, accepted, declined)';
+COMMENT ON COLUMN friendship.requested_at IS 'Когда был отправлен запрос дружбы';
+COMMENT ON COLUMN friendship.accepted_at IS 'Когда был принят запрос дружбы';
 
 
 CREATE TABLE IF NOT EXISTS film_likes (

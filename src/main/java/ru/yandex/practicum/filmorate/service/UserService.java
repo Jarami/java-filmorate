@@ -10,6 +10,7 @@ import ru.yandex.practicum.filmorate.dto.UpdateUserRequest;
 import ru.yandex.practicum.filmorate.exceptions.UserNotFoundException;
 import ru.yandex.practicum.filmorate.mapper.UserMapper;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.FriendshipStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.util.Collection;
@@ -23,9 +24,14 @@ import java.util.stream.Collectors;
 public class UserService {
 
     private final UserStorage userStorage;
+    private final FriendshipStorage friendshipStorage;
 
-    public UserService(@Qualifier("db") UserStorage userStorage) {
+    public UserService(
+            @Qualifier("db") UserStorage userStorage,
+            @Qualifier("db") FriendshipStorage friendshipStorage) {
+
         this.userStorage = userStorage;
+        this.friendshipStorage = friendshipStorage;
     }
 
     public User createUser(@Valid NewUserRequest newUserRequest) {
@@ -68,54 +74,46 @@ public class UserService {
             .ifPresent(userStorage::delete);
     }
 
-    public User addFriend(long userId, long friendId) {
-        User user = userStorage.getById(userId)
-                .orElseThrow(() -> new UserNotFoundException(userId));
-        User friend = userStorage.getById(friendId)
-                .orElseThrow(() -> new UserNotFoundException(friendId));
-
-        user.addFriend(friend);
-        friend.addFriend(user);
-
-        userStorage.save(user);
-        userStorage.save(friend);
-
-        return user;
-    }
-
     public Collection<User> getFriends(long userId) {
-        User user = userStorage.getById(userId)
-                .orElseThrow(() -> new UserNotFoundException(userId));
+        User user = getById(userId);
 
-        return user.getFriendsId().stream().map(this::getUserById).collect(Collectors.toList());
-    }
-
-    public void removeFromFriends(long userId, long friendId) {
-        User user = userStorage.getById(userId)
-                .orElseThrow(() -> new UserNotFoundException(userId));
-        User friend = userStorage.getById(friendId)
-                .orElseThrow(() -> new UserNotFoundException(friendId));
-
-        user.removeFriend(friend);
-        friend.removeFriend(user);
+        return friendshipStorage.getFriends(user).stream().map(this::getUserById).toList();
     }
 
     public Collection<User> getCommonFriends(long userId, long otherUserId) {
-        User user = userStorage.getById(userId)
-                .orElseThrow(() -> new UserNotFoundException(userId));
-        User otherUser = userStorage.getById(otherUserId)
-                .orElseThrow(() -> new UserNotFoundException(otherUserId));
+        User user = getById(userId);
+        User otherUser = getById(otherUserId);
 
-        Set<Long> intersectSet = new HashSet<>(user.getFriendsId());
-        intersectSet.retainAll(otherUser.getFriendsId());
+        return friendshipStorage.getCommonFriends(user, otherUser).stream()
+                .map(this::getUserById).toList();
+    }
 
-        return intersectSet.stream().map(this::getUserById).toList();
+    public boolean addFriend(long userId, long friendId) {
+
+        User user = getById(userId);
+        User friend = getById(friendId);
+
+        log.debug("making friends: {} and {}", user.getLogin(), friend.getLogin());
+
+        return friendshipStorage.addFriend(user, friend);
+    }
+
+    public boolean removeFromFriends(long userId1, long userId2) {
+        User user1 = getById(userId1);
+        User user2 = getById(userId2);
+
+        return friendshipStorage.removeFriend(user1, user2);
     }
 
     private void setNameIfAbsent(NewUserRequest user) {
         if (user.getName() == null || user.getName().isEmpty()) {
             user.setName(user.getLogin());
         }
+    }
+
+    private User getById(Long userId) {
+        return userStorage.getById(userId)
+                .orElseThrow(() -> new UserNotFoundException(userId));
     }
 
     private void checkUserId(Long userId) {

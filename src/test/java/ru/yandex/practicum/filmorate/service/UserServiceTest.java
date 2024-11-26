@@ -9,6 +9,8 @@ import ru.yandex.practicum.filmorate.dto.UpdateUserRequest;
 import ru.yandex.practicum.filmorate.exceptions.UserNotFoundException;
 import ru.yandex.practicum.filmorate.mapper.UserMapper;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.FriendshipStorage;
+import ru.yandex.practicum.filmorate.storage.InMemoryFilmFriendshipStorage;
 import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
@@ -25,11 +27,13 @@ public class UserServiceTest {
 
     UserStorage userStorage;
     UserService userService;
+    FriendshipStorage friendshipStorage;
 
     @BeforeEach
     void setup() {
         userStorage = new InMemoryUserStorage();
-        userService = new UserService(userStorage);
+        friendshipStorage = new InMemoryFilmFriendshipStorage();
+        userService = new UserService(userStorage, friendshipStorage);
     }
 
     @Nested

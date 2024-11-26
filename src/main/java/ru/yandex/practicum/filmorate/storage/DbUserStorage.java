@@ -8,6 +8,7 @@ import ru.yandex.practicum.filmorate.storage.mapper.UserRowMapper;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Repository
 @Qualifier("db")
@@ -40,16 +41,42 @@ public class DbUserStorage extends BaseRepository<User> implements UserStorage {
     private static final String DELETE_ALL_QUERY = """
         DELETE FROM users""";
 
+    private static final String GET_FRIENDS_ID = """
+        SELECT receiving_user_id as "friend_id"
+        FROM friendship
+        WHERE sending_user_id = ? AND status = 'accepted'
+        
+        UNION
+        
+        SELECT sending_user_id as "friend_id"
+        FROM friendship
+        WHERE receiving_user_id = ? AND status = 'accepted'""";
+
     public DbUserStorage(JdbcTemplate jdbc, UserRowMapper mapper) {
         super(jdbc, mapper);
     }
 
     public List<User> getAll() {
-        return findMany(FIND_ALL_QUERY);
+        List<User> users = findMany(FIND_ALL_QUERY);
+
+        users.forEach(user -> {
+            List<Long> friendsId = jdbc.queryForList(GET_FRIENDS_ID, Long.class, user.getId(), user.getId());
+            user.setFriendsId(Set.copyOf(friendsId));
+        });
+
+        return users;
     }
 
     public Optional<User> getById(Long UserId) {
-        return findOne(FIND_BY_ID_QUERY, UserId);
+
+        Optional<User> user = findOne(FIND_BY_ID_QUERY, UserId);
+
+        user.ifPresent(u -> {
+            List<Long> friendsId = jdbc.queryForList(GET_FRIENDS_ID, Long.class, u.getId(), u.getId());
+            u.setFriendsId(Set.copyOf(friendsId));
+        });
+
+        return user;
     }
 
     public User save(User user) {

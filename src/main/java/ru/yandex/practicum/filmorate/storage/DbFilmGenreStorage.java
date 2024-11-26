@@ -4,7 +4,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.FilmGenre;
-import ru.yandex.practicum.filmorate.storage.mapper.FilmGenreMapper;
+import ru.yandex.practicum.filmorate.storage.mapper.FilmGenreRowMapper;
 
 import java.util.List;
 import java.util.Optional;
@@ -46,7 +46,7 @@ public class DbFilmGenreStorage extends BaseRepository<FilmGenre> implements Fil
     private static final String DELETE_ALL_QUERY = """
         DELETE FROM film_genres""";
 
-    public DbFilmGenreStorage(JdbcTemplate jdbc, FilmGenreMapper mapper) {
+    public DbFilmGenreStorage(JdbcTemplate jdbc, FilmGenreRowMapper mapper) {
         super(jdbc, mapper);
     }
 
