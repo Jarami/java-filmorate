@@ -2,8 +2,7 @@ package ru.yandex.practicum.filmorate.service;
 
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exceptions.FilmNotFoundException;
-import ru.yandex.practicum.filmorate.exceptions.UserNotFoundException;
+import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.FilmLikeStorage;
@@ -51,20 +50,20 @@ public class LikeService {
     public List<Film> getPopularFilms(int count) {
         return filmService.getAllFilms()
                 .stream()
-                .sorted((film1, film2) -> Integer.compare(film2.getLikeCount(), film1.getLikeCount()))
+                .sorted((film1, film2) -> Integer.compare(film2.getRate(), film1.getRate()))
                 .limit(count)
                 .toList();
     }
 
     private void checkFilmId(Long filmId) {
-        if (filmId == null || filmService.getFilmById(filmId) == null) {
-            throw new FilmNotFoundException(filmId);
+        if (filmId == null) {
+            throw new NotFoundException("не найден фильм", "не найден фильм по id = " + filmId);
         }
     }
 
     private void checkUserId(Long userId) {
-        if (userId == null || userService.getUserById(userId) == null) {
-            throw new UserNotFoundException(userId);
+        if (userId == null) {
+            throw new NotFoundException("не найден пользователь", "не найден пользователь по id = " + userId);
         }
     }
 }

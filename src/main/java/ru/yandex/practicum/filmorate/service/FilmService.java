@@ -9,14 +9,13 @@ import ru.yandex.practicum.filmorate.dto.FilmGenreDto;
 import ru.yandex.practicum.filmorate.dto.NewFilmRequest;
 import ru.yandex.practicum.filmorate.dto.UpdateFilmRequest;
 import ru.yandex.practicum.filmorate.exceptions.BadRequestException;
-import ru.yandex.practicum.filmorate.exceptions.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.mapper.FilmMapper;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.FilmGenre;
-import ru.yandex.practicum.filmorate.model.FilmRating;
+import ru.yandex.practicum.filmorate.model.FilmMpa;
 import ru.yandex.practicum.filmorate.storage.FilmGenreStorage;
-import ru.yandex.practicum.filmorate.storage.FilmRatingStorage;
+import ru.yandex.practicum.filmorate.storage.FilmMpaStorage;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
 import java.util.List;
@@ -27,16 +26,16 @@ import java.util.List;
 public class FilmService {
 
     private final FilmStorage filmStorage;
-    private final FilmRatingStorage filmRatingStorage;
+    private final FilmMpaStorage filmMpaStorage;
     private final FilmGenreStorage filmGenreStorage;
 
     public FilmService(
             @Qualifier("db") FilmStorage filmStorage,
-            @Qualifier("db") FilmRatingStorage filmRatingStorage,
+            @Qualifier("db") FilmMpaStorage filmMpaStorage,
             @Qualifier("db") FilmGenreStorage filmGenreStorage) {
 
         this.filmStorage = filmStorage;
-        this.filmRatingStorage = filmRatingStorage;
+        this.filmMpaStorage = filmMpaStorage;
         this.filmGenreStorage = filmGenreStorage;
     }
 
@@ -45,7 +44,7 @@ public class FilmService {
         log.info("creating film {}", newFilmRequest);
 
         Film film = FilmMapper.mapToFilm(newFilmRequest);
-        film.setRating(getFilmRating(newFilmRequest));
+        film.setMpa(getFilmMpa(newFilmRequest));
 
         if (newFilmRequest.getGenres() != null) {
             List<FilmGenre> genres = getFilmGenres(newFilmRequest);
@@ -59,20 +58,20 @@ public class FilmService {
         return filmStorage.save(film);
     }
 
-    private FilmRating getFilmRating(NewFilmRequest newFilmRequest) {
-        Integer ratingId = newFilmRequest.getRating().getId();
+    private FilmMpa getFilmMpa(NewFilmRequest newFilmRequest) {
+        Integer mpaId = newFilmRequest.getMpa().getId();
 
-        return filmRatingStorage.getById(ratingId)
+        return filmMpaStorage.getById(mpaId)
                 .orElseThrow(() ->
-                        new BadRequestException("не найден рейтинг", "не найден рейтинг по id " + ratingId));
+                        new BadRequestException("не найден рейтинг", "не найден рейтинг по id " + mpaId));
     }
 
-    private FilmRating getFilmRating(UpdateFilmRequest updateFilmRequest) {
-        Integer ratingId = updateFilmRequest.getRating().getId();
+    private FilmMpa getFilmMpa(UpdateFilmRequest updateFilmRequest) {
+        Integer mpaId = updateFilmRequest.getMpa().getId();
 
-        return filmRatingStorage.getById(ratingId)
+        return filmMpaStorage.getById(mpaId)
                 .orElseThrow(() ->
-                        new NotFoundException("не найден рейтинг", "не найден рейтинг по id " + ratingId));
+                        new NotFoundException("не найден рейтинг", "не найден рейтинг по id " + mpaId));
     }
 
     private List<FilmGenre> getFilmGenres(NewFilmRequest newFilmRequest) {
@@ -90,7 +89,6 @@ public class FilmService {
     }
 
     public Film getFilmById(long id) {
-        checkFilmId(id);
         return filmStorage.getById(id)
                 .orElseThrow(() -> new NotFoundException("не найден фильм", "не найден фильм с id = " + id));
     }
@@ -118,8 +116,8 @@ public class FilmService {
             film.setDuration(updateFilmRequest.getDuration());
         }
 
-        if (updateFilmRequest.getRating() != null) {
-            film.setRating(getFilmRating(updateFilmRequest));
+        if (updateFilmRequest.getMpa() != null) {
+            film.setMpa(getFilmMpa(updateFilmRequest));
         }
 
         if (updateFilmRequest.getGenres() != null) {
@@ -135,18 +133,11 @@ public class FilmService {
     }
 
     public void deleteFilmById(long filmId) {
-        checkFilmId(filmId);
         filmStorage.getById(filmId)
             .ifPresent(filmStorage::delete);
     }
 
     public int deleteAllFilms() {
         return filmStorage.deleteAll();
-    }
-
-    private void checkFilmId(Long filmId) {
-        if (filmId == null) {
-            throw new FilmNotFoundException(null);
-        }
     }
 }

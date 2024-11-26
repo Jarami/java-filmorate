@@ -35,7 +35,7 @@ public class NewFilmRequest {
 
     @NotNull
     @JsonProperty("mpa")
-    private FilmRatingDto rating;
+    private FilmMpaDto mpa;
 
     private List<FilmGenreDto> genres;
 }

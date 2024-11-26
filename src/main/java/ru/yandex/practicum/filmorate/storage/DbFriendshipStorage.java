@@ -24,54 +24,54 @@ public class DbFriendshipStorage extends NamedRepository<Friendship> implements 
     private static final String FIND_FRIENDSHIP = """
        SELECT *
        FROM friendship
-       WHERE sending_user_id = :userId AND receiving_user_id = :friendId""";
+       WHERE user_id = :userId AND friend_id = :friendId""";
 
     private static final String FIND_FRIENDS_ID = """
-        SELECT receiving_user_id
+        SELECT friend_id
         FROM friendship
-        WHERE sending_user_id = :userId
+        WHERE user_id = :userId
 
         UNION
 
-        SELECT sending_user_id
+        SELECT user_id
         FROM friendship
-        WHERE receiving_user_id = :userId AND status = 'accepted'""";
+        WHERE friend_id = :userId AND status = 'accepted'""";
 
     private static final String ACCEPT_FRIENDSHIP_QUERY = """
         UPDATE friendship
         SET status = 'accepted', accepted_at = :acceptedAt
-        WHERE receiving_user_id = :friendId AND sending_user_id = :userId""";
+        WHERE friend_id = :friendId AND user_id = :userId""";
 
     private static final String COMMON_FRIENDS_QUERY = """
-        (SELECT receiving_user_id
+        (SELECT friend_id
         FROM friendship
-        WHERE sending_user_id = :id1
+        WHERE user_id = :id1
 
         UNION
 
-        SELECT sending_user_id
+        SELECT user_id
         FROM friendship
-        WHERE receiving_user_id = :id1 AND status = 'accepted')
+        WHERE friend_id = :id1 AND status = 'accepted')
 
         INTERSECT
 
-        (SELECT receiving_user_id
+        (SELECT friend_id
         FROM friendship
-        WHERE sending_user_id = :id2
+        WHERE user_id = :id2
 
         UNION
 
-        SELECT sending_user_id
+        SELECT user_id
         FROM friendship
-        WHERE receiving_user_id = :id2 AND status = 'accepted')""";
+        WHERE friend_id = :id2 AND status = 'accepted')""";
 
     private static final String INSERT_FRIENDSHIP_REQUEST = """
-        INSERT INTO friendship (receiving_user_id, sending_user_id, status, requested_at)
+        INSERT INTO friendship (friend_id, user_id, status, requested_at)
         VALUES (:friendId, :userId, :status, :requestedAt)""";
 
     private static final String DELETE_QUERY = """
         DELETE FROM friendship
-        WHERE receiving_user_id = :friendId AND sending_user_id = :userId""";
+        WHERE friend_id = :friendId AND user_id = :userId""";
 
     protected final NamedParameterJdbcTemplate namedTemplate;
     protected final RowMapper<Friendship> mapper;

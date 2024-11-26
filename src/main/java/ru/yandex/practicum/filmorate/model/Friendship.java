@@ -6,6 +6,7 @@ import lombok.Setter;
 import lombok.ToString;
 
 import java.time.LocalDateTime;
+import static ru.yandex.practicum.filmorate.model.FriendshipStatus.*;
 
 @Getter
 @Setter
@@ -13,17 +14,17 @@ import java.time.LocalDateTime;
 @ToString
 public class Friendship {
     private Long id;
-    private Long sendingUserId;
-    private Long receivingUserId;
+    private Long userId;
+    private Long friendId;
     private FriendshipStatus status;
     private LocalDateTime requestedAt;
     private LocalDateTime acceptedAt;
 
     public boolean isAccepted() {
-        return status == FriendshipStatus.ACCEPTED;
+        return status == ACCEPTED;
     }
 
     public boolean isPending() {
-        return status == FriendshipStatus.PENDING;
+        return status == PENDING;
     }
 }

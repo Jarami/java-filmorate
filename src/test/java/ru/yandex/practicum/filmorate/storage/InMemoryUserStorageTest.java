@@ -2,7 +2,7 @@ package ru.yandex.practicum.filmorate.storage;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import ru.yandex.practicum.filmorate.exceptions.UserNotFoundException;
+import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
@@ -12,7 +12,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static ru.yandex.practicum.filmorate.util.TestUtil.*;
+import static ru.yandex.practicum.filmorate.util.TestUtil.assertUserEquals;
 
 class InMemoryUserStorageTest {
 
@@ -37,11 +37,14 @@ class InMemoryUserStorageTest {
         User savedUser = storage.save(
                 new User("my@email.com", "login", "name", LocalDate.parse("2024-01-01")));
 
-        User updatedUser = storage.save(new User(savedUser.getId(), "my2@email.com", "login2",
+        long userId = savedUser.getId();
+
+        User updatedUser = storage.save(new User(userId, "my2@email.com", "login2",
                 "name2", LocalDate.parse("2024-02-01"), new ArrayList<>()));
 
         User actualUpdatedUser = storage.getById(savedUser.getId())
-                .orElseThrow(() -> new UserNotFoundException(savedUser.getId()));
+                .orElseThrow(() ->
+                        new NotFoundException("не найден пользователь", "не найден пользователь с id = " + userId));
 
         assertUserEquals(updatedUser, actualUpdatedUser);
     }
@@ -67,8 +70,11 @@ class InMemoryUserStorageTest {
         User user2 = storage.save(
                 new User("my2@email.com", "login2", "name2", LocalDate.parse("2024-02-01")));
 
+        long userId = user1.getId();
+
         User actualUser = storage.getById(user1.getId())
-                .orElseThrow(() -> new UserNotFoundException(user1.getId()));
+                .orElseThrow(() ->
+                        new NotFoundException("не найден пользователь", "не найден пользователь с id = " + userId));
 
         assertUserEquals(user1, actualUser);
     }
@@ -78,8 +84,11 @@ class InMemoryUserStorageTest {
         User user1 = storage.save(
                 new User("my1@email.com", "login1", "name1", LocalDate.parse("2024-01-01")));
 
+        long userId = user1.getId() + 1;
+
         User actualUser = storage.getById(user1.getId() + 1)
-                .orElseThrow(() -> new UserNotFoundException(user1.getId() + 1));
+                .orElseThrow(() ->
+                        new NotFoundException("не найден пользователь", "не найден пользователь с id = " + userId));
 
         assertNull(actualUser);
     }

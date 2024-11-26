@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import ru.yandex.practicum.filmorate.exceptions.BadRequestException;
-import ru.yandex.practicum.filmorate.exceptions.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 
 import java.util.Set;
@@ -35,18 +34,6 @@ public class ErrorHandler {
         log.error("Не найдено", e);
 
         return new ErrorResponse(e.getMessage(), e.getDescription());
-    }
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handleFilmNotFound(FilmNotFoundException e) {
-
-        log.error("Фильм с id = {} не найден", e.getFilmId(), e);
-
-        return new ErrorResponse(
-                "Фильм не найден",
-                "Фильм с id = " + e.getFilmId() + " не найден"
-        );
     }
 
     @ExceptionHandler

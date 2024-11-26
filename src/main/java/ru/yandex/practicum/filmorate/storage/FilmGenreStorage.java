@@ -12,9 +12,9 @@ public interface FilmGenreStorage extends AbstractStorage<Integer, FilmGenre> {
 
     List<FilmGenre> getById(List<Integer> ids);
 
-    FilmGenre save(FilmGenre rating);
+    FilmGenre save(FilmGenre mpa);
 
-    void delete(FilmGenre rating);
+    void delete(FilmGenre mpa);
 
     int deleteAll();
 }

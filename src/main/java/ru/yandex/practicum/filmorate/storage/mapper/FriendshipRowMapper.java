@@ -17,8 +17,8 @@ public class FriendshipRowMapper implements RowMapper<Friendship> {
         Timestamp acceptedAt = rs.getTimestamp("accepted_at");
 
         return Friendship.builder()
-                .sendingUserId(rs.getLong("sending_user_id"))
-                .receivingUserId(rs.getLong("receiving_user_id"))
+                .userId(rs.getLong("user_id"))
+                .friendId(rs.getLong("friend_id"))
                 .status(FriendshipStatus.valueOf(rs.getString("status").toUpperCase()))
                 .requestedAt(rs.getTimestamp("requested_at").toLocalDateTime())
                 .acceptedAt(acceptedAt == null ? null : acceptedAt.toLocalDateTime())

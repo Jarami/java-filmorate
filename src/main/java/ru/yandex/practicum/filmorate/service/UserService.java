@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 import ru.yandex.practicum.filmorate.dto.NewUserRequest;
 import ru.yandex.practicum.filmorate.dto.UpdateUserRequest;
-import ru.yandex.practicum.filmorate.exceptions.UserNotFoundException;
+import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.mapper.UserMapper;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.FriendshipStorage;
@@ -44,15 +44,16 @@ public class UserService {
     }
 
     public User getUserById(long id) {
-        checkUserId(id);
         return userStorage.getById(id)
-                .orElseThrow(() -> new UserNotFoundException(id));
+                .orElseThrow(() ->
+                        new NotFoundException("не найден пользователь", "не найден пользователь с id = " + id));
     }
 
     public User updateUser(@Valid UpdateUserRequest updateUserRequest) {
 
-        if (userStorage.getById(updateUserRequest.getId()).isEmpty()) {
-            throw new UserNotFoundException(updateUserRequest.getId());
+        long userId = updateUserRequest.getId();
+        if (userStorage.getById(userId).isEmpty()) {
+            throw new NotFoundException("не найден пользователь", "не найден пользователь с id = " + userId);
         }
 
         User user = UserMapper.mapToUser(updateUserRequest);
@@ -66,7 +67,6 @@ public class UserService {
     }
 
     public void deleteUserById(long userId) {
-        checkUserId(userId);
         userStorage.getById(userId)
             .ifPresent(userStorage::delete);
     }
@@ -110,12 +110,7 @@ public class UserService {
 
     private User getById(Long userId) {
         return userStorage.getById(userId)
-                .orElseThrow(() -> new UserNotFoundException(userId));
-    }
-
-    private void checkUserId(Long userId) {
-        if (userId == null) {
-            throw new UserNotFoundException(null);
-        }
+                .orElseThrow(() ->
+                        new NotFoundException("не найден пользователь", "не найден пользователь с id = " + userId));
     }
 }

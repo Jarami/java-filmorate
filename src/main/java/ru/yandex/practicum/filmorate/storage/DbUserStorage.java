@@ -42,15 +42,15 @@ public class DbUserStorage extends BaseRepository<User> implements UserStorage {
         DELETE FROM users""";
 
     private static final String GET_FRIENDS_ID = """
-        SELECT receiving_user_id as "friend_id"
+        SELECT friend_id as "friend_id"
         FROM friendship
-        WHERE sending_user_id = ? AND status = 'accepted'
+        WHERE user_id = ? AND status = 'accepted'
 
         UNION
 
-        SELECT sending_user_id as "friend_id"
+        SELECT user_id as "friend_id"
         FROM friendship
-        WHERE receiving_user_id = ? AND status = 'accepted'""";
+        WHERE friend_id = ? AND status = 'accepted'""";
 
     public DbUserStorage(JdbcTemplate jdbc, UserRowMapper mapper) {
         super(jdbc, mapper);

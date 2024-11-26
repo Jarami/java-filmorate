@@ -4,17 +4,17 @@ DROP TABLE IF EXISTS film_likes;
 DROP TABLE IF EXISTS films;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS film_genres;
-DROP TABLE IF EXISTS film_ratings;
+DROP TABLE IF EXISTS film_mpa;
 
-CREATE TABLE IF NOT EXISTS film_ratings (
-    rating_id SERIAL PRIMARY KEY,
-    rating_name VARCHAR(10) NOT NULL,
+CREATE TABLE IF NOT EXISTS film_mpa (
+    mpa_id SERIAL PRIMARY KEY,
+    mpa_name VARCHAR(10) NOT NULL,
 
-    CONSTRAINT ratings_name_in_list CHECK (rating_name in ('G', 'PG', 'PG-13', 'R', 'NC-17'))
+    CONSTRAINT film_mpa_name_in_list CHECK (mpa_name in ('G', 'PG', 'PG-13', 'R', 'NC-17'))
 );
-COMMENT ON TABLE film_ratings IS 'Таблица рейтингов MPA';
-COMMENT ON COLUMN film_ratings.rating_id IS 'Идентификатор рейтинга';
-COMMENT ON COLUMN film_ratings.rating_name IS 'Название рейтинга';
+COMMENT ON TABLE film_mpa IS 'Таблица рейтингов MPA';
+COMMENT ON COLUMN film_mpa.mpa_id IS 'Идентификатор рейтинга';
+COMMENT ON COLUMN film_mpa.mpa_name IS 'Название рейтинга';
 
 CREATE TABLE IF NOT EXISTS films (
   film_id BIGSERIAL PRIMARY KEY,
@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS films (
   description varchar(200) NOT NULL,
   release_date date NOT NULL,
   duration integer NOT NULL,
-  rating_id INTEGER REFERENCES film_ratings (rating_id),
+  mpa_id INTEGER REFERENCES film_mpa (mpa_id),
 
   CONSTRAINT films_release_date_after CHECK (release_date >= '1895-12-28'),
   CONSTRAINT films_duration_positive CHECK (duration > 0)
@@ -69,17 +69,17 @@ COMMENT ON COLUMN users.birthday IS 'Дата рождения пользова�
 
 CREATE TABLE IF NOT EXISTS friendship (
   friendship_id BIGSERIAL PRIMARY KEY,
-  sending_user_id bigint NOT NULL REFERENCES users (user_id),
-  receiving_user_id bigint NOT NULL REFERENCES users (user_id),
+  user_id bigint NOT NULL REFERENCES users (user_id),
+  friend_id bigint NOT NULL REFERENCES users (user_id),
   status varchar NOT NULL,
   requested_at timestamp NOT NULL,
   accepted_at timestamp,
-  CONSTRAINT friendship_users_differ CHECK (sending_user_id != receiving_user_id),
-  CONSTRAINT friendship_unique UNIQUE (sending_user_id, receiving_user_id)
+  CONSTRAINT friendship_users_differ CHECK (user_id != friend_id),
+  CONSTRAINT friendship_unique UNIQUE (user_id, friend_id)
 );
 COMMENT ON TABLE friendship IS 'Таблица друзей';
-COMMENT ON COLUMN friendship.sending_user_id IS 'ID пользователя, отправившего запрос дружбы';
-COMMENT ON COLUMN friendship.receiving_user_id IS 'ID пользователя, кому отправили запрос дружбы';
+COMMENT ON COLUMN friendship.user_id IS 'ID пользователя, отправившего запрос дружбы';
+COMMENT ON COLUMN friendship.friend_id IS 'ID пользователя, кому отправили запрос дружбы';
 COMMENT ON COLUMN friendship.status IS 'Статус запроса дружбы (pending, accepted, declined)';
 COMMENT ON COLUMN friendship.requested_at IS 'Когда был отправлен запрос дружбы';
 COMMENT ON COLUMN friendship.accepted_at IS 'Когда был принят запрос дружбы';

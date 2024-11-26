@@ -21,7 +21,7 @@ public class Film {
     private String description;
     private LocalDate releaseDate;
     private int duration;
-    private FilmRating rating;
+    private FilmMpa mpa;
     private List<FilmGenre> genres;
     private int rate;
 
@@ -29,11 +29,7 @@ public class Film {
         this(null, null, null, null, 0, null, new ArrayList<>(), 0);
     }
 
-    public Film(Long id, String name, String description, String ratingName, LocalDate releaseDate, int duration) {
+    public Film(Long id, String name, String description, String mpaName, LocalDate releaseDate, int duration) {
         this(id, name, description, releaseDate, duration, null, new ArrayList<>(), 0);
-    }
-
-    public int getLikeCount() {
-        return rate;
     }
 }

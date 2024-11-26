@@ -628,7 +628,7 @@ class FilmorateApplicationTests {
 		@Test
 		void givenUserHasNotLikedFilmYet_whenGetLikeCount_gotZero() {
 			for (Film film : films) {
-				assertEquals(0, film.getLikeCount());
+				assertEquals(0, film.getRate());
 			}
 		}
 
@@ -642,7 +642,7 @@ class FilmorateApplicationTests {
 			Film film = resp.getBody();
 			assertNotNull(film);
 			assertEquals(films.get(7).getName(), film.getName());
-			assertEquals(1, film.getLikeCount());
+			assertEquals(1, film.getRate());
 		}
 
 		@Test
@@ -651,7 +651,7 @@ class FilmorateApplicationTests {
 			like(films.get(7), users.get(3));
 
 			Film film = getFilmById(films.get(7).getId()).getBody();
-			assertEquals(1, film.getLikeCount());
+			assertEquals(1, film.getRate());
 		}
 
 		@Test
@@ -664,7 +664,7 @@ class FilmorateApplicationTests {
 			Film film = resp.getBody();
 			assertNotNull(film);
 			assertEquals(films.get(7).getName(), film.getName());
-			assertEquals(1, film.getLikeCount());
+			assertEquals(1, film.getRate());
 		}
 
 		@Test
@@ -675,7 +675,7 @@ class FilmorateApplicationTests {
 			Film film = getFilmById(films.get(7).getId()).getBody();
 			assertNotNull(film);
 			assertEquals(films.get(7).getName(), film.getName());
-			assertEquals(0, film.getLikeCount());
+			assertEquals(0, film.getRate());
 		}
 
 		@Test
@@ -708,16 +708,16 @@ class FilmorateApplicationTests {
 			}
 
 			Film[] films = getPopularFilms(10).getBody();
-			assertEquals(9, films[0].getLikeCount());
-			assertEquals(8, films[1].getLikeCount());
-			assertEquals(7, films[2].getLikeCount());
-			assertEquals(6, films[3].getLikeCount());
-			assertEquals(5, films[4].getLikeCount());
-			assertEquals(4, films[5].getLikeCount());
-			assertEquals(3, films[6].getLikeCount());
-			assertEquals(2, films[7].getLikeCount());
-			assertEquals(1, films[8].getLikeCount());
-			assertEquals(0, films[9].getLikeCount());
+			assertEquals(9, films[0].getRate());
+			assertEquals(8, films[1].getRate());
+			assertEquals(7, films[2].getRate());
+			assertEquals(6, films[3].getRate());
+			assertEquals(5, films[4].getRate());
+			assertEquals(4, films[5].getRate());
+			assertEquals(3, films[6].getRate());
+			assertEquals(2, films[7].getRate());
+			assertEquals(1, films[8].getRate());
+			assertEquals(0, films[9].getRate());
 		}
 	}
 

@@ -3,26 +3,26 @@ package ru.yandex.practicum.filmorate.service;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
-import ru.yandex.practicum.filmorate.model.FilmRating;
-import ru.yandex.practicum.filmorate.storage.FilmRatingStorage;
+import ru.yandex.practicum.filmorate.model.FilmMpa;
+import ru.yandex.practicum.filmorate.storage.FilmMpaStorage;
 
 import java.util.List;
 
 @Service
 public class MpaService {
 
-    private final FilmRatingStorage filmRatingStorage;
+    private final FilmMpaStorage filmMpaStorage;
 
-    public MpaService(@Qualifier("db") FilmRatingStorage filmRatingStorage) {
-        this.filmRatingStorage = filmRatingStorage;
+    public MpaService(@Qualifier("db") FilmMpaStorage filmMpaStorage) {
+        this.filmMpaStorage = filmMpaStorage;
     }
 
-    public List<FilmRating> getAll() {
-        return filmRatingStorage.getAll();
+    public List<FilmMpa> getAll() {
+        return filmMpaStorage.getAll();
     }
 
-    public FilmRating getById(int id) {
-        return filmRatingStorage.getById(id)
+    public FilmMpa getById(int id) {
+        return filmMpaStorage.getById(id)
                 .orElseThrow(() -> new NotFoundException("не найден рейтинг", "не найден рейтинг по id " + id));
     }
 }

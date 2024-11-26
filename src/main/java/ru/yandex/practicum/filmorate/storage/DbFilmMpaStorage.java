@@ -3,64 +3,59 @@ package ru.yandex.practicum.filmorate.storage;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
-import ru.yandex.practicum.filmorate.model.FilmGenre;
-import ru.yandex.practicum.filmorate.storage.mapper.FilmGenreRowMapper;
+import ru.yandex.practicum.filmorate.model.FilmMpa;
+import ru.yandex.practicum.filmorate.storage.mapper.FilmMpaRowMapper;
 
 import java.util.List;
 import java.util.Optional;
 
 @Repository
 @Qualifier("db")
-public class DbFilmGenreStorage extends BaseRepository<FilmGenre> implements FilmGenreStorage {
+public class DbFilmMpaStorage extends BaseRepository<FilmMpa> implements FilmMpaStorage {
 
     private static final String FIND_ALL_QUERY = """
-        SELECT genre_id as "genre_id",
-               genre_name as "genre_name"
-        FROM film_genres""";
+        SELECT mpa_id as "mpa_id",
+               mpa_name as "mpa_name"
+        FROM film_mpa""";
 
     private static final String FIND_BY_ID_QUERY = """
-        SELECT genre_id as "genre_id",
-               genre_name as "genre_name"
-        FROM film_genres
-        WHERE genre_id = ?""";
+        SELECT mpa_id as "mpa_id",
+               mpa_name as "mpa_name"
+        FROM film_mpa
+        WHERE mpa_id = ?""";
 
     private static final String INSERT_QUERY = """
-        INSERT INTO film_genres(genre_name)
+        INSERT INTO film_mpa(mpa_name)
         VALUES (?, ?, ?, ?, ?)""";
 
     private static final String UPDATE_QUERY = """
-        UPDATE film_genres
-        SET genre_name = ?
-        WHERE genre_id = ?""";
+        UPDATE film_mpa
+        SET mpa_name = ?
+        WHERE mpa_id = ?""";
 
     private static final String DELETE_QUERY = """
-        DELETE FROM film_genres
-        WHERE genre_id = ?""";
+        DELETE FROM film_mpa
+        WHERE mpa_id = ?""";
 
     private static final String DELETE_ALL_QUERY = """
-        DELETE FROM film_genres""";
+        DELETE FROM film_mpa""";
 
-    public DbFilmGenreStorage(JdbcTemplate jdbc, FilmGenreRowMapper mapper) {
+    public DbFilmMpaStorage(JdbcTemplate jdbc, FilmMpaRowMapper mapper) {
         super(jdbc, mapper);
     }
 
     @Override
-    public List<FilmGenre> getAll() {
+    public List<FilmMpa> getAll() {
         return findMany(FIND_ALL_QUERY);
     }
 
     @Override
-    public Optional<FilmGenre> getById(Integer genreId) {
-        return findOne(FIND_BY_ID_QUERY, genreId);
+    public Optional<FilmMpa> getById(Integer filmId) {
+        return findOne(FIND_BY_ID_QUERY, filmId);
     }
 
     @Override
-    public List<FilmGenre> getById(List<Integer> ids) {
-        return getAll().stream().filter(genre -> ids.contains(genre.getId())).toList();
-    }
-
-    @Override
-    public FilmGenre save(FilmGenre mpa) {
+    public FilmMpa save(FilmMpa mpa) {
 
         if (mpa.getId() == null) {
             Number id = insert(
@@ -81,7 +76,7 @@ public class DbFilmGenreStorage extends BaseRepository<FilmGenre> implements Fil
     }
 
     @Override
-    public void delete(FilmGenre mpa) {
+    public void delete(FilmMpa mpa) {
         delete(DELETE_QUERY, mpa.getId());
     }
 
@@ -89,6 +84,4 @@ public class DbFilmGenreStorage extends BaseRepository<FilmGenre> implements Fil
     public int deleteAll() {
         return executeUpdate(DELETE_ALL_QUERY);
     }
-
 }
-

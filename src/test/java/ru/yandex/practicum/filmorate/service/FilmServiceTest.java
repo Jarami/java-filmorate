@@ -3,10 +3,10 @@ package ru.yandex.practicum.filmorate.service;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import ru.yandex.practicum.filmorate.dto.FilmRatingDto;
+import ru.yandex.practicum.filmorate.dto.FilmMpaDto;
 import ru.yandex.practicum.filmorate.dto.NewFilmRequest;
 import ru.yandex.practicum.filmorate.dto.UpdateFilmRequest;
-import ru.yandex.practicum.filmorate.exceptions.FilmNotFoundException;
+import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.mapper.FilmMapper;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.*;
@@ -27,15 +27,15 @@ public class FilmServiceTest {
 
     FilmService filmService;
     FilmStorage filmStorage;
-    FilmRatingStorage filmRatingStorage;
+    FilmMpaStorage filmMpaStorage;
     FilmGenreStorage filmGenreStorage;
 
     @BeforeEach
     void setup() {
         filmStorage = new InMemoryFilmStorage();
-        filmRatingStorage = new InMemoryFilmRatingStorage();
+        filmMpaStorage = new InMemoryFilmMpaStorage();
         filmGenreStorage = new InMemoryFilmGenreStorage();
-        filmService = new FilmService(filmStorage, filmRatingStorage, filmGenreStorage);
+        filmService = new FilmService(filmStorage, filmMpaStorage, filmGenreStorage);
     }
 
     @Nested
@@ -82,7 +82,7 @@ public class FilmServiceTest {
             Film film = new Film(1L, "name", "desc", "G",
                     LocalDate.parse("2024-01-01"), 120);
 
-            assertThrows(FilmNotFoundException.class, () -> filmService.getFilmById(film.getId()));
+            assertThrows(NotFoundException.class, () -> filmService.getFilmById(film.getId()));
         }
     }
 
@@ -95,7 +95,7 @@ public class FilmServiceTest {
             UpdateFilmRequest updateFilmRequest = UpdateFilmRequest.builder()
                     .name("name2")
                     .description("desc2")
-                    .rating(new FilmRatingDto(1))
+                    .mpa(new FilmMpaDto(1))
                     .releaseDate(LocalDate.parse("2024-02-02"))
                     .duration(180)
                     .build();
@@ -113,12 +113,12 @@ public class FilmServiceTest {
                     .id(1L)
                     .name("name")
                     .description("desc")
-                    .rating(new FilmRatingDto(1))
+                    .mpa(new FilmMpaDto(1))
                     .releaseDate(LocalDate.parse("2024-01-01"))
                     .duration(120)
                     .build();
 
-            assertThrows(FilmNotFoundException.class, () -> filmService.updateFilm(updateFilmRequest));
+            assertThrows(NotFoundException.class, () -> filmService.updateFilm(updateFilmRequest));
         }
     }
 
@@ -152,7 +152,7 @@ public class FilmServiceTest {
             Film film = new Film(1L, "name", "desc", "G",
                     LocalDate.parse("2024-01-01"), 120);
 
-            assertThrows(FilmNotFoundException.class, () -> filmService.deleteFilmById(film.getId()));
+            assertThrows(NotFoundException.class, () -> filmService.deleteFilmById(film.getId()));
         }
     }
 
@@ -163,7 +163,7 @@ public class FilmServiceTest {
         return NewFilmRequest.builder()
                 .name(chunks[0].equals("NULL") ? null : chunks[0])
                 .description(chunks[1].equals("NULL") ? null : chunks[1])
-                .rating(new FilmRatingDto(0))
+                .mpa(new FilmMpaDto(0))
                 .genres(new ArrayList<>())
                 .build();
     }

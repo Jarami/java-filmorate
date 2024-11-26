@@ -31,12 +31,12 @@ public class InMemoryFilmFriendshipStorage implements FriendshipStorage {
     public List<Long> getFriends(User user) {
 
         Stream<Long> receivingIds = friendships.stream()
-                .filter(f -> f.getSendingUserId().equals(user.getId()) && f.getStatus().equals(ACCEPTED))
-                .map(Friendship::getReceivingUserId);
+                .filter(f -> f.getUserId().equals(user.getId()) && f.getStatus().equals(ACCEPTED))
+                .map(Friendship::getFriendId);
 
         Stream<Long> sendingIds = friendships.stream()
-                .filter(f -> f.getSendingUserId().equals(user.getId()) && (f.getStatus().equals(ACCEPTED) || f.getStatus().equals(PENDING)))
-                .map(Friendship::getSendingUserId);
+                .filter(f -> f.getUserId().equals(user.getId()) && (f.getStatus().equals(ACCEPTED) || f.getStatus().equals(PENDING)))
+                .map(Friendship::getUserId);
 
         return Stream.concat(receivingIds, sendingIds).toList();
     }
@@ -84,8 +84,8 @@ public class InMemoryFilmFriendshipStorage implements FriendshipStorage {
         }
 
         Friendship friendship = Friendship.builder()
-                .sendingUserId(friend.getId())
-                .receivingUserId(user.getId())
+                .userId(friend.getId())
+                .friendId(user.getId())
                 .status(PENDING)
                 .requestedAt(LocalDateTime.now())
                 .build();
@@ -98,23 +98,23 @@ public class InMemoryFilmFriendshipStorage implements FriendshipStorage {
     @Override
     public boolean removeFriend(User user, User friend) {
 
-        boolean result = friendships.removeIf(f -> f.getSendingUserId().equals(user.getId()) &&
-                f.getReceivingUserId().equals(friend.getId()));
+        boolean result = friendships.removeIf(f -> f.getUserId().equals(user.getId()) &&
+                f.getFriendId().equals(friend.getId()));
 
         if (result) {
             return true;
         }
         return false;
 
-//        result = friendships.removeIf(f -> f.getReceivingUserId().equals(friend.getId()) &&
-//                    f.getSendingUserId().equals(user.getId()));
+//        result = friendships.removeIf(f -> f.getFriendId().equals(friend.getId()) &&
+//                    f.getUserId().equals(user.getId()));
 //
 //        return result;
     }
 
     private Friendship getFriendshipForUsers(User user, User friend) {
         return friendships.stream()
-                .filter(f -> f.getSendingUserId().equals(user.getId()) && f.getReceivingUserId().equals(friend.getId()))
+                .filter(f -> f.getUserId().equals(user.getId()) && f.getFriendId().equals(friend.getId()))
                 .findFirst()
                 .orElse(null);
     }

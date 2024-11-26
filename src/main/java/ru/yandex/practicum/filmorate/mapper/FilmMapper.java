@@ -35,7 +35,7 @@ public class FilmMapper {
                 .description(film.getDescription())
                 .releaseDate(film.getReleaseDate())
                 .duration(film.getDuration())
-                .mpa(film.getRating())
+                .mpa(film.getMpa())
                 .genres(film.getGenres())
                 .rate(film.getRate())
                 .build();

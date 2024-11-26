@@ -8,7 +8,7 @@ import lombok.*;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
-public class FilmRating {
+public class FilmMpa {
     private Integer id;
     private String name;
 }

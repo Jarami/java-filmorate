@@ -25,13 +25,13 @@ public class DbFilmStorage extends BaseRepository<Film> implements FilmStorage {
                    f.description as "description",
                    f.release_date as "release_date",
                    f.duration as "duration",
-                   fr.rating_id as "rating_id",
-                   fr.rating_name as "rating_name",
+                   fr.mpa_id as "mpa_id",
+                   fr.mpa_name as "mpa_name",
                    count(fl.film_id) as "rate"
             FROM films f
-            INNER JOIN film_ratings fr ON f.rating_id = fr.rating_id
+            INNER JOIN film_mpa fr ON f.mpa_id = fr.mpa_id
             LEFT JOIN film_likes fl ON fl.film_id = f.film_id
-            GROUP BY f.film_id, fr.rating_id""";
+            GROUP BY f.film_id, fr.mpa_id""";
 
     private static final String FIND_BY_ID_QUERY = """
         SELECT f.film_id as "film_id",
@@ -39,14 +39,14 @@ public class DbFilmStorage extends BaseRepository<Film> implements FilmStorage {
                f.description as "description",
                f.release_date as "release_date",
                f.duration as "duration",
-               fr.rating_id as "rating_id",
-               fr.rating_name as "rating_name",
+               fr.mpa_id as "mpa_id",
+               fr.mpa_name as "mpa_name",
                count(fl.film_id) as "rate"
         FROM films f
-        INNER JOIN film_ratings fr ON f.rating_id = fr.rating_id
+        INNER JOIN film_mpa fr ON f.mpa_id = fr.mpa_id
         LEFT JOIN film_likes fl ON fl.film_id = f.film_id
         WHERE f.film_id = ?
-        GROUP BY f.film_id, fr.rating_id""";
+        GROUP BY f.film_id, fr.mpa_id""";
 
     private static final String FIND_FILM_GENRES_QUERY = """
         SELECT g.genre_id as "id",
@@ -56,12 +56,12 @@ public class DbFilmStorage extends BaseRepository<Film> implements FilmStorage {
         WHERE r.film_id = ?""";
 
     private static final String INSERT_QUERY = """
-        INSERT INTO films(film_name, description, release_date, duration, rating_id)
+        INSERT INTO films(film_name, description, release_date, duration, mpa_id)
         VALUES (?, ?, ?, ?, ?)""";
 
     private static final String UPDATE_QUERY = """
         UPDATE films
-        SET film_name = ?, description = ?, release_date = ?, duration = ?, rating_id = ?
+        SET film_name = ?, description = ?, release_date = ?, duration = ?, mpa_id = ?
         WHERE film_id = ?""";
 
     private static final String DELETE_QUERY = """
@@ -116,7 +116,7 @@ public class DbFilmStorage extends BaseRepository<Film> implements FilmStorage {
                     film.getDescription(),
                     film.getReleaseDate(),
                     film.getDuration(),
-                    film.getRating().getId());
+                    film.getMpa().getId());
 
             film.setId((long)id);
 
@@ -127,7 +127,7 @@ public class DbFilmStorage extends BaseRepository<Film> implements FilmStorage {
                     film.getDescription(),
                     film.getReleaseDate(),
                     film.getDuration(),
-                    film.getRating().getId(),
+                    film.getMpa().getId(),
                     film.getId()
             );
         }

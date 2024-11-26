@@ -10,7 +10,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import ru.yandex.practicum.filmorate.mapper.FilmGenreMapper;
-import ru.yandex.practicum.filmorate.mapper.FilmRatingMapper;
+import ru.yandex.practicum.filmorate.mapper.FilmMpaMapper;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.validators.After;
 
@@ -43,7 +43,7 @@ public class UpdateFilmRequest {
     private Integer duration;
 
     @JsonProperty("mpa")
-    private FilmRatingDto rating;
+    private FilmMpaDto mpa;
 
     private List<FilmGenreDto> genres;
 
@@ -54,7 +54,7 @@ public class UpdateFilmRequest {
                 .description(film.getDescription())
                 .releaseDate(film.getReleaseDate())
                 .duration(film.getDuration())
-                .rating(FilmRatingMapper.mapToDto(film.getRating()))
+                .mpa(FilmMpaMapper.mapToDto(film.getMpa()))
                 .genres(FilmGenreMapper.mapToDto(film.getGenres()));
 
     }
