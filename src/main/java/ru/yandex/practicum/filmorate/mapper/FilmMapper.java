@@ -19,12 +19,34 @@ public class FilmMapper {
                 .build();
     }
 
+    public static NewFilmRequest mapToNewFilmRequest(Film film) {
+        return NewFilmRequest.builder()
+                .name(film.getName())
+                .description(film.getDescription())
+                .releaseDate(film.getReleaseDate())
+                .duration(film.getDuration())
+                .mpa(FilmMpaMapper.mapToDto(film.getMpa()))
+                .genres(film.getGenres().stream().map(FilmGenreMapper::mapToDto).toList())
+                .build();
+    }
+
     public static Film mapToFilm(UpdateFilmRequest request) {
         return Film.builder()
                 .name(request.getName())
                 .description(request.getDescription())
                 .releaseDate(request.getReleaseDate())
                 .duration(request.getDuration())
+                .build();
+    }
+
+    public static UpdateFilmRequest mapToUpdateFilmRequest(Film film) {
+        return UpdateFilmRequest.builder()
+                .name(film.getName())
+                .description(film.getDescription())
+                .releaseDate(film.getReleaseDate())
+                .duration(film.getDuration())
+                .mpa(FilmMpaMapper.mapToDto(film.getMpa()))
+                .genres(film.getGenres().stream().map(FilmGenreMapper::mapToDto).toList())
                 .build();
     }
 

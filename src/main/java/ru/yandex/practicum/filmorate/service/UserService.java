@@ -82,8 +82,11 @@ public class UserService {
     }
 
     public void deleteUserById(long userId) {
-        userStorage.getById(userId)
-            .ifPresent(userStorage::delete);
+        User user = userStorage.getById(userId)
+                .orElseThrow(() ->
+                        new NotFoundException("не найден пользователь", "не найден пользователь с id = " + userId));
+
+        userStorage.delete(user);
     }
 
     public List<User> getFriends(long userId) {

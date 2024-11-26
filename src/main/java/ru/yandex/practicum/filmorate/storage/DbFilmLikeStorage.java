@@ -36,18 +36,18 @@ public class DbFilmLikeStorage implements FilmLikeStorage {
     public boolean like(Film film, User user) {
 
         if (count(film, user) == 0) {
-            log.debug("liking film {} by {}", film.getName(), user.getLogin());
+            log.info("liking film {} by {}", film.getName(), user.getLogin());
 
             namedTemplate.update(INSERT_QUERY,
                     Map.of("filmId", film.getId(), "userId", user.getId()));
 
-            log.debug("liking film {} by {} done", film.getName(), user.getLogin());
+            log.info("liking film {} by {} done", film.getName(), user.getLogin());
 
             return true;
 
         } else {
 
-            log.debug("film {} was already liked by {}", film.getName(), user.getLogin());
+            log.info("film {} was already liked by {}", film.getName(), user.getLogin());
             return false;
         }
 
@@ -58,17 +58,17 @@ public class DbFilmLikeStorage implements FilmLikeStorage {
 
         if (count(film, user) > 0) {
 
-            log.debug("disliking film {} by {}", film.getName(), user.getLogin());
+            log.info("disliking film {} by {}", film.getName(), user.getLogin());
 
             namedTemplate.update(DELETE_QUERY,
                     Map.of("filmId", film.getId(), "userId", user.getId()));
 
-            log.debug("disliking film {} by {} done", film.getName(), user.getLogin());
+            log.info("disliking film {} by {} done", film.getName(), user.getLogin());
 
             return true;
         } else {
 
-            log.debug("film {} was not liked by {}, skipping", film.getName(), user.getLogin());
+            log.info("film {} was not liked by {}, skipping", film.getName(), user.getLogin());
             return false;
         }
 

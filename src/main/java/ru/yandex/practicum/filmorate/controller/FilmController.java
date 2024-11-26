@@ -33,17 +33,11 @@ public class FilmController {
 
     @GetMapping("/{id}")
     public FilmDto getFilmById(@PathVariable int id) {
-        return FilmMapper.mapToDto(filmService.getFilmById(id));
+        Film film = filmService.getFilmById(id);
+        log.info("getting film {}", film);
+        return FilmMapper.mapToDto(film);
     }
 
-    // {
-    // "name":"c0JttkwNlsgb7ez",
-    // "description":"XZygrtk7d2UO4xXukuaxHvyLpkDNhDHkEGgUWQdVdFRrjaogV4",
-    // "releaseDate":"1975-01-30",
-    // "duration":70,
-    // "mpa":{"id":3},
-    // "genres":[{"id":5}]
-    // }
     @PostMapping(value = {"", "/"})
     @ResponseStatus(HttpStatus.CREATED)
     public FilmDto createFilm(@RequestBody NewFilmRequest newFilmRequest) {

@@ -5,3 +5,5 @@ VALUES ('Комедия'), ('Драма'), ('Мультфильм'), ('Трил�
 DELETE FROM film_mpa;
 INSERT INTO film_mpa (mpa_name)
 VALUES ('G'), ('PG'), ('PG-13'), ('R'), ('NC-17');
+
+--// Film film1 = createFilm("name1;desc1;2024-01-01;120;G;Комедия,Драма");

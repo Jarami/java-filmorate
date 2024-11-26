@@ -18,11 +18,11 @@ COMMENT ON COLUMN film_mpa.mpa_name IS 'Название рейтинга';
 
 CREATE TABLE IF NOT EXISTS films (
   film_id BIGSERIAL PRIMARY KEY,
-  film_name varchar NOT NULL,
-  description varchar(200) NOT NULL,
-  release_date date NOT NULL,
-  duration integer NOT NULL,
-  mpa_id INTEGER REFERENCES film_mpa (mpa_id),
+  film_name VARCHAR NOT NULL,
+  description VARCHAR(200) NOT NULL,
+  release_date DATE NOT NULL,
+  duration INTEGER NOT NULL,
+  mpa_id INTEGER REFERENCES film_mpa (mpa_id) ON DELETE CASCADE,
 
   CONSTRAINT films_release_date_after CHECK (release_date >= '1895-12-28'),
   CONSTRAINT films_duration_positive CHECK (duration > 0)
@@ -35,7 +35,7 @@ COMMENT ON COLUMN films.duration IS 'Продолжительность филь
 
 CREATE TABLE IF NOT EXISTS film_genres (
   genre_id SERIAL PRIMARY KEY,
-  genre_name varchar NOT NULL,
+  genre_name VARCHAR NOT NULL,
 
   CONSTRAINT genres_name_in_list CHECK (genre_name in ('Комедия', 'Драма', 'Мультфильм', 'Триллер', 'Документальный', 'Боевик'))
 );
@@ -44,20 +44,19 @@ COMMENT ON COLUMN film_genres.genre_name IS 'Название жанра';
 
 
 CREATE TABLE IF NOT EXISTS films_genres_relation (
-  film_id bigint REFERENCES films (film_id),
-  genre_id integer REFERENCES film_genres (genre_id),
+  film_id BIGINT REFERENCES films (film_id) ON DELETE CASCADE,
+  genre_id INTEGER REFERENCES film_genres (genre_id) ON DELETE CASCADE,
   PRIMARY KEY (film_id, genre_id)
 );
 COMMENT ON TABLE films_genres_relation IS 'Таблица связи фильмов и жанров';
 
 CREATE TABLE IF NOT EXISTS users (
   user_id BIGSERIAL PRIMARY KEY,
-  user_name varchar,
-  email varchar NOT NULL UNIQUE,
-  login varchar NOT NULL,
-  birthday date NOT NULL,
+  user_name VARCHAR,
+  email VARCHAR NOT NULL UNIQUE,
+  login VARCHAR NOT NULL,
+  birthday DATE NOT NULL,
 
---  CONSTRAINT users_login_valid CHECK (login !~ '[ \\t\\v\\b\\r\\n\\u00a0]'),
   CONSTRAINT users_birthday_valid CHECK (birthday < current_date),
   CONSTRAINT users_email_valid CHECK ( email ~ '^[a-zA-Z0-9.!#$%&''*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$' )
 );
@@ -69,9 +68,9 @@ COMMENT ON COLUMN users.birthday IS 'Дата рождения пользова�
 
 CREATE TABLE IF NOT EXISTS friendship (
   friendship_id BIGSERIAL PRIMARY KEY,
-  user_id bigint NOT NULL REFERENCES users (user_id),
-  friend_id bigint NOT NULL REFERENCES users (user_id),
-  status varchar NOT NULL,
+  user_id BIGINT NOT NULL REFERENCES users (user_id) ON DELETE CASCADE,
+  friend_id BIGINT NOT NULL REFERENCES users (user_id) ON DELETE CASCADE,
+  status VARCHAR NOT NULL,
   requested_at timestamp NOT NULL,
   accepted_at timestamp,
   CONSTRAINT friendship_users_differ CHECK (user_id != friend_id),
@@ -86,7 +85,7 @@ COMMENT ON COLUMN friendship.accepted_at IS 'Когда был принят за
 
 
 CREATE TABLE IF NOT EXISTS film_likes (
-  film_id bigint REFERENCES films (film_id),
-  user_id bigint REFERENCES users (user_id),
+  film_id BIGINT REFERENCES films (film_id) ON DELETE CASCADE,
+  user_id BIGINT REFERENCES users (user_id) ON DELETE CASCADE,
   PRIMARY KEY (film_id, user_id)
 );
