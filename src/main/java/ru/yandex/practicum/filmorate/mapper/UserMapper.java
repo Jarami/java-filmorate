@@ -6,8 +6,6 @@ import ru.yandex.practicum.filmorate.dto.NewUserRequest;
 import ru.yandex.practicum.filmorate.dto.UpdateUserRequest;
 import ru.yandex.practicum.filmorate.model.User;
 
-import java.util.HashSet;
-
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public class UserMapper {
     public static User mapToUser(NewUserRequest request) {
@@ -17,7 +15,6 @@ public class UserMapper {
                 .login(request.getLogin())
                 .name(request.getName())
                 .birthday(request.getBirthday())
-                .friendsId(new HashSet<>())
                 .build();
     }
 
@@ -29,7 +26,6 @@ public class UserMapper {
                 .login(request.getLogin())
                 .name(request.getName())
                 .birthday(request.getBirthday())
-                .friendsId(new HashSet<>())
                 .build();
     }
 }

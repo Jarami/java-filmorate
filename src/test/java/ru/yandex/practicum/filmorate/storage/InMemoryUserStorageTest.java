@@ -40,7 +40,7 @@ class InMemoryUserStorageTest {
         long userId = savedUser.getId();
 
         User updatedUser = storage.save(new User(userId, "my2@email.com", "login2",
-                "name2", LocalDate.parse("2024-02-01"), new ArrayList<>()));
+                "name2", LocalDate.parse("2024-02-01")));
 
         User actualUpdatedUser = storage.getById(savedUser.getId())
                 .orElseThrow(() ->

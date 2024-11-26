@@ -14,7 +14,6 @@ public class TestUtil {
         assertEquals(expectedUser.getLogin(), actualUser.getLogin());
         assertEquals(expectedUser.getName(), actualUser.getName());
         assertEquals(expectedUser.getBirthday(), actualUser.getBirthday());
-        assertIterableEquals(expectedUser.getFriendsId(), actualUser.getFriendsId());
     }
 
     public static void assertFilmEquals(Film expectedFilm, Film actualFilm) {

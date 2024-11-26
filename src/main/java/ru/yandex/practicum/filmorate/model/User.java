@@ -8,10 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Data
 @ToString
@@ -28,22 +24,11 @@ public class User {
     private String name;
     private LocalDate birthday;
 
-    private Set<Long> friendsId;
-
     public User() {
-        this(null, null, null, null, null, new ArrayList<>());
+        this(null, null, null, null, null);
     }
 
     public User(String email, String login, String name, LocalDate birthday) {
-        this(null, email, login, name, birthday, new ArrayList<>());
-    }
-
-    public User(Long id, String email, String login, String name, LocalDate birthday, List<User> friends) {
-        this.id = id;
-        this.email = email;
-        this.login = login;
-        this.name = name;
-        this.birthday = birthday;
-        this.friendsId = friends.stream().map(User::getId).collect(Collectors.toSet());
+        this(null, email, login, name, birthday);
     }
 }

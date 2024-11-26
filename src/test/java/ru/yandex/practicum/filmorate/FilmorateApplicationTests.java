@@ -55,7 +55,7 @@ class FilmorateApplicationTests {
 		class CreateTests {
 			@Test
 			void givenValidUser_whenCreate_getSuccess() {
-				ResponseEntity<User> resp = createUser("mail@mail.ru;dolore;Nick Name;1946-08-20");
+				ResponseEntity<User> resp = createUserResp("mail@mail.ru;dolore;Nick Name;1946-08-20");
 				User user = resp.getBody();
 
 				assertStatus(201, resp);
@@ -69,7 +69,7 @@ class FilmorateApplicationTests {
 
 			@Test
 			void givenUserWithoutName_whenCreate_getUserWithLoginInsteadOfName() {
-				ResponseEntity<User> resp = createUser("my@email.com;login;NULL;2024-01-01");
+				ResponseEntity<User> resp = createUserResp("my@email.com;login;NULL;2024-01-01");
 				User user = resp.getBody();
 
 				assertStatus(201, resp);
@@ -132,7 +132,7 @@ class FilmorateApplicationTests {
 
 			@Test
 			void givenExistingUserId_whenGetById_getUser() {
-				User user = createUser("bob@mail.ru;bob;Bob;2000-08-20").getBody();
+				User user = createUser("bob@mail.ru;bob;Bob;2000-08-20");
 				createUser("jack@mail.ru;jack;Jack;2010-08-20");
 
 				ResponseEntity<User> resp = getUserById(user.getId());
@@ -145,8 +145,13 @@ class FilmorateApplicationTests {
 
 			@Test
 			void givenNonExistingUserId_whenGetById_getNotFound() {
-				User user = new User(1L, "my@mail.ru", "login", "name",
-						LocalDate.parse("2024-01-01"), new ArrayList<>());
+				User user = User.builder()
+						.id(1L)
+						.email("my@mail.ru")
+						.login("login")
+						.name("name")
+						.birthday(LocalDate.parse("2024-01-01"))
+						.build();
 
 				assertThrows(HttpClientErrorException.NotFound.class, () -> getUserById(user.getId()));
 			}
@@ -157,13 +162,18 @@ class FilmorateApplicationTests {
 
 			@Test
 			void givenExistingUser_whenUpdate_getUpdated() {
-				ResponseEntity<User> resp1 = createUser("my1@email.com;login1;name1;2024-01-01");
-				ResponseEntity<User> resp2 = createUser("my2@email.com;login2;name2;2024-02-01");
+				ResponseEntity<User> resp1 = createUserResp("my1@email.com;login1;name1;2024-01-01");
+				ResponseEntity<User> resp2 = createUserResp("my2@email.com;login2;name2;2024-02-01");
 				User user1 = resp1.getBody();
 				User user2 = resp2.getBody();
 
-				User updatedUser = new User(user1.getId(), "my-new@email.com", "new-login", "new-name",
-						LocalDate.parse("2024-02-02"), List.of(user2));
+				User updatedUser = User.builder()
+						.id(user1.getId())
+						.email("my-new@email.com")
+						.login("new-login")
+						.name("new-name")
+						.birthday(LocalDate.parse("2024-02-02"))
+						.build();
 
 				ResponseEntity<User> resp3 = updateUser(updatedUser);
 				User actualUser = resp3.getBody();
@@ -172,15 +182,20 @@ class FilmorateApplicationTests {
 
 			@Test
 			void givenNonExistingUser_whenUpdate_getNotFound() {
-				User user = new User(1L, "my@mail.ru", "login", "name",
-						LocalDate.parse("2024-01-01"), new ArrayList<>());
+				User user = User.builder()
+						.id(1L)
+						.email("my@mail.ru")
+						.login("login")
+						.name("name")
+						.birthday(LocalDate.parse("2024-01-01"))
+						.build();
 
 				assertThrows(HttpClientErrorException.NotFound.class, () -> updateUser(user));
 			}
 
 			@Test
 			void givenUserWithoutName_whenUpdate_getUserWithLoginInsteadOfName() {
-				User user = createUser("my@email.com;login;name;2024-01-01").getBody();
+				User user = createUser("my@email.com;login;name;2024-01-01");
 				user.setName(null);
 
 				ResponseEntity<User> resp = updateUser(user);
@@ -192,7 +207,7 @@ class FilmorateApplicationTests {
 
 			@Test
 			void givenNoLogin_whenSave_getBadRequest() {
-				User user = createUser("my@email.com;login;name;2024-01-01").getBody();
+				User user = createUser("my@email.com;login;name;2024-01-01");
 				user.setLogin(null);
 
 				assertThrows(HttpClientErrorException.BadRequest.class, () -> updateUser(user));
@@ -200,7 +215,7 @@ class FilmorateApplicationTests {
 
 			@Test
 			void givenUserWithSpaceInLogin_whenCreate_getBadRequest() {
-				User user = createUser("my@email.com;login;name;2024-01-01").getBody();
+				User user = createUser("my@email.com;login;name;2024-01-01");
 				user.setLogin("space in login");
 
 				assertThrows(HttpClientErrorException.BadRequest.class, () -> updateUser(user));
@@ -208,7 +223,7 @@ class FilmorateApplicationTests {
 
 			@Test
 			void givenLoginWithWrongEmail_whenCreate_getBadRequest() {
-				User user = createUser("my@email.com;login;name;2024-01-01").getBody();
+				User user = createUser("my@email.com;login;name;2024-01-01");
 				user.setEmail("@email.com");
 
 				assertThrows(HttpClientErrorException.BadRequest.class, () -> updateUser(user));
@@ -216,7 +231,7 @@ class FilmorateApplicationTests {
 
 			@Test
 			void givenLoginWithWrongBirthday_whenCreate_getBadRequest() {
-				User user = createUser("my@email.com;login;name;2024-01-01").getBody();
+				User user = createUser("my@email.com;login;name;2024-01-01");
 				user.setBirthday(LocalDate.parse("2946-08-20"));
 
 				assertThrows(HttpClientErrorException.BadRequest.class, () -> updateUser(user));
@@ -241,8 +256,8 @@ class FilmorateApplicationTests {
 
 			@Test
 			void givenFilm_whenDelete_getDeleted() {
-				User user1 = createUser("my1@email.com;login1;name1;2024-01-01").getBody();
-				User user2 = createUser("my2@email.com;login2;name2;2024-02-01").getBody();
+				User user1 = createUser("my1@email.com;login1;name1;2024-01-01");
+				User user2 = createUser("my2@email.com;login2;name2;2024-02-01");
 
 				deleteUser(user1);
 
@@ -254,7 +269,7 @@ class FilmorateApplicationTests {
 			@Test
 			void givenNonExistingFilm_whenDelete_getNotFound() {
 				User user = new User(1L, "my@mail.ru", "login", "name",
-						LocalDate.parse("2024-01-01"), new ArrayList<>());
+						LocalDate.parse("2024-01-01"));
 
 				assertThrows(HttpClientErrorException.NotFound.class, () -> deleteUser(user));
 			}
@@ -264,8 +279,8 @@ class FilmorateApplicationTests {
 		class FriendTests {
 			@Test
 			void givenExistingUsers_whenAddFriends_getFriendship() {
-				User user1 = createUser("my1@email.com;login1;name1;2024-01-01").getBody();
-				User user2 = createUser("my2@email.com;login2;name2;2024-02-01").getBody();
+				User user1 = createUser("my1@email.com;login1;name1;2024-01-01");
+				User user2 = createUser("my2@email.com;login2;name2;2024-02-01");
 
 				addFriend(user1.getId(), user2.getId());
 
@@ -283,7 +298,7 @@ class FilmorateApplicationTests {
 
 			@Test
 			void givenNonExistingUsers_whenAddFriends_getNoFriendship() {
-				User user1 = createUser("my1@email.com;login1;name1;2024-01-01").getBody();
+				User user1 = createUser("my1@email.com;login1;name1;2024-01-01");
 
 				assertThrows(HttpClientErrorException.NotFound.class, () ->
 						addFriend(user1.getId(), user1.getId() + 1));
@@ -294,8 +309,8 @@ class FilmorateApplicationTests {
 
 			@Test
 			void givenExistingUsers_whenRemoveFriends_getNoFriendshipAnyMore() {
-				User user1 = createUser("my1@email.com;login1;name1;2024-01-01").getBody();
-				User user2 = createUser("my2@email.com;login2;name2;2024-02-01").getBody();
+				User user1 = createUser("my1@email.com;login1;name1;2024-01-01");
+				User user2 = createUser("my2@email.com;login2;name2;2024-02-01");
 				addFriend(user1, user2);
 
 				removeFromFriends(user1, user2);
@@ -314,9 +329,9 @@ class FilmorateApplicationTests {
 
 			@Test
 			void givenUsersWithCommonFriends_whenGetCommon_getThem() {
-				User user1 = createUser("my1@email.com;login1;name1;2024-01-01").getBody();
-				User user2 = createUser("my2@email.com;login2;name2;2024-02-01").getBody();
-				User user3 = createUser("my3@email.com;login3;name3;2024-03-01").getBody();
+				User user1 = createUser("my1@email.com;login1;name1;2024-01-01");
+				User user2 = createUser("my2@email.com;login2;name2;2024-02-01");
+				User user3 = createUser("my3@email.com;login3;name3;2024-03-01");
 
 				addFriend(user1.getId(), user2.getId());
 				addFriend(user1.getId(), user3.getId());
@@ -599,10 +614,9 @@ class FilmorateApplicationTests {
 						.login("login" + i)
 						.email("mail" + i + "@mail.com")
 						.birthday(LocalDate.parse("2000-01-01"))
-						.friendsId(new HashSet<>())
 						.build();
 
-				users.add(createUser(user).getBody());
+				users.add(createUser(user));
 			}
 
 			films = new ArrayList<>();
@@ -721,11 +735,19 @@ class FilmorateApplicationTests {
 		}
 	}
 
-	private ResponseEntity<User> createUser(String userString) {
+	private User createUser(String userString) {
 		return createUser(parseUser(userString));
 	}
 
-	private ResponseEntity<User> createUser(User user) {
+	private User createUser(User user) {
+		return createUserResp(user).getBody();
+	}
+
+	private ResponseEntity<User> createUserResp(String userString) {
+		return createUserResp(parseUser(userString));
+	}
+
+	private ResponseEntity<User> createUserResp(User user) {
 		return post("/users", user, User.class);
 	}
 

@@ -47,7 +47,6 @@ public class UserServiceTest {
 
             assertNotNull(user.getId());
             assertUserEquals(UserMapper.mapToUser(userRequest), user);
-            assertEmpty(user.getFriendsId());
         }
 
         @Test
@@ -88,8 +87,7 @@ public class UserServiceTest {
 
         @Test
         void givenNonExistingUserId_whenGetById_gotNotFound() {
-            User user = new User(1L, "my@mail.ru", "login", "name", LocalDate.parse("2024-01-01"),
-                    new ArrayList<>());
+            User user = new User(1L, "my@mail.ru", "login", "name", LocalDate.parse("2024-01-01"));
 
             assertThrows(NotFoundException.class, () -> userService.getUserById(user.getId()));
         }
