@@ -15,6 +15,7 @@ public class InMemoryFilmLikeStorage implements FilmLikeStorage {
         filmLikes = new HashMap<>();
     }
 
+    @Override
     public boolean like(Film film, User user) {
         filmLikes.putIfAbsent(film.getId(), new HashSet<>());
 
@@ -27,6 +28,7 @@ public class InMemoryFilmLikeStorage implements FilmLikeStorage {
         return false;
     }
 
+    @Override
     public boolean dislike(Film film, User user) {
         filmLikes.putIfAbsent(film.getId(), new HashSet<>());
 
@@ -37,5 +39,12 @@ public class InMemoryFilmLikeStorage implements FilmLikeStorage {
             return true;
         }
         return false;
+    }
+
+    @Override
+    public int deleteAll() {
+        int count = filmLikes.size();
+        filmLikes.clear();
+        return count;
     }
 }

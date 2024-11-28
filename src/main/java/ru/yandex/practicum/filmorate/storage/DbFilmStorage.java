@@ -104,6 +104,7 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
         super(namedTemplate, mapper);
     }
 
+    @Override
     public List<Film> getAll() {
         List<Film> films = getAll(FIND_ALL_QUERY);
 
@@ -129,6 +130,7 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
         return films;
     }
 
+    @Override
     public Optional<Film> getById(Long filmId) {
         Optional<Film> film = findOne(FIND_BY_ID_QUERY, Map.of("filmId", filmId));
 
@@ -141,6 +143,7 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
         return film;
     }
 
+    @Override
     public Film save(Film film) {
 
         if (film.getId() == null) {
@@ -184,11 +187,19 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
         return film;
     }
 
+    @Override
+    public void delete(Film film) {
+        delete(DELETE_QUERY, Map.of("filmId", film.getId()));
+    }
+
+    @Override
+    public int deleteAll() {
+        return delete(DELETE_ALL_QUERY);
+    }
+
     private void saveGenres(Film film) {
 
         delete(DELETE_FILM_GENRE_REL_QUERY, Map.of("filmId", film.getId()));
-
-        List<FilmGenre> genres = film.getGenres();
 
         List<Map<String, Object>> batchValues = film.getGenres().stream()
                 .map(genre -> createFilmGenreMap(film, genre))
@@ -199,13 +210,5 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
 
     private Map<String, Object> createFilmGenreMap(Film film, FilmGenre genre) {
         return Map.of("filmId", film.getId(), "genreId", genre.getId());
-    }
-
-    public void delete(Film film) {
-         delete(DELETE_QUERY, Map.of("filmId", film.getId()));
-    }
-
-    public int deleteAll() {
-         return delete(DELETE_ALL_QUERY);
     }
 }

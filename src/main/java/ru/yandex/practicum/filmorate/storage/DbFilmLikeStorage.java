@@ -30,6 +30,9 @@ public class DbFilmLikeStorage implements FilmLikeStorage {
         DELETE FROM film_likes
         WHERE film_id = :filmId AND user_id = :userId""";
 
+    private static final String DELETE_ALL_QUERY = """
+            DELETE FROM film_likes""";
+
     protected final NamedParameterJdbcTemplate namedTemplate;
 
     @Override
@@ -72,6 +75,11 @@ public class DbFilmLikeStorage implements FilmLikeStorage {
             return false;
         }
 
+    }
+
+    @Override
+    public int deleteAll() {
+        return namedTemplate.update(DELETE_ALL_QUERY, Map.of());
     }
 
     private int count(Film film, User user) {

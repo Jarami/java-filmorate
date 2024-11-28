@@ -1,20 +1,20 @@
 package ru.yandex.practicum.filmorate.storage;
 
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.jdbc.core.RowMapper;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
-import org.springframework.jdbc.support.KeyHolder;
-import org.springframework.stereotype.Repository;
-import ru.yandex.practicum.filmorate.model.Friendship;
-import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.mapper.FriendshipRowMapper;
-
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.support.KeyHolder;
+import org.springframework.stereotype.Repository;
+
+import lombok.extern.slf4j.Slf4j;
+import ru.yandex.practicum.filmorate.model.Friendship;
+import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.mapper.FriendshipRowMapper;
 
 @Slf4j
 @Repository
@@ -74,12 +74,10 @@ public class DbFriendshipStorage extends NamedRepository<Friendship> implements 
         WHERE friend_id = :friendId AND user_id = :userId""";
 
     protected final NamedParameterJdbcTemplate namedTemplate;
-    protected final RowMapper<Friendship> mapper;
 
     public DbFriendshipStorage(NamedParameterJdbcTemplate namedTemplate, FriendshipRowMapper mapper) {
         super(namedTemplate, mapper);
         this.namedTemplate = namedTemplate;
-        this.mapper = mapper;
     }
 
     @Override

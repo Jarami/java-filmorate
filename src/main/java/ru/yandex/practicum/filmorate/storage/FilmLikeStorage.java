@@ -8,4 +8,6 @@ public interface FilmLikeStorage {
     boolean like(Film film, User user);
 
     boolean dislike(Film film, User user);
+
+    int deleteAll();
 }

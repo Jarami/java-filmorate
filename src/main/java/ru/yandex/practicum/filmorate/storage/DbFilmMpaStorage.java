@@ -64,7 +64,7 @@ public class DbFilmMpaStorage extends NamedRepository<FilmMpa> implements FilmMp
             KeyHolder keyHolder = insert(
                     INSERT_QUERY,
                     Map.of("name", mpa.getName()),
-                    new String[]{"genre_id"}
+                    new String[]{"mpa_id"}
             );
 
             Integer id = keyHolder.getKeyAs(Integer.class);

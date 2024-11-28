@@ -145,7 +145,7 @@ public class UserServiceTest {
         void givenUser_whenDelete_gotDeleted() {
             List<User> users = createAndSaveTestUsers();
 
-            userService.deleteUserById(users.getFirst().getId());
+            userService.deleteUserById(users.get(0).getId());
 
             List<User> actualUsers = userService.getAllUsers();
             List<User> expectedUsers = List.of(users.get(1));
@@ -210,7 +210,7 @@ public class UserServiceTest {
             user3 = userService.getUserById(user3.getId());
 
             assertEquals(1, commonFriends.size());
-            assertUserEquals(user3, commonFriends.getFirst());
+            assertUserEquals(user3, commonFriends.get(0));
         }
     }
 

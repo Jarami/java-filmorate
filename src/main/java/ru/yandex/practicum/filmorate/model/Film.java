@@ -26,7 +26,7 @@ public class Film {
     private int rate;
 
     public Film() {
-        this(null, null, null, null, 0, null, new ArrayList<>(), 0);
+        genres = new ArrayList<>();
     }
 
     public Film(Long id, String name, String description, String mpaName, LocalDate releaseDate, int duration) {
