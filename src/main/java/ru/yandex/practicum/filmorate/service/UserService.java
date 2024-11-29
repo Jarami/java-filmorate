@@ -1,48 +1,80 @@
 package ru.yandex.practicum.filmorate.service;
 
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
-import ru.yandex.practicum.filmorate.exceptions.UserNotFoundException;
+import ru.yandex.practicum.filmorate.dto.NewUserRequest;
+import ru.yandex.practicum.filmorate.dto.UpdateUserRequest;
+import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
+import ru.yandex.practicum.filmorate.mapper.UserMapper;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.FriendshipStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
-import ru.yandex.practicum.filmorate.validators.Marker;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.List;
 
+@Slf4j
 @Service
 @Validated
-@RequiredArgsConstructor
 public class UserService {
 
     private final UserStorage userStorage;
+    private final FriendshipStorage friendshipStorage;
 
-    @Validated(Marker.OnCreate.class)
-    public User createUser(@Valid User user) {
-        setNameIfAbsent(user);
-        userStorage.save(user);
-        return user;
+    public UserService(
+            @Qualifier("db") UserStorage userStorage,
+            @Qualifier("db") FriendshipStorage friendshipStorage) {
+
+        this.userStorage = userStorage;
+        this.friendshipStorage = friendshipStorage;
     }
 
-    public Collection<User> getAllUsers() {
+    public User createUser(@Valid NewUserRequest newUserRequest) {
+        setNameIfAbsent(newUserRequest);
+
+        log.info("creating user {}", newUserRequest);
+
+        return userStorage.save(UserMapper.mapToUser(newUserRequest));
+    }
+
+    public List<User> getAllUsers() {
         return userStorage.getAll();
     }
 
     public User getUserById(long id) {
-        checkUserId(id);
-        return userStorage.getById(id);
+        return userStorage.getById(id)
+                .orElseThrow(() ->
+                        new NotFoundException("не найден пользователь", "не найден пользователь с id = " + id));
     }
 
-    @Validated(Marker.OnUpdate.class)
-    public User updateUser(@Valid User user) {
-        checkUserId(user.getId());
-        setNameIfAbsent(user);
-        userStorage.save(user);
-        return user;
+    public User updateUser(@Valid UpdateUserRequest updateUserRequest) {
+
+        Long userId = updateUserRequest.getId();
+
+        User user = userStorage.getById(userId)
+                .orElseThrow(() ->
+                        new NotFoundException("не найден пользователь", "не найден пользователь по id = " + userId));
+
+        if (updateUserRequest.getName() != null) {
+            user.setName(updateUserRequest.getName());
+        }
+
+        if (updateUserRequest.getLogin() != null) {
+            user.setLogin(updateUserRequest.getLogin());
+        }
+
+        if (updateUserRequest.getEmail() != null) {
+            user.setEmail(updateUserRequest.getEmail());
+        }
+
+        if (updateUserRequest.getBirthday() != null) {
+            user.setBirthday(updateUserRequest.getBirthday());
+        }
+
+        log.debug("updating user {}", user);
+        return userStorage.save(user);
     }
 
     public int deleteAllUsers() {
@@ -50,67 +82,53 @@ public class UserService {
     }
 
     public void deleteUserById(long userId) {
-        checkUserId(userId);
-        userStorage.delete(userStorage.getById(userId));
+        User user = userStorage.getById(userId)
+                .orElseThrow(() ->
+                        new NotFoundException("не найден пользователь", "не найден пользователь с id = " + userId));
+
+        userStorage.delete(user);
     }
 
-    public User addFriend(long userId, long friendId) {
-        User user = userStorage.getById(userId);
-        User friend = userStorage.getById(friendId);
+    public List<User> getFriends(long userId) {
+        User user = getById(userId);
 
-        if (user == null) throw new UserNotFoundException(userId);
-        if (friend == null) throw new UserNotFoundException(friendId);
-
-        user.addFriend(friend);
-        friend.addFriend(user);
-
-        userStorage.save(user);
-        userStorage.save(friend);
-
-        return user;
+        return friendshipStorage.getFriends(user).stream().map(this::getUserById).toList();
     }
 
-    public Collection<User> getFriends(long userId) {
-        User user = userStorage.getById(userId);
+    public List<User> getCommonFriends(long userId, long otherUserId) {
+        User user = getById(userId);
+        User otherUser = getById(otherUserId);
 
-        if (user == null) throw new UserNotFoundException(userId);
-
-        return user.getFriendsId().stream().map(this::getUserById).collect(Collectors.toList());
+        return friendshipStorage.getCommonFriends(user, otherUser).stream()
+                .map(this::getUserById).toList();
     }
 
-    public void removeFromFriends(long userId, long friendId) {
-        User user = userStorage.getById(userId);
-        User friend = userStorage.getById(friendId);
+    public boolean addFriend(long userId, long friendId) {
 
-        if (user == null) throw new UserNotFoundException(userId);
-        if (friend == null) throw new UserNotFoundException(friendId);
+        User user = getById(userId);
+        User friend = getById(friendId);
 
-        user.removeFriend(friend);
-        friend.removeFriend(user);
+        log.debug("making friends: {} and {}", user.getLogin(), friend.getLogin());
+
+        return friendshipStorage.addFriend(user, friend);
     }
 
-    public Collection<User> getCommonFriends(long userId, long otherUserId) {
-        User user = userStorage.getById(userId);
-        User otherUser = userStorage.getById(otherUserId);
+    public boolean removeFromFriends(long userId1, long userId2) {
+        User user1 = getById(userId1);
+        User user2 = getById(userId2);
 
-        if (user == null) throw new UserNotFoundException(userId);
-        if (otherUser == null) throw new UserNotFoundException(otherUserId);
-
-        Set<Long> intersectSet = new HashSet<>(user.getFriendsId());
-        intersectSet.retainAll(otherUser.getFriendsId());
-
-        return intersectSet.stream().map(this::getUserById).toList();
+        return friendshipStorage.removeFriend(user1, user2);
     }
 
-    private void setNameIfAbsent(User user) {
+    private void setNameIfAbsent(NewUserRequest user) {
         if (user.getName() == null || user.getName().isEmpty()) {
             user.setName(user.getLogin());
         }
     }
 
-    private void checkUserId(Long userId) {
-        if (userId == null || userStorage.getById(userId) == null) {
-            throw new UserNotFoundException(userId);
-        }
+    private User getById(Long userId) {
+        return userStorage.getById(userId)
+                .orElseThrow(() ->
+                        new NotFoundException("не найден пользователь", "не найден пользователь с id = " + userId));
     }
 }

@@ -1,15 +1,24 @@
 package ru.yandex.practicum.filmorate.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import ru.yandex.practicum.filmorate.exceptions.UserNotFoundException;
+import ru.yandex.practicum.filmorate.dto.NewUserRequest;
+import ru.yandex.practicum.filmorate.dto.UpdateUserRequest;
+import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
+import ru.yandex.practicum.filmorate.mapper.UserMapper;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.FriendshipStorage;
+import ru.yandex.practicum.filmorate.storage.InMemoryFilmFriendshipStorage;
 import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.time.LocalDate;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static ru.yandex.practicum.filmorate.util.TestUtil.assertEmpty;
@@ -17,36 +26,38 @@ import static ru.yandex.practicum.filmorate.util.TestUtil.assertUserEquals;
 
 // Эти тесты не учитывают валидации
 
+@Slf4j
 public class UserServiceTest {
 
     UserStorage userStorage;
     UserService userService;
+    FriendshipStorage friendshipStorage;
 
     @BeforeEach
     void setup() {
         userStorage = new InMemoryUserStorage();
-        userService = new UserService(userStorage);
+        friendshipStorage = new InMemoryFilmFriendshipStorage();
+        userService = new UserService(userStorage, friendshipStorage);
     }
 
     @Nested
     class CreateTests {
         @Test
         void givenUserCreateRequest_whenCreated_gotUser() {
-            User userRequest = parseUser("my@email.com;login;name;2024-01-01");
+            NewUserRequest userRequest = parseUser("my@email.com;login;name;2024-01-01");
             User user = userService.createUser(userRequest);
 
             assertNotNull(user.getId());
-            assertUserEquals(userRequest, user);
-            assertEmpty(user.getFriendsId());
+            assertUserEquals(UserMapper.mapToUser(userRequest), user);
         }
 
         @Test
         void givenUserCreateRequestWithoutName_whenCreated_gotLoginInsteadOfName() {
-            User userRequest = parseUser("my@email.com;login;NULL;2024-01-01");
+            NewUserRequest userRequest = parseUser("my@email.com;login;NULL;2024-01-01");
             User user = userService.createUser(userRequest);
 
             assertNotNull(user.getId());
-            assertUserEquals(userRequest, user);
+            assertUserEquals(UserMapper.mapToUser(userRequest), user);
         }
     }
 
@@ -58,7 +69,7 @@ public class UserServiceTest {
             users.put("login1", createUser("my1@email.com;login1;name1;2024-01-01"));
             users.put("login2", createUser("my2@email.com;login2;name2;2024-01-02"));
 
-            Collection<User> actualUsers = userService.getAllUsers();
+            List<User> actualUsers = userService.getAllUsers();
 
             actualUsers.forEach(actualUser -> {
                 User user = users.get(actualUser.getLogin());
@@ -78,10 +89,9 @@ public class UserServiceTest {
 
         @Test
         void givenNonExistingUserId_whenGetById_gotNotFound() {
-            User user = new User(1L, "my@mail.ru", "login", "name", LocalDate.parse("2024-01-01"),
-                    new ArrayList<>());
+            User user = new User(1L, "my@mail.ru", "login", "name", LocalDate.parse("2024-01-01"));
 
-            assertThrows(UserNotFoundException.class, () -> userService.getUserById(user.getId()));
+            assertThrows(NotFoundException.class, () -> userService.getUserById(user.getId()));
         }
     }
 
@@ -92,31 +102,31 @@ public class UserServiceTest {
             User user1 = createUser("my1@email.com;login1;name1;2024-01-01");
             User user2 = createUser("my2@email.com;login2;name2;2024-02-01");
 
-            User updatedUser = new User(user1.getId(), "my-new@email.com", "new-login", "new-name",
-                    LocalDate.parse("2024-02-02"), List.of(user2));
+            UpdateUserRequest updatedUser = UpdateUserRequest.builder()
+                    .id(user1.getId())
+                    .email("my-new@email.com")
+                    .login("new-login")
+                    .name("new-name")
+                    .birthday(LocalDate.parse("2024-05-05"))
+                    .build();
 
             userService.updateUser(updatedUser);
 
             User actualUser = userService.getUserById(user1.getId());
-            assertUserEquals(updatedUser, actualUser);
+            assertUserEquals(UserMapper.mapToUser(updatedUser), actualUser);
         }
 
         @Test
         void givenNonExistingUser_whenUpdate_gotError() {
-            User user = new User(1L, "my@mail.ru", "login", "name", LocalDate.parse("2024-01-01"),
-                    new ArrayList<>());
+            UpdateUserRequest user = UpdateUserRequest.builder()
+                            .id(1L)
+                            .email("my@mail.ru")
+                            .login("login")
+                            .name("name")
+                            .birthday(LocalDate.parse("2024-01-01"))
+                            .build();
 
-            assertThrows(UserNotFoundException.class, () -> userService.updateUser(user));
-        }
-
-        @Test
-        void givenUserWithoutName_whenUpdate_gotLoginInsteadOfName() {
-            User user = createUser("my@email.com;login;name;2024-01-01");
-            user.setName(null);
-
-            user = userService.updateUser(user);
-
-            assertEquals("login", user.getName());
+            assertThrows(NotFoundException.class, () -> userService.updateUser(user));
         }
     }
 
@@ -135,10 +145,10 @@ public class UserServiceTest {
         void givenUser_whenDelete_gotDeleted() {
             List<User> users = createAndSaveTestUsers();
 
-            userService.deleteUserById(users.getFirst().getId());
+            userService.deleteUserById(users.get(0).getId());
 
-            Collection<User> actualUsers = userService.getAllUsers();
-            Collection<User> expectedUsers = List.of(users.get(1));
+            List<User> actualUsers = userService.getAllUsers();
+            List<User> expectedUsers = List.of(users.get(1));
 
             assertIterableEquals(expectedUsers, actualUsers);
         }
@@ -152,21 +162,21 @@ public class UserServiceTest {
             User user2 = createUser("my2@email.com;login2;name2;2024-02-01");
             userService.addFriend(user1.getId(), user2.getId());
 
-            Collection<User> user1friends = userService.getFriends(user1.getId());
-            Collection<User> user2friends = userService.getFriends(user2.getId());
+            List<User> user1friends = userService.getFriends(user1.getId());
+            List<User> user2friends = userService.getFriends(user2.getId());
 
             assertTrue(user1friends.contains(user2));
-            assertTrue(user2friends.contains(user1));
+            assertFalse(user2friends.contains(user1));
         }
 
         @Test
         void givenAbsentUser_whenAddFriends_gotNoFriendship() {
             User user1 = createUser("my1@email.com;login1;name1;2024-01-01");
 
-            assertThrows(UserNotFoundException.class, () ->
+            assertThrows(NotFoundException.class, () ->
                 userService.addFriend(user1.getId() + 1, user1.getId()));
 
-            assertThrows(UserNotFoundException.class, () ->
+            assertThrows(NotFoundException.class, () ->
                     userService.addFriend(user1.getId(), user1.getId() + 1));
         }
 
@@ -178,8 +188,8 @@ public class UserServiceTest {
 
             userService.removeFromFriends(user1.getId(), user2.getId());
 
-            Collection<User> user1friends = userService.getFriends(user1.getId());
-            Collection<User> user2friends = userService.getFriends(user2.getId());
+            List<User> user1friends = userService.getFriends(user1.getId());
+            List<User> user2friends = userService.getFriends(user2.getId());
 
             assertFalse(user1friends.contains(user2));
             assertFalse(user2friends.contains(user1));
@@ -196,11 +206,11 @@ public class UserServiceTest {
             userService.addFriend(user2.getId(), user1.getId());
             userService.addFriend(user2.getId(), user3.getId());
 
-            Collection<User> commonFriends = userService.getCommonFriends(user1.getId(), user2.getId());
+            List<User> commonFriends = userService.getCommonFriends(user1.getId(), user2.getId());
             user3 = userService.getUserById(user3.getId());
 
             assertEquals(1, commonFriends.size());
-            assertUserEquals(user3, commonFriends.iterator().next());
+            assertUserEquals(user3, commonFriends.get(0));
         }
     }
 
@@ -212,17 +222,18 @@ public class UserServiceTest {
         return users;
     }
 
-    private User parseUser(String userString) {
+    private NewUserRequest parseUser(String userString) {
         String[] chunks = userString.split(";");
-        return new User(
-                chunks[0],
-                chunks[1].equals("NULL") ? null : chunks[1],
-                chunks[2].equals("NULL") ? null : chunks[2],
-                LocalDate.parse(chunks[3])
-        );
+        return NewUserRequest.builder()
+                .email(chunks[0])
+                .login(chunks[1].equals("NULL") ? null : chunks[1])
+                .name(chunks[2].equals("NULL") ? null : chunks[2])
+                .birthday(chunks[3].equals("NULL") ? null : LocalDate.parse(chunks[3]))
+                .build();
     }
 
     private User createUser(String userString) {
-        return userStorage.save(parseUser(userString));
+        NewUserRequest newUserRequest = parseUser(userString);
+        return userStorage.save(UserMapper.mapToUser(newUserRequest));
     }
 }

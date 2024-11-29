@@ -1,61 +1,73 @@
 package ru.yandex.practicum.filmorate.service;
 
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exceptions.FilmNotFoundException;
-import ru.yandex.practicum.filmorate.exceptions.UserNotFoundException;
+import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.FilmLikeStorage;
 
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class LikeService {
 
     private final FilmService filmService;
     private final UserService userService;
 
-    public Film like(long filmId, long userId) {
-        checkFilmId(filmId);
-        checkUserId(userId);
+    private final FilmLikeStorage filmLikeStorage;
 
-        Film film = filmService.getFilmById(filmId);
+    public LikeService(FilmService filmService, UserService userService,
+                       @Qualifier("db") FilmLikeStorage filmLikeStorage) {
 
-        film.addLike(userId);
+        this.filmService = filmService;
+        this.userService = userService;
+        this.filmLikeStorage = filmLikeStorage;
 
-        return film;
     }
 
-    public Film dislike(long filmId, long userId) {
+    public boolean like(long filmId, long userId) {
         checkFilmId(filmId);
         checkUserId(userId);
 
         Film film = filmService.getFilmById(filmId);
+        User user = userService.getUserById(userId);
 
-        film.removeLike(userId);
+        boolean result = filmLikeStorage.like(film, user);
+        if (result) {
+            film.setRate(film.getRate() + 1);
+        }
+        return result;
+    }
 
-        return film;
+    public boolean dislike(long filmId, long userId) {
+
+        checkFilmId(filmId);
+        checkUserId(userId);
+
+        Film film = filmService.getFilmById(filmId);
+        User user = userService.getUserById(userId);
+
+        boolean result = filmLikeStorage.dislike(film, user);
+        if (result) {
+            film.setRate(film.getRate() - 1);
+        }
+        return result;
     }
 
     public List<Film> getPopularFilms(int count) {
-        return filmService.getAllFilms()
-                .stream()
-                .sorted((film1, film2) -> Integer.compare(film2.getLikeCount(), film1.getLikeCount()))
-                .limit(count)
-                .toList();
+        return filmService.getPopularFilms(count);
     }
 
     private void checkFilmId(Long filmId) {
-        if (filmId == null || filmService.getFilmById(filmId) == null) {
-            throw new FilmNotFoundException(filmId);
+        if (filmId == null) {
+            throw new NotFoundException("не найден фильм", "не найден фильм по id = " + filmId);
         }
     }
 
     private void checkUserId(Long userId) {
-        if (userId == null || userService.getUserById(userId) == null) {
-            throw new UserNotFoundException(userId);
+        if (userId == null) {
+            throw new NotFoundException("не найден пользователь", "не найден пользователь по id = " + userId);
         }
     }
-
-
 }

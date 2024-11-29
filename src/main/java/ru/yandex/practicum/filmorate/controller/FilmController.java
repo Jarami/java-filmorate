@@ -1,14 +1,17 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.dto.FilmDto;
+import ru.yandex.practicum.filmorate.dto.NewFilmRequest;
+import ru.yandex.practicum.filmorate.dto.UpdateFilmRequest;
+import ru.yandex.practicum.filmorate.mapper.FilmMapper;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
-import java.util.Collection;
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -19,24 +22,32 @@ public class FilmController {
     private final FilmService filmService;
 
     @GetMapping(value = {"", "/"})
-    public Collection<Film> getAllFilms() {
-        return filmService.getAllFilms();
+    public List<FilmDto> getAllFilms() {
+        filmService.getAllFilms().forEach(film ->
+                log.info("film = {}", film));
+
+        return filmService.getAllFilms().stream()
+                .map(FilmMapper::mapToDto)
+                .toList();
     }
 
     @GetMapping("/{id}")
-    public Film getFilmById(@PathVariable int id) {
-        return filmService.getFilmById(id);
+    public FilmDto getFilmById(@PathVariable int id) {
+        Film film = filmService.getFilmById(id);
+        log.info("getting film {}", film);
+        return FilmMapper.mapToDto(film);
     }
 
     @PostMapping(value = {"", "/"})
     @ResponseStatus(HttpStatus.CREATED)
-    public Film createFilm(@RequestBody Film film) {
-        return filmService.createFilm(film);
+    public FilmDto createFilm(@RequestBody NewFilmRequest newFilmRequest) {
+        Film film = filmService.createFilm(newFilmRequest);
+        return FilmMapper.mapToDto(film);
     }
 
     @PutMapping(value = {"", "/"})
-    public Film updateFilm(@Valid @RequestBody Film film) {
-        return filmService.updateFilm(film);
+    public Film updateFilm(@RequestBody UpdateFilmRequest updateFilmRequest) {
+        return filmService.updateFilm(updateFilmRequest);
     }
 
     @DeleteMapping(value = {"", "/"})

@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.dto.ResponseDto;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.LikeService;
 
@@ -20,12 +21,14 @@ public class LikeController {
     }
 
     @PutMapping("/{filmId}/like/{userId}")
-    public Film like(@PathVariable long filmId, @PathVariable long userId) {
-        return likeService.like(filmId, userId);
+    public ResponseDto like(@PathVariable long filmId, @PathVariable long userId) {
+        boolean result = likeService.like(filmId, userId);
+        return new ResponseDto(result);
     }
 
     @DeleteMapping("/{filmId}/like/{userId}")
-    public Film dislike(@PathVariable long filmId, @PathVariable long userId) {
-        return likeService.dislike(filmId, userId);
+    public ResponseDto dislike(@PathVariable long filmId, @PathVariable long userId) {
+        boolean result = likeService.dislike(filmId, userId);
+        return new ResponseDto(result);
     }
 }

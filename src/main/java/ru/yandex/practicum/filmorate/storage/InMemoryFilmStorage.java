@@ -3,9 +3,7 @@ package ru.yandex.practicum.filmorate.storage;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Film;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 @Repository
 public class InMemoryFilmStorage implements FilmStorage {
@@ -24,13 +22,22 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public Collection<Film> getAll() {
-        return films.values();
+    public List<Film> getAll() {
+        return new ArrayList<>(films.values());
     }
 
     @Override
-    public Film getById(Long id) {
-        return films.get(id);
+    public List<Film> getPopularFilms(int count) {
+        return getAll()
+            .stream()
+            .sorted((film1, film2) -> Integer.compare(film2.getRate(), film1.getRate()))
+            .limit(count)
+            .toList();
+    }
+
+    @Override
+    public Optional<Film> getById(Long id) {
+        return Optional.ofNullable(films.get(id));
     }
 
     @Override
