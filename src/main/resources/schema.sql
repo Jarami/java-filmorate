@@ -1,3 +1,4 @@
+DROP TABLE IF EXISTS reviews;
 DROP TABLE IF EXISTS film_likes;
 DROP TABLE IF EXISTS friendship;
 DROP TABLE IF EXISTS users;
@@ -89,3 +90,16 @@ CREATE TABLE IF NOT EXISTS film_likes (
   user_id BIGINT REFERENCES users (user_id) ON DELETE CASCADE,
   PRIMARY KEY (film_id, user_id)
 );
+
+CREATE TABLE IF NOT EXISTS reviews (
+  review_id BIGSERIAL PRIMARY KEY,
+  film_id BIGINT REFERENCES films (film_id) ON DELETE CASCADE,
+  user_id BIGINT REFERENCES users (user_id) ON DELETE CASCADE,
+  content TEXT NOT NULL,
+  is_positive BOOLEAN NOT NULL
+);
+COMMENT ON TABLE reviews IS 'Таблица отзывов';
+COMMENT ON COLUMN reviews.user_id IS 'ID пользователя, написавшего отзыв';
+COMMENT ON COLUMN reviews.film_id IS 'ID фильма, к которому написан отзыв';
+COMMENT ON COLUMN reviews.content IS 'Содержимое отзыва';
+COMMENT ON COLUMN reviews.is_positive IS 'Положительный ли отзыв';

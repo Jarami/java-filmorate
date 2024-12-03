@@ -13,6 +13,7 @@ import ru.yandex.practicum.filmorate.dto.NewUserRequest;
 import ru.yandex.practicum.filmorate.dto.UpdateFilmRequest;
 import ru.yandex.practicum.filmorate.dto.UpdateUserRequest;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.model.User;
 
 public class TestUtil {
@@ -67,6 +68,15 @@ public class TestUtil {
         assertEquals(expectedFilm.getDuration(), actualFilm.getDuration());
     }
 
+    public static void assertReviewEquals(Review expReview, Review actReview) {
+        assertNotNull(actReview);
+        assertEquals(expReview.getId(), actReview.getId());
+        assertEquals(expReview.getUserId(), actReview.getUserId());
+        assertEquals(expReview.getFilmId(), actReview.getFilmId());
+        assertEquals(expReview.getContent(), actReview.getContent());
+        assertEquals(expReview.isPositive(), actReview.isPositive());
+    }
+
     public static <T> void assertEmpty(Collection<T> collection) {
         assertTrue(collection.isEmpty(), "Collection must be empty, but has " + collection.size() + " elements");
     }
@@ -102,6 +112,16 @@ public class TestUtil {
             .name(randomString(10) + " " + randomString(10))
             .birthday(LocalDate.of(year, month, day))
             .build();
+    }
+
+    public static Review getRandomReview(Film film, User user) {
+        return Review.builder()
+                .filmId(film.getId())
+                .userId(user.getId())
+                .content(randomString(100))
+                .isPositive(true)
+                .rate(0)
+                .build();
     }
 
     public static String randomString(int targetStringLength) {
