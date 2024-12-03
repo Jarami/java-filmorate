@@ -73,8 +73,8 @@ public class DbUserStorage extends NamedRepository<User> implements UserStorage 
             if (id == null) {
                 throw new FailedToCreateEntity("не удалось создать пользователя " + user);
             } else {
-                log.debug("Пользователь {} сохранен с id = {}", user.getLogin(), user.getId());
                 user.setId(id);
+                log.debug("Пользователь {} сохранен с id = {}", user.getLogin(), user.getId());
             }
 
         } else {

@@ -31,7 +31,7 @@ public class DbFilmLikeStorage implements FilmLikeStorage {
         WHERE film_id = :filmId AND user_id = :userId""";
 
     private static final String DELETE_ALL_QUERY = """
-            DELETE FROM film_likes""";
+        DELETE FROM film_likes""";
 
     protected final NamedParameterJdbcTemplate namedTemplate;
 

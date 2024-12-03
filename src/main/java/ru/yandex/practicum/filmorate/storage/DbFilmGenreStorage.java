@@ -82,6 +82,7 @@ public class DbFilmGenreStorage extends NamedRepository<FilmGenre> implements Fi
                 throw new FailedToCreateEntity("не удалось создать жанр " + genre);
             } else {
                 genre.setId(id);
+                log.debug("Жанр {} сохранен с id = {}", genre.getName(), genre.getId());
             }
 
         } else {
