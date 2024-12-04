@@ -59,6 +59,18 @@ public class LikeService {
         return filmService.getPopularFilms(count);
     }
 
+    public List<Film> getPopularFilmsByYear(int count, int year) {
+        return filmService.getPopularFilmsByYear(count, year);
+    }
+
+    public List<Film> getPopularFilmsByGenre(int count, int genre) {
+        return filmService.getPopularFilmsByGenre(count, genre);
+    }
+
+    public List<Film> getPopularFilmsByYearGenre(int count, int year, int genre) {
+        return filmService.getPopularFilmsByYearGenre(count, year, genre);
+    }
+
     private void checkFilmId(Long filmId) {
         if (filmId == null) {
             throw new NotFoundException("не найден фильм", "не найден фильм по id = " + filmId);

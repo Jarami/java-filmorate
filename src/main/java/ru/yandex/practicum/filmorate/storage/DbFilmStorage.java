@@ -50,55 +50,111 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
             ORDER BY count(fl.film_id) desc
             LIMIT :count""";
 
+    private static final String FIND_TOP_YEAR = """
+            SELECT  f.film_id as film_id,
+                    f.film_name as film_name,
+                    f.description as description,
+                    f.release_date as release_date,
+                    f.duration as duration,
+                    fr.mpa_id as mpa_id,
+                    fr.mpa_name as mpa_name,
+                    count(fl.film_id) as rate
+            FROM films f
+            INNER JOIN film_mpa fr ON f.mpa_id = fr.mpa_id
+            LEFT JOIN film_likes fl ON fl.film_id = f.film_id
+            WHERE 1=1
+            AND EXTRACT(YEAR FROM f.release_date) = :year
+            GROUP BY f.film_id, fr.mpa_id
+            ORDER BY count(fl.film_id) desc
+            LIMIT :count""";
+
+    private static final String FIND_TOP_GENRE = """
+            SELECT  f.film_id as film_id,
+                    f.film_name as film_name,
+                    f.description as description,
+                    f.release_date as release_date,
+                    f.duration as duration,
+                    fr.mpa_id as mpa_id,
+                    fr.mpa_name as mpa_name,
+                    count(fl.film_id) as rate
+            FROM films f
+            INNER JOIN film_mpa fr ON f.mpa_id = fr.mpa_id
+            LEFT JOIN film_likes fl ON fl.film_id = f.film_id
+            WHERE 1=1
+            AND f.film_id IN (SELECT FILM_ID FROM FILMS_GENRES_RELATION fgr WHERE GENRE_ID = :genre_id)
+            GROUP BY f.film_id, fr.mpa_id
+            ORDER BY count(fl.film_id) desc
+            LIMIT :count""";
+
+
+    private static final String FIND_TOP_YEAR_GENRE = """
+            SELECT  f.film_id as film_id,
+                    f.film_name as film_name,
+                    f.description as description,
+                    f.release_date as release_date,
+                    f.duration as duration,
+                    fr.mpa_id as mpa_id,
+                    fr.mpa_name as mpa_name,
+                    count(fl.film_id) as rate
+            FROM films f
+            INNER JOIN film_mpa fr ON f.mpa_id = fr.mpa_id
+            LEFT JOIN film_likes fl ON fl.film_id = f.film_id
+            WHERE 1=1
+            AND EXTRACT(YEAR FROM f.release_date) = :year
+            AND f.film_id IN (SELECT FILM_ID FROM FILMS_GENRES_RELATION fgr WHERE GENRE_ID = :genre_id)
+            GROUP BY f.film_id, fr.mpa_id
+            ORDER BY count(fl.film_id) desc
+            LIMIT :count""";
+
     private static final String FIND_BY_ID_QUERY = """
-        SELECT f.film_id as "film_id",
-               f.film_name as "film_name",
-               f.description as "description",
-               f.release_date as "release_date",
-               f.duration as "duration",
-               fr.mpa_id as "mpa_id",
-               fr.mpa_name as "mpa_name",
-               count(fl.film_id) as "rate"
-        FROM films f
-        INNER JOIN film_mpa fr ON f.mpa_id = fr.mpa_id
-        LEFT JOIN film_likes fl ON fl.film_id = f.film_id
-        WHERE f.film_id = :filmId
-        GROUP BY f.film_id, fr.mpa_id""";
+            SELECT f.film_id as "film_id",
+                   f.film_name as "film_name",
+                   f.description as "description",
+                   f.release_date as "release_date",
+                   f.duration as "duration",
+                   fr.mpa_id as "mpa_id",
+                   fr.mpa_name as "mpa_name",
+                   count(fl.film_id) as "rate"
+            FROM films f
+            INNER JOIN film_mpa fr ON f.mpa_id = fr.mpa_id
+            LEFT JOIN film_likes fl ON fl.film_id = f.film_id
+            WHERE f.film_id = :filmId
+            GROUP BY f.film_id, fr.mpa_id""";
 
     private static final String FIND_FILM_GENRES_QUERY = """
-        SELECT g.genre_id as "id",
-               g.genre_name as "name"
-        FROM film_genres g
-        INNER JOIN films_genres_relation r ON g.genre_id = r.genre_id
-        WHERE r.film_id = :filmId""";
+            SELECT g.genre_id as "id",
+                   g.genre_name as "name"
+            FROM film_genres g
+            INNER JOIN films_genres_relation r ON g.genre_id = r.genre_id
+            WHERE r.film_id = :filmId""";
 
     private static final String INSERT_QUERY = """
-        INSERT INTO films(film_name, description, release_date, duration, mpa_id)
-        VALUES (:name, :description, :releaseDate, :duration, :mpaId)""";
+            INSERT INTO films(film_name, description, release_date, duration, mpa_id)
+            VALUES (:name, :description, :releaseDate, :duration, :mpaId)""";
 
     private static final String UPDATE_QUERY = """
-        UPDATE films
-        SET film_name = :name,
-            description = :description,
-            release_date = :releaseDate,
-            duration = :duration,
-            mpa_id = :mpaId
-        WHERE film_id = :filmId""";
+            UPDATE films
+            SET film_name = :name,
+                description = :description,
+                release_date = :releaseDate,
+                duration = :duration,
+                mpa_id = :mpaId
+            WHERE film_id = :filmId""";
 
     private static final String DELETE_QUERY = """
-        DELETE FROM films
-        WHERE film_id = :filmId""";
+            DELETE FROM films
+            WHERE film_id = :filmId""";
 
     private static final String DELETE_ALL_QUERY = """
-        DELETE FROM films""";
+            DELETE FROM films""";
 
     private static final String INSERT_FILM_GENRE_REL_QUERY = """
-        INSERT INTO films_genres_relation (film_id, genre_id)
-        VALUES (:filmId, :genreId)""";
+            INSERT INTO films_genres_relation (film_id, genre_id)
+            VALUES (:filmId, :genreId)""";
 
     private static final String DELETE_FILM_GENRE_REL_QUERY = """
-        DELETE FROM films_genres_relation
-        WHERE film_id = :filmId""";
+            DELETE FROM films_genres_relation
+            WHERE film_id = :filmId""";
 
     public DbFilmStorage(NamedParameterJdbcTemplate namedTemplate, FilmRowMapper mapper) {
         super(namedTemplate, mapper);
@@ -131,6 +187,26 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
     }
 
     @Override
+    public List<Film> getPopularFilmsByYear(int count, int year) {
+        List<Film> films = findMany(FIND_TOP_YEAR, Map.of("count", count, "year", year));
+        return addGenresToFilms(films);
+    }
+
+    @Override
+    public List<Film> getPopularFilmsByGenre(int count, int genre) {
+        List<Film> films = findMany(FIND_TOP_GENRE, Map.of("count", count, "genre_id", genre));
+        return addGenresToFilms(films);
+    }
+
+    @Override
+    public List<Film> getPopularFilmsByYearGenre(int count, int year, int genre) {
+        List<Film> films = findMany(FIND_TOP_YEAR_GENRE, Map.of("count", count,
+                "year", year,
+                "genre_id", genre));
+        return addGenresToFilms(films);
+    }
+
+    @Override
     public Optional<Film> getById(Long filmId) {
         Optional<Film> film = findOne(FIND_BY_ID_QUERY, Map.of("filmId", filmId));
 
@@ -151,11 +227,11 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
             KeyHolder keyHolder = insert(
                     INSERT_QUERY,
                     Map.of(
-                        "name", film.getName(),
-                        "description", film.getDescription(),
-                        "releaseDate", film.getReleaseDate(),
-                        "duration", film.getDuration(),
-                        "mpaId", film.getMpa().getId()),
+                            "name", film.getName(),
+                            "description", film.getDescription(),
+                            "releaseDate", film.getReleaseDate(),
+                            "duration", film.getDuration(),
+                            "mpaId", film.getMpa().getId()),
                     new String[]{"film_id"}
             );
             Long id = keyHolder.getKeyAs(Long.class);
@@ -171,12 +247,12 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
             update(
                     UPDATE_QUERY,
                     Map.of(
-                        "name", film.getName(),
-                        "description", film.getDescription(),
-                        "releaseDate", film.getReleaseDate(),
-                        "duration", film.getDuration(),
-                        "mpaId", film.getMpa().getId(),
-                        "filmId", film.getId())
+                            "name", film.getName(),
+                            "description", film.getDescription(),
+                            "releaseDate", film.getReleaseDate(),
+                            "duration", film.getDuration(),
+                            "mpaId", film.getMpa().getId(),
+                            "filmId", film.getId())
             );
         }
 
@@ -210,5 +286,14 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
 
     private Map<String, Object> createFilmGenreMap(Film film, FilmGenre genre) {
         return Map.of("filmId", film.getId(), "genreId", genre.getId());
+    }
+
+    private List<Film> addGenresToFilms(List<Film> films) {
+        films.forEach(film -> {
+            List<FilmGenre> genres = findMany(FIND_FILM_GENRES_QUERY,
+                    Map.of("filmId", film.getId()), new BeanPropertyRowMapper<>(FilmGenre.class));
+            film.setGenres(genres);
+        });
+        return films;
     }
 }
