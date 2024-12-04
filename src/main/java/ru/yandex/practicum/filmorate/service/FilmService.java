@@ -92,6 +92,13 @@ public class FilmService {
         return filmStorage.getPopularFilms(count);
     }
 
+    public List<Film> getCommonFilms(Long userId, Long friendId) {
+        if (userId == null || friendId == null) {
+            throw new BadRequestException("плохой запрос", "некорректные id пользователей");
+        }
+        return filmStorage.getCommonFilms(userId, friendId);
+    }
+
     public Film getFilmById(long id) {
         return filmStorage.getById(id)
                 .orElseThrow(() -> new NotFoundException("не найден фильм", "не найден фильм с id = " + id));
