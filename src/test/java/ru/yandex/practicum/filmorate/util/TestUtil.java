@@ -118,7 +118,7 @@ public class TestUtil {
         return Review.builder()
                 .filmId(film.getId())
                 .userId(user.getId())
-                .content(randomString(100))
+                .content(randomString(20))
                 .isPositive(true)
                 .rate(0)
                 .build();
