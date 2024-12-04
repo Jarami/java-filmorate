@@ -746,7 +746,7 @@ class FilmorateApplicationTests {
 	}
 
 	@Nested
-	class FilmReviewTests{
+	class FilmReviewTests {
 		List<User> users;
 		List<Film> films;
 
