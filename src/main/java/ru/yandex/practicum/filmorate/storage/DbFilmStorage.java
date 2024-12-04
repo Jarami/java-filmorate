@@ -65,6 +65,21 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
         WHERE f.film_id = :filmId
         GROUP BY f.film_id, fr.mpa_id""";
 
+    private static final String FIND_MANY_BY_IDS_QUERY = """
+        SELECT f.film_id as "film_id",
+               f.film_name as "film_name",
+               f.description as "description",
+               f.release_date as "release_date",
+               f.duration as "duration",
+               fr.mpa_id as "mpa_id",
+               fr.mpa_name as "mpa_name",
+               count(fl.film_id) as "rate"
+        FROM films f
+        INNER JOIN film_mpa fr ON f.mpa_id = fr.mpa_id
+        LEFT JOIN film_likes fl ON fl.film_id = f.film_id
+        WHERE f.film_id IN (:filmIds)
+        GROUP BY f.film_id, fr.mpa_id""";
+
     private static final String FIND_FILM_GENRES_QUERY = """
         SELECT g.genre_id as "id",
                g.genre_name as "name"
@@ -120,6 +135,20 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
     @Override
     public List<Film> getPopularFilms(int count) {
         List<Film> films = findMany(FIND_TOP_QUERY, Map.of("count", count));
+
+        films.forEach(film -> {
+            List<FilmGenre> genres = findMany(FIND_FILM_GENRES_QUERY,
+                    Map.of("filmId", film.getId()), new BeanPropertyRowMapper<>(FilmGenre.class));
+            film.setGenres(genres);
+        });
+
+        return films;
+    }
+
+    @Override
+    public List<Film> getAllByIds(List<Long> ids) {
+        System.out.println(Map.of("filmIds", ids));
+        List<Film> films = findMany(FIND_MANY_BY_IDS_QUERY, Map.of("filmIds", ids));
 
         films.forEach(film -> {
             List<FilmGenre> genres = findMany(FIND_FILM_GENRES_QUERY,

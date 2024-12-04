@@ -9,13 +9,20 @@ import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 @Slf4j
 @Repository
 @Qualifier("db")
 @RequiredArgsConstructor
 public class DbFilmLikeStorage implements FilmLikeStorage {
+
+    private static final String FIND_ALL_QUERY = """
+            SELECT * FROM film_likes
+            """;
 
     private static final String COUNT_QUERY = """
         SELECT COUNT(*) as "cnt"
@@ -34,6 +41,19 @@ public class DbFilmLikeStorage implements FilmLikeStorage {
         DELETE FROM film_likes""";
 
     protected final NamedParameterJdbcTemplate namedTemplate;
+
+    @Override
+    public Map<Long, Set<Long>> getLikes() {
+        return namedTemplate.query(FIND_ALL_QUERY, rs -> {
+            Map<Long, Set<Long>> userLikes = new HashMap<>();
+            while (rs.next()) {
+                long userId = rs.getLong("user_id");
+                long filmId = rs.getLong("film_id");
+                userLikes.computeIfAbsent(userId, k -> new HashSet<>()).add(filmId);
+            }
+            return userLikes;
+        });
+    }
 
     @Override
     public boolean like(Film film, User user) {
