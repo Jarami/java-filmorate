@@ -15,8 +15,10 @@ import ru.yandex.practicum.filmorate.storage.mapper.*;
 import ru.yandex.practicum.filmorate.util.TestUtil;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static ru.yandex.practicum.filmorate.util.TestUtil.*;
 
 @Slf4j
@@ -58,7 +60,7 @@ public class DbReviewStorageTest {
     }
 
     @Test
-    void createAndGetBadReview() {
+    void testCreateAndGetBadReview() {
         User user = createUser();
         Film film = createFilm();
 
@@ -75,7 +77,7 @@ public class DbReviewStorageTest {
     }
 
     @Test
-    void updateToPositive() {
+    void testUpdateToPositive() {
         User user = createUser();
         Film film = createFilm();
 
@@ -100,7 +102,7 @@ public class DbReviewStorageTest {
     }
 
     @Test
-    void getReviewToFilm() {
+    void testGetReviewToFilm() {
         Film film1 = createFilm();
         Film film2 = createFilm();
 
@@ -115,7 +117,7 @@ public class DbReviewStorageTest {
     }
 
     @Test
-    void getReviews() {
+    void testGetReviews() {
         Film film1 = createFilm();
         Film film2 = createFilm();
 
@@ -127,8 +129,40 @@ public class DbReviewStorageTest {
     }
 
     @Test
-    void getReviewToFilmInCorrectOrder() {
+    void testGetReviewToFilmInCorrectOrder() {
         // TODO: проверить порядок
+    }
+
+    @Test
+    void testDeleteReview() {
+        Film film1 = createFilm();
+        Film film2 = createFilm();
+
+        List<Review> reviews1 = createReviews(2, film1, createUser());
+        List<Review> reviews2 = createReviews(1, film2, createUser());
+
+        deleteReview(reviews1.get(0));
+
+        List<Review> actReviews = getAllReview(10);
+        Set<Long> actReviewIds = actReviews.stream().map(Review::getId).collect(Collectors.toSet());
+        Set<Long> expReviewIds = Set.of(reviews1.get(1).getId(), reviews2.get(0).getId());
+
+        assertEquals(expReviewIds, actReviewIds);
+    }
+
+    @Test
+    void testGetReviewAfterDelete() {
+        Film film1 = createFilm();
+        Film film2 = createFilm();
+
+        List<Review> reviews1 = createReviews(2, film1, createUser());
+        List<Review> reviews2 = createReviews(1, film2, createUser());
+
+        deleteReview(reviews1.get(0));
+
+        assertThrows(NotFoundException.class, () -> {
+            getReviewById(reviews1.get(0).getId());
+        });
     }
 
     private User createUser() {
@@ -184,6 +218,10 @@ public class DbReviewStorageTest {
 
     private List<Review> getAllReview(int count) {
         return reviewStorage.getAll(count);
+    }
+
+    private void deleteReview(Review review) {
+        reviewStorage.delete(review);
     }
 
     private List<FilmMpa> createMpa(String... mpaNames) {

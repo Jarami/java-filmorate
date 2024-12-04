@@ -64,6 +64,10 @@ public class DbReviewStorage extends NamedRepository<Review> implements ReviewSt
         FROM reviews r
         LIMIT :count""";
 
+    private static final String DELETE_QUERY = """
+        DELETE FROM reviews
+        WHERE review_id = :reviewId""";
+
     public DbReviewStorage(NamedParameterJdbcTemplate namedTemplate, ReviewRowMapper mapper) {
         super(namedTemplate, mapper);
     }
@@ -108,7 +112,7 @@ public class DbReviewStorage extends NamedRepository<Review> implements ReviewSt
 
     @Override
     public void delete(Review review) {
-
+        delete(DELETE_QUERY, Map.of("reviewId", review.getId()));
     }
 
     @Override
