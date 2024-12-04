@@ -13,7 +13,7 @@ import ru.yandex.practicum.filmorate.dto.NewUserRequest;
 import ru.yandex.practicum.filmorate.dto.UpdateFilmRequest;
 import ru.yandex.practicum.filmorate.dto.UpdateUserRequest;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.Review;
+import ru.yandex.practicum.filmorate.model.FilmReview;
 import ru.yandex.practicum.filmorate.model.User;
 
 public class TestUtil {
@@ -68,13 +68,13 @@ public class TestUtil {
         assertEquals(expectedFilm.getDuration(), actualFilm.getDuration());
     }
 
-    public static void assertReviewEquals(Review expReview, Review actReview) {
-        assertNotNull(actReview);
-        assertEquals(expReview.getId(), actReview.getId());
-        assertEquals(expReview.getUserId(), actReview.getUserId());
-        assertEquals(expReview.getFilmId(), actReview.getFilmId());
-        assertEquals(expReview.getContent(), actReview.getContent());
-        assertEquals(expReview.isPositive(), actReview.isPositive());
+    public static void assertReviewEquals(FilmReview expFilmReview, FilmReview actFilmReview) {
+        assertNotNull(actFilmReview);
+        assertEquals(expFilmReview.getReviewId(), actFilmReview.getReviewId());
+        assertEquals(expFilmReview.getUserId(), actFilmReview.getUserId());
+        assertEquals(expFilmReview.getFilmId(), actFilmReview.getFilmId());
+        assertEquals(expFilmReview.getContent(), actFilmReview.getContent());
+        assertEquals(expFilmReview.isPositive(), actFilmReview.isPositive());
     }
 
     public static <T> void assertEmpty(Collection<T> collection) {
@@ -114,8 +114,8 @@ public class TestUtil {
             .build();
     }
 
-    public static Review getRandomReview(Film film, User user) {
-        return Review.builder()
+    public static FilmReview getRandomReview(Film film, User user) {
+        return FilmReview.builder()
                 .filmId(film.getId())
                 .userId(user.getId())
                 .content(randomString(20))

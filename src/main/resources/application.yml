@@ -21,4 +21,7 @@ server:
     error:
         include-stacktrace: never
 
+app:
+    defaultFilmReviewCount: 10
+
 logging.level.org.zalando.logbook: TRACE

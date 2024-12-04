@@ -745,6 +745,44 @@ class FilmorateApplicationTests {
 		}
 	}
 
+	@Nested
+	class FilmReviewTests{
+		List<User> users;
+		List<Film> films;
+
+		@BeforeEach
+		void setup() {
+
+			users = new ArrayList<>();
+			for (int i = 1; i <= 11; i++) {
+				NewUserRequest newUserRequest = NewUserRequest.builder()
+						.name("name" + i)
+						.login("login" + i)
+						.email("mail" + i + "@mail.com")
+						.birthday(LocalDate.parse("2000-01-01"))
+						.build();
+
+				users.add(createUser(newUserRequest));
+			}
+
+			films = new ArrayList<>();
+			for (int i = 1; i <= 11; i++) {
+				NewFilmRequest newFilmRequest = NewFilmRequest.builder()
+						.name("film name " + i)
+						.description("film desc " + i)
+						.releaseDate(LocalDate.parse("2010-01-01"))
+						.duration(10 * i + 10)
+						.mpa(mpaDto("G"))
+						.genres(genreDto("Комедия"))
+						.build();
+
+				films.add(createFilm(newFilmRequest));
+			}
+		}
+
+
+	}
+
 	private User createUser(String userString) {
 		NewUserRequest newUserRequest = parseNewUserRequest(userString);
 		return createUser(newUserRequest);
@@ -782,18 +820,6 @@ class FilmorateApplicationTests {
 				.build();
 	}
 
-//	private Film createFilm(Film film) {
-//		return createFilmResp(film).getBody();
-//	}
-//
-//	private ResponseEntity<Film> createFilmResp(String filmString) {
-//		return createFilmResp(parseFilm(filmString));
-//	}
-
-//	private ResponseEntity<FilmDto> createFilmResp(NewFilmRequest newFilmRequest) {
-//		return post("/films", newFilmRequest, FilmDto.class);
-//	}
-
 	private List<FilmGenre> getAllGenres() {
 		return Arrays.stream(Objects.requireNonNull(get("/genres", FilmGenre[].class).getBody())).toList();
 	}
@@ -830,16 +856,6 @@ class FilmorateApplicationTests {
 	private Film[] getPopularFilms(int count) {
 		return get("/films/popular?count=" + count, Film[].class).getBody();
 	}
-
-//	private User parseUser(String userString) {
-//		String[] chunks = userString.split(";");
-//		return new User(
-//				chunks[0],
-//				chunks[1].equals("NULL") ? null : chunks[1],
-//				chunks[2].equals("NULL") ? null : chunks[2],
-//				LocalDate.parse(chunks[3])
-//		);
-//	}
 
 	private NewUserRequest parseNewUserRequest(String userString) {
 

@@ -7,9 +7,9 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.exceptions.FailedToCreateEntity;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.Review;
+import ru.yandex.practicum.filmorate.model.FilmReview;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.mapper.ReviewRowMapper;
+import ru.yandex.practicum.filmorate.storage.mapper.FilmReviewRowMapper;
 
 import java.util.List;
 import java.util.Map;
@@ -18,14 +18,14 @@ import java.util.Optional;
 @Slf4j
 @Repository
 @Qualifier("db")
-public class DbReviewStorage extends NamedRepository<Review> implements ReviewStorage {
+public class DbFilmReviewStorage extends NamedRepository<FilmReview> implements FilmReviewStorage {
 
     private static final String INSERT_QUERY = """
-        INSERT INTO reviews(film_id, user_id, content, is_positive)
+        INSERT INTO film_reviews(film_id, user_id, content, is_positive)
         VALUES (:filmId, :userId, :content, :isPositive)""";
 
     private static final String UPDATE_QUERY = """
-        UPDATE reviews
+        UPDATE film_reviews
         SET film_id = :filmId,
             user_id = :userId,
             content = :content,
@@ -39,8 +39,8 @@ public class DbReviewStorage extends NamedRepository<Review> implements ReviewSt
                r.content as "content",
                r.is_positive as "is_positive",
                SUM(rr.rate) as "rate"
-        FROM reviews r
-        LEFT JOIN review_rates rr ON rr.review_id = r.review_id
+        FROM film_reviews r
+        LEFT JOIN film_review_rates rr ON rr.review_id = r.review_id
         WHERE r.review_id = :reviewId
         GROUP BY r.review_id
         ORDER BY SUM(rr.rate) DESC""";
@@ -52,8 +52,8 @@ public class DbReviewStorage extends NamedRepository<Review> implements ReviewSt
                r.content as "content",
                r.is_positive as "is_positive",
                SUM(rr.rate) as "rate"
-        FROM reviews r
-        LEFT JOIN review_rates rr ON rr.review_id = r.review_id
+        FROM film_reviews r
+        LEFT JOIN film_review_rates rr ON rr.review_id = r.review_id
         WHERE r.film_id = :filmId
         GROUP BY r.review_id
         ORDER BY SUM(rr.rate) DESC
@@ -66,61 +66,61 @@ public class DbReviewStorage extends NamedRepository<Review> implements ReviewSt
                r.content as "content",
                r.is_positive as "is_positive",
                SUM(rr.rate) as "rate"
-        FROM reviews r
-        LEFT JOIN review_rates rr ON rr.review_id = r.review_id
+        FROM film_reviews r
+        LEFT JOIN film_review_rates rr ON rr.review_id = r.review_id
         GROUP BY r.review_id
         ORDER BY SUM(rr.rate) DESC
         LIMIT :count""";
 
     private static final String DELETE_QUERY = """
-        DELETE FROM reviews
+        DELETE FROM film_reviews
         WHERE review_id = :reviewId""";
 
     private static final String DELETE_ALL_QUERY = """
-        DELETE FROM reviews""";
+        DELETE FROM film_reviews""";
 
     private static final String INSERT_RATE_QUERY = """
-        INSERT INTO review_rates(review_id, user_id, rate)
+        INSERT INTO film_review_rates(review_id, user_id, rate)
         VALUES (:reviewId, :userId, :rate)""";
 
     private static final String UPDATE_RATE_QUERY = """
-        UPDATE review_rates
+        UPDATE film_review_rates
         SET rate = :rate
         WHERE review_id = :reviewId AND user_id = :userId""";
 
     private static final String COUNT_RATE_QUERY = """
         SELECT COUNT(*)
-        FROM review_rates
+        FROM film_review_rates
         WHERE review_id = :reviewId AND user_id = :userId""";
 
     private static final String DELETE_RATE_QUERY = """
-        DELETE FROM review_rates
+        DELETE FROM film_review_rates
         WHERE review_id = :reviewId AND user_id = :userId""";
 
-    public DbReviewStorage(NamedParameterJdbcTemplate namedTemplate, ReviewRowMapper mapper) {
+    public DbFilmReviewStorage(NamedParameterJdbcTemplate namedTemplate, FilmReviewRowMapper mapper) {
         super(namedTemplate, mapper);
     }
 
     @Override
-    public Review save(Review review) {
-        if (review.getId() == null) {
+    public FilmReview save(FilmReview filmReview) {
+        if (filmReview.getReviewId() == null) {
 
             KeyHolder keyHolder = insert(
                     INSERT_QUERY,
                     Map.of(
-                        "filmId", review.getFilmId(),
-                        "userId", review.getUserId(),
-                        "content", review.getContent(),
-                        "isPositive", review.isPositive()),
+                        "filmId", filmReview.getFilmId(),
+                        "userId", filmReview.getUserId(),
+                        "content", filmReview.getContent(),
+                        "isPositive", filmReview.isPositive()),
                     new String[]{"review_id"}
             );
             Long id = keyHolder.getKeyAs(Long.class);
             if (id == null) {
-                throw new FailedToCreateEntity("не удалось создать отзыв " + review);
+                throw new FailedToCreateEntity("не удалось создать отзыв " + filmReview);
             } else {
-                review.setId(id);
-                log.debug("Отзыв на фильм {} от пользователя {} сохранен с id = {}", review.getFilmId(),
-                        review.getUserId(), review.getId());
+                filmReview.setReviewId(id);
+                log.debug("Отзыв на фильм {} от пользователя {} сохранен с id = {}", filmReview.getFilmId(),
+                        filmReview.getUserId(), filmReview.getReviewId());
             }
 
         } else {
@@ -128,20 +128,20 @@ public class DbReviewStorage extends NamedRepository<Review> implements ReviewSt
             update(
                     UPDATE_QUERY,
                     Map.of(
-                        "filmId", review.getFilmId(),
-                        "userId", review.getUserId(),
-                        "content", review.getContent(),
-                        "isPositive", review.isPositive(),
-                        "reviewId", review.getId())
+                        "filmId", filmReview.getFilmId(),
+                        "userId", filmReview.getUserId(),
+                        "content", filmReview.getContent(),
+                        "isPositive", filmReview.isPositive(),
+                        "reviewId", filmReview.getReviewId())
             );
         }
 
-        return review;
+        return filmReview;
     }
 
     @Override
-    public void delete(Review review) {
-        delete(DELETE_QUERY, Map.of("reviewId", review.getId()));
+    public void delete(FilmReview filmReview) {
+        delete(DELETE_QUERY, Map.of("reviewId", filmReview.getReviewId()));
     }
 
     @Override
@@ -150,50 +150,50 @@ public class DbReviewStorage extends NamedRepository<Review> implements ReviewSt
     }
 
     @Override
-    public Optional<Review> getById(long id) {
+    public Optional<FilmReview> getById(long id) {
         return findOne(FIND_BY_ID_QUERY, Map.of("reviewId", id));
     }
 
     @Override
-    public List<Review> getAll(int count, Film film) {
+    public List<FilmReview> getAll(int count, Film film) {
         return findMany(FIND_BY_FILM_ID_WITH_LIMIT_QUERY, Map.of("filmId", film.getId(), "count", count));
     }
 
     @Override
-    public List<Review> getAll(int count) {
+    public List<FilmReview> getAll(int count) {
         return findMany(FIND_WITH_LIMIT_QUERY, Map.of("count", count));
     }
 
     @Override
-    public void addLikeToReview(Review review, User user) {
-        upsertRateToReview(review, user, 1);
+    public void addLikeToReview(FilmReview filmReview, User user) {
+        upsertRateToReview(filmReview, user, 1);
     }
 
     @Override
-    public void addDislikeToReview(Review review, User user) {
-        upsertRateToReview(review, user, -1);
+    public void addDislikeToReview(FilmReview filmReview, User user) {
+        upsertRateToReview(filmReview, user, -1);
     }
 
     @Override
-    public void deleteLikeToReview(Review review, User user) {
-        delete(DELETE_RATE_QUERY, Map.of("reviewId", review.getId(), "userId", user.getId()));
+    public void deleteLikeToReview(FilmReview filmReview, User user) {
+        delete(DELETE_RATE_QUERY, Map.of("reviewId", filmReview.getReviewId(), "userId", user.getId()));
     }
 
     @Override
-    public void deleteDislikeToReview(Review review, User user) {
-        delete(DELETE_RATE_QUERY, Map.of("reviewId", review.getId(), "userId", user.getId()));
+    public void deleteDislikeToReview(FilmReview filmReview, User user) {
+        delete(DELETE_RATE_QUERY, Map.of("reviewId", filmReview.getReviewId(), "userId", user.getId()));
     }
 
-    private void upsertRateToReview(Review review, User user, int rate) {
+    private void upsertRateToReview(FilmReview filmReview, User user, int rate) {
 
         Integer count = queryForObject(COUNT_RATE_QUERY,
-                Map.of("reviewId", review.getId(), "userId", user.getId()), Integer.class);
+                Map.of("reviewId", filmReview.getReviewId(), "userId", user.getId()), Integer.class);
 
         if (count == 0) {
             insert(
                     INSERT_RATE_QUERY,
                     Map.of(
-                            "reviewId", review.getId(),
+                            "reviewId", filmReview.getReviewId(),
                             "userId", user.getId(),
                             "rate", rate),
                     new String[]{"review_rate_id"}
@@ -202,7 +202,7 @@ public class DbReviewStorage extends NamedRepository<Review> implements ReviewSt
             update(
                     UPDATE_RATE_QUERY,
                     Map.of(
-                            "reviewId", review.getId(),
+                            "reviewId", filmReview.getReviewId(),
                             "userId", user.getId(),
                             "rate", rate)
             );
