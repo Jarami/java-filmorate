@@ -17,8 +17,7 @@ import ru.yandex.practicum.filmorate.util.TestUtil;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static ru.yandex.practicum.filmorate.util.TestUtil.*;
 
 @Slf4j
@@ -148,6 +147,19 @@ public class DbReviewStorageTest {
         Set<Long> expReviewIds = Set.of(reviews1.get(1).getId(), reviews2.get(0).getId());
 
         assertEquals(expReviewIds, actReviewIds);
+    }
+
+    @Test
+    void testDeleteAllReviews() {
+        createReviews(2, createFilm(), createUser());
+        createReviews(1, createFilm(), createUser());
+
+        int deleted = reviewStorage.deleteAll();
+
+        List<Review> actReviews = getAllReview(10);
+
+        assertEquals(3, deleted);
+        assertTrue(actReviews.isEmpty());
     }
 
     @Test

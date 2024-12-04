@@ -68,6 +68,9 @@ public class DbReviewStorage extends NamedRepository<Review> implements ReviewSt
         DELETE FROM reviews
         WHERE review_id = :reviewId""";
 
+    private static final String DELETE_ALL_QUERY = """
+        DELETE FROM reviews""";
+
     public DbReviewStorage(NamedParameterJdbcTemplate namedTemplate, ReviewRowMapper mapper) {
         super(namedTemplate, mapper);
     }
@@ -117,7 +120,7 @@ public class DbReviewStorage extends NamedRepository<Review> implements ReviewSt
 
     @Override
     public int deleteAll() {
-        return 0;
+        return delete(DELETE_ALL_QUERY);
     }
 
     @Override
