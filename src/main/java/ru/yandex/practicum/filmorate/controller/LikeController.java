@@ -19,16 +19,16 @@ public class LikeController {
     public List<Film> getPopularFilms(@RequestParam(required = false, defaultValue = "10") int count,
                                       @RequestParam(required = false) Integer genreId,
                                       @RequestParam(required = false) Integer year) {
-        if (genreId==null && year==null) {
+        if (genreId == null && year == null) {
             return likeService.getPopularFilms(count);
         }
-        if (genreId==null) {
+        if (genreId == null) {
             return likeService.getPopularFilmsByYear(count, year);
         }
-        if (year==null) {
+        if (year == null) {
             return likeService.getPopularFilmsByGenre(count, genreId);
         }
-        return likeService.getPopularFilmsByYearGenre(count,year,genreId);
+        return likeService.getPopularFilmsByYearGenre(count, year, genreId);
     }
 
     @PutMapping("/{filmId}/like/{userId}")
