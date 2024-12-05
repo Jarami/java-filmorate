@@ -7,5 +7,5 @@ import java.util.List;
 public interface FilmStorage extends AbstractStorage<Long, Film> {
     List<Film> getPopularFilms(int count);
 
-    List<Film> getAllByIds(List<Long> ids);
+    List<Film> getRecommendations(long userId);
 }

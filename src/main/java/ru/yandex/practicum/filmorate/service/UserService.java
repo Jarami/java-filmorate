@@ -11,15 +11,11 @@ import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.mapper.UserMapper;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.FilmLikeStorage;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.FriendshipStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 @Slf4j
 @Service
@@ -28,17 +24,14 @@ public class UserService {
 
     private final UserStorage userStorage;
     private final FriendshipStorage friendshipStorage;
-    private final FilmLikeStorage filmLikeStorage;
     private final FilmStorage filmStorage;
 
     public UserService(
             @Qualifier("db") UserStorage userStorage,
             @Qualifier("db") FriendshipStorage friendshipStorage,
-            @Qualifier("db") FilmLikeStorage filmLikeStorage,
             @Qualifier("db") FilmStorage filmStorage) {
         this.userStorage = userStorage;
         this.friendshipStorage = friendshipStorage;
-        this.filmLikeStorage = filmLikeStorage;
         this.filmStorage = filmStorage;
     }
 
@@ -115,41 +108,7 @@ public class UserService {
     }
 
     public List<Film> getRecommendations(long userId) {
-        Map<Long, Set<Long>> usersLikes = filmLikeStorage.getLikes();
-        Set<Long> userLikes = usersLikes.get(userId);
-        if (userLikes == null || userLikes.isEmpty()) {
-            return List.of();
-        }
-        Map<Long, Integer> intersections = new HashMap<>();
-
-        for (Map.Entry<Long, Set<Long>> entry : usersLikes.entrySet()) {
-            Long otherUserId = entry.getKey();
-            Set<Long> otherUserLikes = entry.getValue();
-            if (otherUserId.equals(userId)) {
-                continue;
-            }
-            int commonLikes = (int) userLikes.stream()
-                    .filter(otherUserLikes::contains)
-                    .count();
-            if (commonLikes > 0) {
-                intersections.put(otherUserId, commonLikes);
-            }
-        }
-        Long mostCommonUserId = intersections.entrySet().stream()
-                .max(Map.Entry.comparingByValue())
-                .map(Map.Entry::getKey)
-                .orElse(null);
-        if (mostCommonUserId == null) {
-            return List.of();
-        }
-        Set<Long> mostSimilarUserLikes = usersLikes.get(mostCommonUserId);
-        List<Long> recommendations = mostSimilarUserLikes.stream()
-                .filter(filmId -> !userLikes.contains(filmId))
-                .toList();
-        if (recommendations.isEmpty()) {
-            return List.of();
-        }
-        return filmStorage.getAllByIds(recommendations);
+        return filmStorage.getRecommendations(userId);
     }
 
     public boolean addFriend(long userId, long friendId) {
