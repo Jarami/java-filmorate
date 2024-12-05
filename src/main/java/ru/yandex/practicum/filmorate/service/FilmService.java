@@ -28,15 +28,18 @@ public class FilmService {
     private final FilmStorage filmStorage;
     private final FilmMpaStorage filmMpaStorage;
     private final FilmGenreStorage filmGenreStorage;
+    private final UserService userService;
 
     public FilmService(
             @Qualifier("db") FilmStorage filmStorage,
             @Qualifier("db") FilmMpaStorage filmMpaStorage,
-            @Qualifier("db") FilmGenreStorage filmGenreStorage) {
+            @Qualifier("db") FilmGenreStorage filmGenreStorage,
+            UserService userService) {
 
         this.filmStorage = filmStorage;
         this.filmMpaStorage = filmMpaStorage;
         this.filmGenreStorage = filmGenreStorage;
+        this.userService = userService;
     }
 
     public Film createFilm(@Valid NewFilmRequest newFilmRequest) {
@@ -96,6 +99,8 @@ public class FilmService {
         if (userId == null || friendId == null) {
             throw new BadRequestException("плохой запрос", "некорректные id пользователей");
         }
+        userService.getUserById(userId);
+        userService.getUserById(friendId);
         return filmStorage.getCommonFilms(userId, friendId);
     }
 
