@@ -74,9 +74,9 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
                     ORDER BY count(fl.film_id) DESC
                     LIMIT 1
                 )
-                        
+
                 EXCEPT
-                        
+
                 SELECT film_id
                 FROM film_likes fl
                 WHERE user_id = :userId
