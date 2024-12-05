@@ -10,7 +10,7 @@ DROP TABLE IF EXISTS film_mpa;
 
 CREATE TABLE IF NOT EXISTS film_mpa (
     mpa_id SERIAL PRIMARY KEY,
-    mpa_name VARCHAR(10) NOT NULL,
+    mpa_name VARCHAR(10) NOT NULL UNIQUE,
 
     CONSTRAINT film_mpa_name_in_list CHECK (mpa_name in ('G', 'PG', 'PG-13', 'R', 'NC-17'))
 );
@@ -37,7 +37,7 @@ COMMENT ON COLUMN films.duration IS 'Продолжительность филь
 
 CREATE TABLE IF NOT EXISTS film_genres (
   genre_id SERIAL PRIMARY KEY,
-  genre_name VARCHAR NOT NULL,
+  genre_name VARCHAR NOT NULL UNIQUE,
 
   CONSTRAINT genres_name_in_list CHECK (genre_name in ('Комедия', 'Драма', 'Мультфильм', 'Триллер', 'Документальный', 'Боевик'))
 );

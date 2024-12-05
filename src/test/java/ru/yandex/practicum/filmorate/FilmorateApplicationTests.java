@@ -803,6 +803,80 @@ class FilmorateApplicationTests {
 		}
 
 		@Test
+		@DisplayName("Попытка сохранить отзыв без содержимого вызывает ошибку 400 или 500")
+		void givenNewReviewWithoutContent_whenSave_gotError() {
+			User user = createUser();
+			Film film = createFilm();
+
+			Map<String, Object> request = Map.of("filmId", film.getId(), "userId", user.getId(),
+					"isPositive", true);
+
+			assertThrows(HttpClientErrorException.BadRequest.class,
+					() -> createReview(request));
+		}
+
+		@Test
+		@DisplayName("Попытка сохранить отзыв c несуществующим пользователем вызывает ошибку 404")
+		void givenNewReviewWithWrongUser_whenSave_gotError() {
+			Film film = createFilm();
+
+			Map<String, Object> request = Map.of("filmId", film.getId(), "userId", -1,
+					"content", "good movie", "isPositive", true);
+
+			assertThrows(HttpClientErrorException.NotFound.class,
+					() -> createReview(request));
+		}
+
+		@Test
+		@DisplayName("Попытка сохранить отзыв без пользователя вызывает ошибку 400 или 500")
+		void givenNewReviewWithoutUser_whenSave_gotError() {
+			Film film = createFilm();
+
+			Map<String, Object> request = Map.of("filmId", film.getId(), "content", "good movie",
+					"isPositive", true);
+
+			assertThrows(HttpClientErrorException.BadRequest.class,
+					() -> createReview(request));
+		}
+
+		@Test
+		@DisplayName("Попытка сохранить отзыв на несуществующий фильм вызывает ошибку 404")
+		void givenNewReviewWithWrongFilm_whenSave_gotError() {
+			User user = createUser();
+
+			Map<String, Object> request = Map.of("filmId", -1, "userId", user.getId(),
+					"content", "good movie", "isPositive", true);
+
+			assertThrows(HttpClientErrorException.NotFound.class,
+					() -> createReview(request));
+		}
+
+		@Test
+		@DisplayName("Попытка сохранить отзыв на несуществующий фильм вызывает ошибку 400 ли 500")
+		void givenNewReviewWithoutFilm_whenSave_gotError() {
+			User user = createUser();
+
+			Map<String, Object> request = Map.of("userId", user.getId(),
+					"content", "good movie", "isPositive", true);
+
+			assertThrows(HttpClientErrorException.BadRequest.class,
+					() -> createReview(request));
+		}
+
+		@Test
+		@DisplayName("Попытка сохранить отзыв без типа вызывает ошибку 400 или 500")
+		void givenNewReviewWithoutType_whenSave_gotError() {
+			User user = createUser();
+			Film film = createFilm();
+
+			Map<String, Object> request = Map.of("filmId", film.getId(), "userId", user.getId(),
+					"content", "good movie");
+
+			assertThrows(HttpClientErrorException.BadRequest.class,
+					() -> createReview(request));
+		}
+
+		@Test
 		@DisplayName("Обновление отзывов")
 		void givenExistingReview_whenSave_gotUpdated() {
 			User user = createUser();
@@ -1268,6 +1342,10 @@ class FilmorateApplicationTests {
 	}
 
 	private FilmReview createReview(NewFilmReviewRequest request) {
+		return post("/reviews", request, FilmReview.class).getBody();
+	}
+
+	private FilmReview createReview(Map<String, Object> request) {
 		return post("/reviews", request, FilmReview.class).getBody();
 	}
 

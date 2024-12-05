@@ -19,7 +19,8 @@ public class DbFilmMpaStorage extends NamedRepository<FilmMpa> implements FilmMp
     private static final String FIND_ALL_QUERY = """
         SELECT mpa_id as "mpa_id",
                mpa_name as "mpa_name"
-        FROM film_mpa""";
+        FROM film_mpa
+        ORDER BY mpa_id""";
 
     private static final String FIND_BY_ID_QUERY = """
         SELECT mpa_id as "mpa_id",
