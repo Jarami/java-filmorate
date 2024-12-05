@@ -25,18 +25,15 @@ public class FilmReviewService {
     private final UserService userService;
     private final FilmService filmService;
     private final FilmReviewStorage reviewStorage;
-    private final int defaultFilmReviewCount;
 
     public FilmReviewService(
             UserService userService,
             FilmService filmService,
-            @Qualifier("db") FilmReviewStorage reviewStorage,
-            @Value("${app.defaultFilmReviewCount}") int defaultFilmReviewCount) {
+            @Qualifier("db") FilmReviewStorage reviewStorage) {
 
         this.userService = userService;
         this.filmService = filmService;
         this.reviewStorage = reviewStorage;
-        this.defaultFilmReviewCount = defaultFilmReviewCount;
     }
 
     public FilmReview getById(long id) {
@@ -90,10 +87,6 @@ public class FilmReviewService {
 
     public List<FilmReview> getByFilmAndCount(Integer count, Long filmId) {
 
-        if (count == null) {
-            count = defaultFilmReviewCount;
-        }
-
         if (count < 0) {
             throw new BadRequestException("плохой запрос", "count не может быть отрицательным");
         }
@@ -104,6 +97,10 @@ public class FilmReviewService {
         }
 
         return reviewStorage.getAll(count);
+    }
+
+    public int deleteAllReviews() {
+        return reviewStorage.deleteAll();
     }
 
     public void addLikeToReview(long reviewId, long userId) {

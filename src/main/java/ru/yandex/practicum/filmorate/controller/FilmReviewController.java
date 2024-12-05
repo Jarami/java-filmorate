@@ -21,30 +21,35 @@ public class FilmReviewController {
 
     @PostMapping(value = {"", "/"})
     @ResponseStatus(HttpStatus.CREATED)
-    public FilmReview createFilm(@RequestBody NewFilmReviewRequest request) {
+    public FilmReview createFilmReview(@RequestBody NewFilmReviewRequest request) {
         return reviewService.createReview(request);
     }
 
     @PutMapping(value = {"", "/"})
-    public FilmReview updateFilm(@RequestBody UpdateFilmReviewRequest request) {
+    public FilmReview updateFilmReview(@RequestBody UpdateFilmReviewRequest request) {
         return reviewService.updateReview(request);
     }
 
     @DeleteMapping("/{id}")
-    public void deleteFilmById(@PathVariable long id) {
+    public void deleteFilmReviewById(@PathVariable long id) {
         reviewService.deleteById(id);
     }
 
     @GetMapping("/{id}")
-    public FilmReview getFilmById(@PathVariable long id) {
+    public FilmReview getFilmReviewById(@PathVariable long id) {
         return reviewService.getById(id);
     }
 
     @GetMapping(value = {"", "/"})
-    public List<FilmReview> getByFilmAndCount(@RequestParam(required = false) Integer count,
+    public List<FilmReview> getByFilmAndCount(@RequestParam(required = false, defaultValue = "10") Integer count,
                                               @RequestParam(required = false) Long filmId) {
 
         return reviewService.getByFilmAndCount(count, filmId);
+    }
+
+    @DeleteMapping(value = {"", "/"})
+    public int deleteAllFilmReviews() {
+        return reviewService.deleteAllReviews();
     }
 
     @PutMapping("/{id}/like/{userId}")
