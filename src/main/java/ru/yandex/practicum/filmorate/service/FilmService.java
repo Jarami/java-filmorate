@@ -137,6 +137,9 @@ public class FilmService {
     }
 
     public void deleteFilmById(long filmId) {
+
+        log.info("удаляем фильм {}", filmId);
+
         Film film = filmStorage.getById(filmId)
                 .orElseThrow(() -> new NotFoundException("не найден фильм", "не найден фильм по id = " + filmId));
 
