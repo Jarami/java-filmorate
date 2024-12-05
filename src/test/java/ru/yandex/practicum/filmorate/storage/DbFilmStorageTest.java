@@ -147,6 +147,36 @@ public class DbFilmStorageTest {
         assertEquals(Set.of("Мультфильм", "Триллер"), getGenresNames(actFilm));
     }
 
+    @Test
+    void givenUserWithRecommendations_whenGetRecommendations_gotCorrectFilm() {
+        filmLikeStorage.like(film1, user1);
+        filmLikeStorage.like(film2, user1);
+        filmLikeStorage.like(film2, user2);
+        filmLikeStorage.like(film3, user2);
+
+        List<Film> recommendedFilms = filmStorage.getRecommendations(user1.getId());
+
+        assertEquals(1, recommendedFilms.size());
+        assertEquals(film3.getId(), recommendedFilms.get(0).getId());
+    }
+
+    @Test
+    void givenUserWithoutRecommendations_whenGetRecommendations_gotEmptyList() {
+        filmLikeStorage.like(film1, user1);
+        filmLikeStorage.like(film2, user2);
+
+        List<Film> recommendedFilms = filmStorage.getRecommendations(user1.getId());
+
+        assertEquals(0, recommendedFilms.size());
+    }
+
+    @Test
+    void givenNoLikes_whenGetRecommendations_gotEmptyList() {
+        List<Film> recommendedFilms = filmStorage.getRecommendations(user1.getId());
+
+        assertEquals(0, recommendedFilms.size());
+    }
+
     private Set<String> getFilmNames(List<Film> films) {
         return films.stream().map(f -> f.getName()).collect(Collectors.toSet());
     }
