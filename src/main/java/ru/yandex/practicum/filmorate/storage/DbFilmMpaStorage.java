@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.storage;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.KeyHolder;
@@ -12,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+@Slf4j
 @Repository
 @Qualifier("db")
 public class DbFilmMpaStorage extends NamedRepository<FilmMpa> implements FilmMpaStorage {
@@ -73,6 +75,7 @@ public class DbFilmMpaStorage extends NamedRepository<FilmMpa> implements FilmMp
                 throw new FailedToCreateEntity("не удалось создать рейтинг " + mpa);
             } else {
                 mpa.setId(id);
+                log.debug("Рейтинг {} сохранен с id = {}", mpa.getName(), mpa.getId());
             }
 
         } else {
