@@ -263,6 +263,6 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
             case "director,title" -> FIND_FILMS_BY_DIRECTOR_AND_FILM_QUERY;
             default -> "";
         };
-        return namedTemplate.query(sqlQuery,  Map.of("name", queryString), new FilmRowMapper());
+        return namedTemplate.query(sqlQuery, Map.of("name", queryString), new FilmRowMapper());
     }
 }
