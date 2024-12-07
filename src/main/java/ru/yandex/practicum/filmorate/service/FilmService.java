@@ -146,6 +146,10 @@ public class FilmService {
                 .orElseThrow(() -> new NotFoundException("не найден фильм", "не найден фильм с id = " + id));
     }
 
+    public List<Film> searchFilms(String queryString, String searchBy) {
+        return filmStorage.searchBy(queryString, searchBy);
+    }
+
     public Film updateFilm(@Valid UpdateFilmRequest updateFilmRequest) {
 
         Long filmId = updateFilmRequest.getId();
