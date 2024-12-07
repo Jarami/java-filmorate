@@ -196,12 +196,9 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
                f.duration as "duration",
                fr.mpa_id as "mpa_id",
                fr.mpa_name as "mpa_name",
-        FROM films AS f LEFT OUTER JOIN
-        (
-            SELECT film_id, COUNT (*) AS likes_count 
-            FROM film_likes
-            GROUP BY film_id
-        ) AS l ON f.film_id = l.film_id
+               count(fl.film_id) as "rate"
+        FROM films AS f 
+        LEFT OUTER JOIN film_likes AS fl ON fl.film_id = f.film_id
         LEFT OUTER JOIN film_mpa AS fr ON f.mpa_id = fr.mpa_id
         WHERE f.name ILIKE CONCAT('%', :name, '%')""";
 
@@ -213,12 +210,9 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
                f.duration as "duration",
                fr.mpa_id as "mpa_id",
                fr.mpa_name as "mpa_name",
-        FROM films AS f LEFT OUTER JOIN
-        (
-            SELECT film_id, COUNT (*) AS likes_count 
-            FROM film_likes
-            GROUP BY film_id
-        ) AS l ON f.film_id = l.film_id
+               count(fl.film_id) as "rate"
+        FROM films AS f 
+        LEFT OUTER JOIN film_likes AS fl ON fl.film_id = f.film_id
         LEFT OUTER JOIN film_mpa AS fr ON f.mpa_id = fr.mpa_id
         LEFT OUTER JOIN films_directors AS fd ON f.film_id = fd.film_id
         LEFT OUTER JOIN directors AS d ON fd.director_id = d.director_id
@@ -228,13 +222,13 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
             FIND_FILMS_BY_TITLE_QUERY +
                     " UNION ALL " +
                     FIND_FILMS_BY_DIRECTOR_QUERY +
-                    " ORDER BY FILM_ID desc";
+                    " ORDER BY f.film_id DESC";
 
     private static final String FIND_FILMS_BY_DIRECTOR_AND_FILM_QUERY =
             FIND_FILMS_BY_DIRECTOR_QUERY +
                     " UNION ALL " +
                     FIND_FILMS_BY_TITLE_QUERY +
-                    " ORDER BY FILM_ID desc";
+                    " ORDER BY f.film_id DESC";
 
     private static final String FIND_FILM_DIRECTORS_QUERY = """
         SELECT d.director_id as "director_id",
