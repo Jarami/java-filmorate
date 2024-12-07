@@ -38,6 +38,17 @@ public class FilmController {
         return FilmMapper.mapToDto(film);
     }
 
+    @GetMapping("/search")
+    public List<FilmDto> searchFilms(@RequestParam(required = false) String query,
+                               @RequestParam(required = false) String by) {
+        List<Film> films = filmService.searchFilms(query, by);
+        films.forEach(film -> log.info("getting film {}", film));
+
+        return films.stream()
+                .map(FilmMapper::mapToDto)
+                .toList();
+    }
+
     @PostMapping(value = {"", "/"})
     @ResponseStatus(HttpStatus.CREATED)
     public FilmDto createFilm(@RequestBody NewFilmRequest newFilmRequest) {
