@@ -84,7 +84,7 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
         FROM films AS f 
         LEFT OUTER JOIN film_likes AS fl ON fl.film_id = f.film_id
         LEFT OUTER JOIN film_mpa AS fr ON f.mpa_id = fr.mpa_id
-        WHERE f.name ILIKE CONCAT('%', :name, '%')""";
+        WHERE f.name LIKE("%:name%")""";
 
     private static final String FIND_FILMS_BY_DIRECTOR_QUERY = """
         SELECT f.film_id as "id"
@@ -100,7 +100,7 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
         LEFT OUTER JOIN film_mpa AS fr ON f.mpa_id = fr.mpa_id
         LEFT OUTER JOIN films_directors AS fd ON f.film_id = fd.film_id
         LEFT OUTER JOIN directors AS d ON fd.director_id = d.director_id
-        WHERE d.name ILIKE CONCAT('%', :name, '%')""";
+        WHERE d.name LIKE("%:name%")""";
 
     private static final String FIND_FILMS_BY_FILM_AND_DIRECTOR_QUERY =
             FIND_FILMS_BY_TITLE_QUERY +
