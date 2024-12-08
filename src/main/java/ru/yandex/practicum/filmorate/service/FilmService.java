@@ -93,15 +93,15 @@ public class FilmService {
     }
 
     public List<Film> getPopularFilmsByYear(int count, int year) {
-        return filmStorage.getPopularFilmsByYear(count,year);
+        return filmStorage.getPopularFilmsByYear(count, year);
     }
 
     public List<Film> getPopularFilmsByGenre(int count, int genre) {
-        return filmStorage.getPopularFilmsByGenre(count,genre);
+        return filmStorage.getPopularFilmsByGenre(count, genre);
     }
 
-    public List<Film> getPopularFilmsByYearGenre(int count, int year, int genre) {
-        return filmStorage.getPopularFilmsByYearGenre(count,year,genre);
+    public List<Film> getPopularFilmsByYearAndGenre(int count, int year, int genreId) {
+        return filmStorage.getPopularFilmsByYearGenre(count, year, genreId);
     }
 
     public Film getFilmById(long id) {

@@ -63,12 +63,12 @@ public class LikeService {
         return filmService.getPopularFilmsByYear(count, year);
     }
 
-    public List<Film> getPopularFilmsByGenre(int count, int genre) {
-        return filmService.getPopularFilmsByGenre(count, genre);
+    public List<Film> getPopularFilmsByGenre(int count, int genreId) {
+        return filmService.getPopularFilmsByGenre(count, genreId);
     }
 
-    public List<Film> getPopularFilmsByYearGenre(int count, int year, int genre) {
-        return filmService.getPopularFilmsByYearGenre(count, year, genre);
+    public List<Film> getPopularFilmsByYearAndGenre(int count, int year, int genreId) {
+        return filmService.getPopularFilmsByYearAndGenre(count, year, genreId);
     }
 
     private void checkFilmId(Long filmId) {

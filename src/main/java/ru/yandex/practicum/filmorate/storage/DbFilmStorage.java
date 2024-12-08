@@ -62,8 +62,7 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
             FROM films f
             INNER JOIN film_mpa fr ON f.mpa_id = fr.mpa_id
             LEFT JOIN film_likes fl ON fl.film_id = f.film_id
-            WHERE 1=1
-            AND EXTRACT(YEAR FROM f.release_date) = :year
+            WHERE EXTRACT(YEAR FROM f.release_date) = :year
             GROUP BY f.film_id, fr.mpa_id
             ORDER BY count(fl.film_id) desc
             LIMIT :count""";
@@ -76,12 +75,13 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
                     f.duration as duration,
                     fr.mpa_id as mpa_id,
                     fr.mpa_name as mpa_name,
-                    count(fl.film_id) as rate
+                    COUNT(fl.film_id) as rate
             FROM films f
             INNER JOIN film_mpa fr ON f.mpa_id = fr.mpa_id
             LEFT JOIN film_likes fl ON fl.film_id = f.film_id
-            WHERE 1=1
-            AND f.film_id IN (SELECT FILM_ID FROM FILMS_GENRES_RELATION fgr WHERE GENRE_ID = :genre_id)
+            WHERE f.film_id IN (
+                SELECT FILM_ID FROM FILMS_GENRES_RELATION fgr WHERE GENRE_ID = :genre_id
+                )
             GROUP BY f.film_id, fr.mpa_id
             ORDER BY count(fl.film_id) desc
             LIMIT :count""";
@@ -95,13 +95,14 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
                     f.duration as duration,
                     fr.mpa_id as mpa_id,
                     fr.mpa_name as mpa_name,
-                    count(fl.film_id) as rate
+                    COUNT(fl.film_id) as rate
             FROM films f
             INNER JOIN film_mpa fr ON f.mpa_id = fr.mpa_id
             LEFT JOIN film_likes fl ON fl.film_id = f.film_id
-            WHERE 1=1
-            AND EXTRACT(YEAR FROM f.release_date) = :year
-            AND f.film_id IN (SELECT FILM_ID FROM FILMS_GENRES_RELATION fgr WHERE GENRE_ID = :genre_id)
+            WHERE EXTRACT(YEAR FROM f.release_date) = :year
+            AND f.film_id IN (
+                SELECT FILM_ID FROM FILMS_GENRES_RELATION fgr WHERE GENRE_ID = :genre_id
+                )
             GROUP BY f.film_id, fr.mpa_id
             ORDER BY count(fl.film_id) desc
             LIMIT :count""";

@@ -28,7 +28,7 @@ public class LikeController {
         if (year == null) {
             return likeService.getPopularFilmsByGenre(count, genreId);
         }
-        return likeService.getPopularFilmsByYearGenre(count, year, genreId);
+        return likeService.getPopularFilmsByYearAndGenre(count, year, genreId);
     }
 
     @PutMapping("/{filmId}/like/{userId}")
