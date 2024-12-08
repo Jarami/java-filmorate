@@ -38,6 +38,15 @@ public class FilmController {
         return FilmMapper.mapToDto(film);
     }
 
+    @GetMapping(value = "/common")
+    public List<FilmDto> getCommonFilms(@RequestParam Long userId,
+                                        @RequestParam Long friendId) {
+        return filmService.getCommonFilms(userId, friendId).stream()
+                .peek(film -> log.info("film = {}", film))
+                .map(FilmMapper::mapToDto)
+                .toList();
+    }
+
     @PostMapping(value = {"", "/"})
     @ResponseStatus(HttpStatus.CREATED)
     public FilmDto createFilm(@RequestBody NewFilmRequest newFilmRequest) {

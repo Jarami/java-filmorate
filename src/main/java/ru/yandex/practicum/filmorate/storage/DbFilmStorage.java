@@ -50,6 +50,28 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
             ORDER BY count(fl.film_id) desc
             LIMIT :count""";
 
+    private static final String FIND_COMMON_FILMS = """
+            SELECT f.film_id as "film_id",
+                   f.film_name as "film_name",
+                   f.description as "description",
+                   f.release_date as "release_date",
+                   f.duration as "duration",
+                   fr.mpa_id as "mpa_id",
+                   fr.mpa_name as "mpa_name",
+                   count(fl.film_id) as "rate"
+            FROM films f
+            LEFT JOIN film_mpa fr ON f.mpa_id = fr.mpa_id
+            LEFT JOIN film_likes fl ON fl.film_id = f.film_id
+            WHERE f.film_id IN (
+                SELECT fl1.film_id
+                FROM film_likes fl1
+                INNER JOIN film_likes fl2 ON fl1.film_id = fl2.film_id
+                WHERE fl1.user_id = :userId AND fl2.user_id = :friendId
+            )
+            GROUP BY f.film_id, fr.mpa_id
+            ORDER BY count(fl.film_id) desc
+            """;
+
     private static final String FIND_BY_ID_QUERY = """
         SELECT f.film_id as "film_id",
                f.film_name as "film_name",
@@ -120,6 +142,19 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
     @Override
     public List<Film> getPopularFilms(int count) {
         List<Film> films = findMany(FIND_TOP_QUERY, Map.of("count", count));
+
+        films.forEach(film -> {
+            List<FilmGenre> genres = findMany(FIND_FILM_GENRES_QUERY,
+                    Map.of("filmId", film.getId()), new BeanPropertyRowMapper<>(FilmGenre.class));
+            film.setGenres(genres);
+        });
+
+        return films;
+    }
+
+    @Override
+    public List<Film> getCommonFilms(Long userId, Long friendId) {
+        List<Film> films = findMany(FIND_COMMON_FILMS, Map.of("userId", userId, "friendId", friendId));
 
         films.forEach(film -> {
             List<FilmGenre> genres = findMany(FIND_FILM_GENRES_QUERY,
