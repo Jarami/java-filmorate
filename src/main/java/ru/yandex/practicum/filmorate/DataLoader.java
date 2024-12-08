@@ -44,7 +44,10 @@ public class DataLoader {
             int genresLoaded = 0;
             int mpaLoaded = 0;
 
-            Set<String> genreNames = genreStorage.getAll().stream().map(FilmGenre::getName).collect(Collectors.toSet());
+            Set<String> genreNames = genreStorage.getAll().stream()
+                    .map(FilmGenre::getName)
+                    .collect(Collectors.toSet());
+
             for (String name : GENRE_NAMES) {
                 if (!genreNames.contains(name)) {
                     genreStorage.save(FilmGenre.builder().name(name).build());
@@ -52,7 +55,10 @@ public class DataLoader {
                 }
             }
 
-            Set<String> mpaNames = mpaStorage.getAll().stream().map(FilmMpa::getName).collect(Collectors.toSet());
+            Set<String> mpaNames = mpaStorage.getAll().stream()
+                    .map(FilmMpa::getName)
+                    .collect(Collectors.toSet());
+
             for (String name : MPA_NAMES) {
                 if (!mpaNames.contains(name)) {
                     mpaStorage.save(FilmMpa.builder().name(name).build());
