@@ -22,7 +22,8 @@ public class DbFilmGenreStorage extends NamedRepository<FilmGenre> implements Fi
     private static final String FIND_ALL_QUERY = """
         SELECT genre_id as "genre_id",
                genre_name as "genre_name"
-        FROM film_genres""";
+        FROM film_genres
+        ORDER BY genre_id""";
 
     private static final String FIND_BY_ID_QUERY = """
         SELECT genre_id as "genre_id",
@@ -52,7 +53,9 @@ public class DbFilmGenreStorage extends NamedRepository<FilmGenre> implements Fi
 
     @Override
     public List<FilmGenre> getAll() {
-        return super.getAll(FIND_ALL_QUERY);
+        List<FilmGenre> genres = super.getAll(FIND_ALL_QUERY);
+        log.info("genres = {}", genres);
+        return genres;
     }
 
     @Override

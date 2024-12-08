@@ -1,3 +1,5 @@
+DROP TABLE IF EXISTS film_review_rates;
+DROP TABLE IF EXISTS film_reviews;
 DROP TABLE IF EXISTS film_likes;
 DROP TABLE IF EXISTS friendship;
 DROP TABLE IF EXISTS users;
@@ -8,7 +10,7 @@ DROP TABLE IF EXISTS film_mpa;
 
 CREATE TABLE IF NOT EXISTS film_mpa (
     mpa_id SERIAL PRIMARY KEY,
-    mpa_name VARCHAR(10) NOT NULL,
+    mpa_name VARCHAR(10) NOT NULL UNIQUE,
 
     CONSTRAINT film_mpa_name_in_list CHECK (mpa_name in ('G', 'PG', 'PG-13', 'R', 'NC-17'))
 );
@@ -35,7 +37,7 @@ COMMENT ON COLUMN films.duration IS 'Продолжительность филь
 
 CREATE TABLE IF NOT EXISTS film_genres (
   genre_id SERIAL PRIMARY KEY,
-  genre_name VARCHAR NOT NULL,
+  genre_name VARCHAR NOT NULL UNIQUE,
 
   CONSTRAINT genres_name_in_list CHECK (genre_name in ('Комедия', 'Драма', 'Мультфильм', 'Триллер', 'Документальный', 'Боевик'))
 );
@@ -89,3 +91,28 @@ CREATE TABLE IF NOT EXISTS film_likes (
   user_id BIGINT REFERENCES users (user_id) ON DELETE CASCADE,
   PRIMARY KEY (film_id, user_id)
 );
+
+CREATE TABLE IF NOT EXISTS film_reviews (
+  review_id BIGSERIAL PRIMARY KEY,
+  film_id BIGINT REFERENCES films (film_id) ON DELETE CASCADE,
+  user_id BIGINT REFERENCES users (user_id) ON DELETE CASCADE,
+  content TEXT NOT NULL,
+  is_positive BOOLEAN NOT NULL
+);
+COMMENT ON TABLE film_reviews IS 'Таблица отзывов';
+COMMENT ON COLUMN film_reviews.user_id IS 'ID пользователя, написавшего отзыв';
+COMMENT ON COLUMN film_reviews.film_id IS 'ID фильма, к которому написан отзыв';
+COMMENT ON COLUMN film_reviews.content IS 'Содержимое отзыва';
+COMMENT ON COLUMN film_reviews.is_positive IS 'Положительный ли отзыв';
+
+CREATE TABLE IF NOT EXISTS film_review_rates (
+    review_rate_id BIGSERIAL PRIMARY KEY,
+    review_id BIGINT REFERENCES film_reviews (review_id) ON DELETE CASCADE,
+    user_id BIGINT REFERENCES users (user_id) ON DELETE CASCADE,
+    rate INTEGER NOT NULL,
+    CONSTRAINT film_review_rates_unique UNIQUE (review_id, user_id)
+);
+COMMENT ON TABLE film_review_rates IS 'Таблица отзывов';
+COMMENT ON COLUMN film_review_rates.review_id IS 'ID отзыва, которому поставлен лайк/дизлайк';
+COMMENT ON COLUMN film_review_rates.user_id IS 'ID пользователя, поставившего лайк/дизлайк';
+COMMENT ON COLUMN film_review_rates.rate IS 'рейтинг (+1 - если лайк, и -1 если дизлайк)';

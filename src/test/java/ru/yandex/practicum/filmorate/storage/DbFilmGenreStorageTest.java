@@ -112,18 +112,4 @@ public class DbFilmGenreStorageTest {
             assertEquals(expGenre.getName(), actGenre.getName());
         });
     }
-
-    @Test
-    void givenExistingGenre_whenUpdate_gotUpdated() {
-        List<FilmGenre> genres = filmGenreStorage.getAll();
-        Integer id = genres.get(0).getId();
-        FilmGenre updatedGenre = new FilmGenre(id, genres.get(1).getName());
-
-        filmGenreStorage.save(updatedGenre);
-
-        FilmGenre actGenre = filmGenreStorage.getById(id)
-                .orElseThrow(() -> new NotFoundException("no genre", "no genre by id = " + id));
-
-        assertEquals(genres.get(1).getName(), actGenre.getName());
-    }
 }

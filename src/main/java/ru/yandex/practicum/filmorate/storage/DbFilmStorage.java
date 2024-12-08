@@ -70,7 +70,8 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
                g.genre_name as "name"
         FROM film_genres g
         INNER JOIN films_genres_relation r ON g.genre_id = r.genre_id
-        WHERE r.film_id = :filmId""";
+        WHERE r.film_id = :filmId
+        ORDER BY g.genre_id""";
 
     private static final String INSERT_QUERY = """
         INSERT INTO films(film_name, description, release_date, duration, mpa_id)
