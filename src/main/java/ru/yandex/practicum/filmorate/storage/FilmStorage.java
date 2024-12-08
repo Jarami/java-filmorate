@@ -6,4 +6,6 @@ import java.util.List;
 
 public interface FilmStorage extends AbstractStorage<Long, Film> {
     List<Film> getPopularFilms(int count);
+
+    List<Film> searchBy(String queryString, String searchBy);
 }
