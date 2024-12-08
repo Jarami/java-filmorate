@@ -8,6 +8,7 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.exceptions.FailedToCreateEntity;
 import ru.yandex.practicum.filmorate.model.Director;
+import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.FilmGenre;
 import ru.yandex.practicum.filmorate.storage.mapper.DirectorRowMapper;
@@ -189,47 +190,41 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
         ORDER BY g.genre_id""";
 
     private static final String FIND_FILMS_BY_TITLE_QUERY = """
-        SELECT f.film_id as "id",
-               f.film_name as "name",
+        SELECT f.film_id as "film_id",
+               f.film_name as "film_name",
                f.description as "description",
                f.release_date as "release_date",
                f.duration as "duration",
                fr.mpa_id as "mpa_id",
                fr.mpa_name as "mpa_name",
-               count(fl.film_id) as "rate"
+               COUNT(DISTINCT fl.film_id) as "rate"
         FROM films AS f
         LEFT OUTER JOIN film_likes AS fl ON fl.film_id = f.film_id
         LEFT OUTER JOIN film_mpa AS fr ON f.mpa_id = fr.mpa_id
-        WHERE f.name LIKE("%:name%")
+        WHERE f.film_name LIKE :name
         GROUP BY f.film_id, fr.mpa_id""";
 
     private static final String FIND_FILMS_BY_DIRECTOR_QUERY = """
-        SELECT f.film_id as "id",
-               f.film_name as "name",
+        SELECT f.film_id as "film_id",
+               f.film_name as "film_name",
                f.description as "description",
                f.release_date as "release_date",
                f.duration as "duration",
                fr.mpa_id as "mpa_id",
                fr.mpa_name as "mpa_name",
-               count(fl.film_id) as "rate"
+               COUNT(DISTINCT fl.film_id) as "rate"
         FROM films AS f
         LEFT OUTER JOIN film_likes AS fl ON fl.film_id = f.film_id
         LEFT OUTER JOIN film_mpa AS fr ON f.mpa_id = fr.mpa_id
         LEFT OUTER JOIN films_directors AS fd ON f.film_id = fd.film_id
         LEFT OUTER JOIN directors AS d ON fd.director_id = d.director_id
-        WHERE d.name LIKE("%:name%")
+        WHERE d.film_name LIKE :name
         GROUP BY f.film_id, fr.mpa_id""";
 
     private static final String FIND_FILMS_BY_FILM_AND_DIRECTOR_QUERY =
             FIND_FILMS_BY_TITLE_QUERY +
-                    " UNION ALL " +
+                    " UNION " +
                     FIND_FILMS_BY_DIRECTOR_QUERY +
-                    " ORDER BY f.film_id DESC";
-
-    private static final String FIND_FILMS_BY_DIRECTOR_AND_FILM_QUERY =
-            FIND_FILMS_BY_DIRECTOR_QUERY +
-                    " UNION ALL " +
-                    FIND_FILMS_BY_TITLE_QUERY +
                     " ORDER BY f.film_id DESC";
 
     private static final String FIND_FILM_DIRECTORS_QUERY = """
@@ -528,10 +523,11 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
         String sqlQuery = switch (searchBy) {
             case "title" -> FIND_FILMS_BY_TITLE_QUERY;
             case "director" -> FIND_FILMS_BY_DIRECTOR_QUERY;
-            case "title,director" -> FIND_FILMS_BY_FILM_AND_DIRECTOR_QUERY;
-            case "director,title" -> FIND_FILMS_BY_DIRECTOR_AND_FILM_QUERY;
-            default -> "";
+            case "title,director", "director,title" -> FIND_FILMS_BY_FILM_AND_DIRECTOR_QUERY;
+            default -> throw new NotFoundException("Неизвестный критерий сортировки",
+                    "корректные критерии: title, director и оба");
         };
-        return namedTemplate.query(sqlQuery, Map.of("name", queryString), new FilmRowMapper());
+        return namedTemplate.query(sqlQuery, Map.of("name", "%" + queryString.toLowerCase() + "%"),
+                new FilmRowMapper());
     }
 }
