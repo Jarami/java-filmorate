@@ -6,4 +6,10 @@ import java.util.List;
 
 public interface FilmStorage extends AbstractStorage<Long, Film> {
     List<Film> getPopularFilms(int count);
+
+    List<Film> getPopularFilmsByYear(int count, int year);
+
+    List<Film> getPopularFilmsByGenre(int count, int genre);
+
+    List<Film> getPopularFilmsByYearGenre(int count, int year, int genre);
 }
