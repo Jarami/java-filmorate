@@ -60,7 +60,7 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
                    fr.mpa_name as "mpa_name",
                    count(fl.film_id) as "rate"
             FROM films f
-            INNER JOIN film_mpa fr ON f.mpa_id = fr.mpa_id
+            LEFT JOIN film_mpa fr ON f.mpa_id = fr.mpa_id
             LEFT JOIN film_likes fl ON fl.film_id = f.film_id
             WHERE f.film_id IN (
                 SELECT fl1.film_id
