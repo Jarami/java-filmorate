@@ -190,28 +190,28 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
 
     private static final String FIND_FILMS_BY_TITLE_QUERY = """
         SELECT f.film_id as "id"
-               f.film_name as "name", 
+               f.film_name as "name",
                f.description as "description",
                f.release_date as "release_date",
                f.duration as "duration",
                fr.mpa_id as "mpa_id",
                fr.mpa_name as "mpa_name",
                count(fl.film_id) as "rate"
-        FROM films AS f 
+        FROM films AS f
         LEFT OUTER JOIN film_likes AS fl ON fl.film_id = f.film_id
         LEFT OUTER JOIN film_mpa AS fr ON f.mpa_id = fr.mpa_id
         WHERE f.name LIKE("%:name%")""";
 
     private static final String FIND_FILMS_BY_DIRECTOR_QUERY = """
         SELECT f.film_id as "id"
-               f.film_name as "name", 
+               f.film_name as "name",
                f.description as "description",
                f.release_date as "release_date",
                f.duration as "duration",
                fr.mpa_id as "mpa_id",
                fr.mpa_name as "mpa_name",
                count(fl.film_id) as "rate"
-        FROM films AS f 
+        FROM films AS f
         LEFT OUTER JOIN film_likes AS fl ON fl.film_id = f.film_id
         LEFT OUTER JOIN film_mpa AS fr ON f.mpa_id = fr.mpa_id
         LEFT OUTER JOIN films_directors AS fd ON f.film_id = fd.film_id
