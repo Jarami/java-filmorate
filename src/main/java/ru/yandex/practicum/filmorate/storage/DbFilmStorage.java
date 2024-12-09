@@ -50,6 +50,40 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
             ORDER BY count(fl.film_id) desc
             LIMIT :count""";
 
+    private static final String FIND_RECOMMENDATIONS_QUERY = """
+            SELECT f.film_id AS "film_id",
+                   f.film_name AS "film_name",
+                   f.description AS "description",
+                   f.release_date AS "release_date",
+                   f.duration AS "duration",
+                   fr.mpa_id AS "mpa_id",
+                   fr.mpa_name AS "mpa_name",
+                   count(fl.film_id) AS "rate"
+            FROM films f
+            INNER JOIN film_mpa fr ON f.mpa_id = fr.mpa_id
+            LEFT JOIN film_likes fl ON fl.film_id = f.film_id
+            WHERE f.film_id IN (
+                SELECT film_id
+                FROM film_likes fl
+                WHERE user_id IN (
+                    SELECT fl.user_id
+                    FROM film_likes fl
+                    INNER JOIN film_likes fl2 ON fl.film_id = fl2.film_id
+                    WHERE fl.user_id <> :userId AND fl2.user_id = :userId
+                    GROUP BY fl.user_id
+                    ORDER BY count(fl.film_id) DESC
+                    LIMIT 1
+                )
+
+                EXCEPT
+
+                SELECT film_id
+                FROM film_likes fl
+                WHERE user_id = :userId
+            )
+            GROUP BY f.film_id, fr.mpa_id
+            """;
+
     private static final String FIND_COMMON_FILMS = """
             SELECT f.film_id as "film_id",
                    f.film_name as "film_name",
@@ -142,6 +176,19 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
     @Override
     public List<Film> getPopularFilms(int count) {
         List<Film> films = findMany(FIND_TOP_QUERY, Map.of("count", count));
+
+        films.forEach(film -> {
+            List<FilmGenre> genres = findMany(FIND_FILM_GENRES_QUERY,
+                    Map.of("filmId", film.getId()), new BeanPropertyRowMapper<>(FilmGenre.class));
+            film.setGenres(genres);
+        });
+
+        return films;
+    }
+
+    @Override
+    public List<Film> getRecommendations(long userId) {
+        List<Film> films = findMany(FIND_RECOMMENDATIONS_QUERY, Map.of("userId", userId));
 
         films.forEach(film -> {
             List<FilmGenre> genres = findMany(FIND_FILM_GENRES_QUERY,
