@@ -8,4 +8,6 @@ public interface FilmStorage extends AbstractStorage<Long, Film> {
     List<Film> getPopularFilms(int count);
 
     List<Film> getRecommendations(long userId);
+
+    List<Film> getCommonFilms(Long userId, Long friendId);
 }
