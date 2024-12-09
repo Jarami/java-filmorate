@@ -1,3 +1,5 @@
+DROP TABLE IF EXISTS films_directors;
+DROP TABLE IF EXISTS directors;
 DROP TABLE IF EXISTS film_likes;
 DROP TABLE IF EXISTS friendship;
 DROP TABLE IF EXISTS users;
@@ -89,3 +91,21 @@ CREATE TABLE IF NOT EXISTS film_likes (
   user_id BIGINT REFERENCES users (user_id) ON DELETE CASCADE,
   PRIMARY KEY (film_id, user_id)
 );
+
+CREATE TABLE IF NOT EXISTS directors (
+    director_id SERIAL PRIMARY KEY,
+    name VARCHAR(50) NOT NULL
+);
+COMMENT ON TABLE directors IS 'Таблица режиссеров';
+COMMENT ON COLUMN directors.director_id IS 'Идентификатор режиссера';
+COMMENT ON COLUMN directors.name IS 'Имя режиссера';
+
+
+CREATE TABLE IF NOT EXISTS films_directors (
+    film_id BIGINT REFERENCES films (film_id) ON DELETE CASCADE,
+    director_id INTEGER REFERENCES directors (director_id) ON DELETE CASCADE,
+    PRIMARY KEY (film_id, director_id)
+);
+COMMENT ON TABLE films_directors IS 'Связь таблиц фильмов и режиссеров';
+COMMENT ON COLUMN films_directors.film_id IS 'Идентификатор фильма';
+COMMENT ON COLUMN films_directors.director_id IS 'Идентификатор режиссера';
