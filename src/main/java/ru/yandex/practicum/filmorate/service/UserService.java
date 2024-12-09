@@ -9,7 +9,9 @@ import ru.yandex.practicum.filmorate.dto.NewUserRequest;
 import ru.yandex.practicum.filmorate.dto.UpdateUserRequest;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.mapper.UserMapper;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.FriendshipStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
@@ -23,15 +25,18 @@ public class UserService {
     private final UserStorage userStorage;
     private final FriendshipStorage friendshipStorage;
     private final EventService eventService;
+    private final FilmStorage filmStorage;
 
     public UserService(
             @Qualifier("db") UserStorage userStorage,
             @Qualifier("db") FriendshipStorage friendshipStorage,
+            @Qualifier("db") FilmStorage filmStorage,
             EventService eventService) {
 
         this.userStorage = userStorage;
         this.friendshipStorage = friendshipStorage;
         this.eventService = eventService;
+        this.filmStorage = filmStorage;
     }
 
     public User createUser(@Valid NewUserRequest newUserRequest) {
