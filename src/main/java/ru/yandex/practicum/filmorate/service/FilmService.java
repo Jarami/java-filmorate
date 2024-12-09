@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
-import ru.yandex.practicum.filmorate.dto.FilmDto;
 import ru.yandex.practicum.filmorate.dto.FilmGenreDto;
 import ru.yandex.practicum.filmorate.dto.NewFilmRequest;
 import ru.yandex.practicum.filmorate.dto.UpdateFilmRequest;
@@ -53,21 +52,21 @@ public class FilmService {
         film.setMpa(getFilmMpa(newFilmRequest));
 
         if (newFilmRequest.getGenres() != null) {
-                List<FilmGenre> genres = getFilmGenres(newFilmRequest);
-                if (genres.isEmpty()) {
-                    throw new BadRequestException("неуспешный запрос", "пустой список жанров");
-                }
-                film.setGenres(genres);
+            List<FilmGenre> genres = getFilmGenres(newFilmRequest);
+            if (genres.isEmpty()) {
+                throw new BadRequestException("неуспешный запрос", "пустой список жанров");
+            }
+            film.setGenres(genres);
         }
 
         if (newFilmRequest.getDirectors() != null) {
             if (newFilmRequest.getDirectors().size() > 0) {
                 List<Director> directors = getFilmDirectors(newFilmRequest);
                 if (directors.isEmpty()) {
-                    throw  new BadRequestException("неуспешный запрос", "пустой список режиссеров");
+                    throw new BadRequestException("неуспешный запрос", "пустой список режиссеров");
                 }
                 if (directors.size() != newFilmRequest.getDirectors().size()) {
-                    throw  new BadRequestException("неуспешный запрос", "В запросе режиссер, которого нет в списке БД");
+                    throw new BadRequestException("неуспешный запрос", "В запросе режиссер, которого нет в списке БД");
                 }
                 film.setDirectors(directors);
             } else {
@@ -188,7 +187,7 @@ public class FilmService {
 
     public List<Film> getSortedFilmsByDirector(int directorId, String sortBy) {
         Director director = directorStorage.getDirectorById(directorId)
-                .orElseThrow(() -> new NotFoundException("не найден режиссер", "нет режиссера с id={}"+directorId));
+                .orElseThrow(() -> new NotFoundException("не найден режиссер", "нет режиссера с id={}" + directorId));
 
         return filmStorage.getSortedFilmsByDirector(director, sortBy);
     }

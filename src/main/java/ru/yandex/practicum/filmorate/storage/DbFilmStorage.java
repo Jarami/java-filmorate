@@ -166,37 +166,14 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
     public List<Film> getAll() {
         List<Film> films = getAll(FIND_ALL_QUERY);
 
-        films.forEach(film -> {
-            List<FilmGenre> genres = findMany(FIND_FILM_GENRES_QUERY,
-                    Map.of("filmId", film.getId()), new BeanPropertyRowMapper<>(FilmGenre.class));
-            film.setGenres(genres);
-        });
-
-        films.forEach(film -> {
-            List<Director> directors = findMany(FIND_FILM_DIRECTORS_QUERY,
-                    Map.of("filmId", film.getId()), directorRowMapper);
-            film.setDirectors(directors);
-        });
-        return films;
+        return fillFilmsGenresAndDirectors(films);
     }
 
     @Override
     public List<Film> getPopularFilms(int count) {
         List<Film> films = findMany(FIND_TOP_QUERY, Map.of("count", count));
 
-        films.forEach(film -> {
-            List<FilmGenre> genres = findMany(FIND_FILM_GENRES_QUERY,
-                    Map.of("filmId", film.getId()), new BeanPropertyRowMapper<>(FilmGenre.class));
-            film.setGenres(genres);
-        });
-
-        films.forEach(film -> {
-            List<Director> directors = findMany(FIND_FILM_DIRECTORS_QUERY,
-                    Map.of("filmId", film.getId()), directorRowMapper);
-            film.setDirectors(directors);
-        });
-
-        return films;
+        return fillFilmsGenresAndDirectors(films);
     }
 
     @Override
@@ -211,19 +188,7 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
 
         List<Film> films = findMany(sqlQuery, Map.of("directorId", director.getId()));
 
-        films.forEach(film -> {
-            List<FilmGenre> genres = findMany(FIND_FILM_GENRES_QUERY,
-                    Map.of("filmId", film.getId()), new BeanPropertyRowMapper<>(FilmGenre.class));
-            film.setGenres(genres);
-        });
-
-        films.forEach(film -> {
-            List<Director> directors = findMany(FIND_FILM_DIRECTORS_QUERY,
-                    Map.of("filmId", film.getId()), directorRowMapper);
-            film.setDirectors(directors);
-        });
-
-        return films;
+        return fillFilmsGenresAndDirectors(films);
     }
 
     @Override
@@ -298,6 +263,21 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
     @Override
     public int deleteAll() {
         return delete(DELETE_ALL_QUERY);
+    }
+
+    private List<Film> fillFilmsGenresAndDirectors(List<Film> films) {
+        films.forEach(film -> {
+            List<FilmGenre> genres = findMany(FIND_FILM_GENRES_QUERY,
+                    Map.of("filmId", film.getId()), new BeanPropertyRowMapper<>(FilmGenre.class));
+            film.setGenres(genres);
+        });
+
+        films.forEach(film -> {
+            List<Director> directors = findMany(FIND_FILM_DIRECTORS_QUERY,
+                    Map.of("filmId", film.getId()), directorRowMapper);
+            film.setDirectors(directors);
+        });
+        return films;
     }
 
     private void saveGenres(Film film) {
