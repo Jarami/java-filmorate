@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.exceptions.FailedToCreateEntity;
 import ru.yandex.practicum.filmorate.model.Director;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -23,7 +24,7 @@ public class DbDirectorStorage extends NamedRepository<Director> implements Dire
             		name
             FROM DIRECTORS""";
 
-    private static final String SELECT_BY_ID = """
+    private static final String FIND_ONE_BY_ID = """
             SELECT  director_id,
             		name
             FROM DIRECTORS
@@ -31,11 +32,11 @@ public class DbDirectorStorage extends NamedRepository<Director> implements Dire
 
     private static final String INSERT_QUERY = """
             INSERT INTO DIRECTORS (NAME)
-            VALUES (':name')""";
+            VALUES (:name)""";
 
     private static final String UPDATE_QUERY = """
             UPDATE DIRECTORS
-            SET NAME = ':name'
+            SET NAME = :name
             WHERE DIRECTOR_ID = :directorId;""";
 
     private static final String DELETE_BY_ID = """
@@ -46,7 +47,6 @@ public class DbDirectorStorage extends NamedRepository<Director> implements Dire
         super(namedTemplate, mapper);
     }
 
-
     @Override
     public List<Director> getAllDirectors() {
         return getAll(FIND_ALL);
@@ -54,7 +54,7 @@ public class DbDirectorStorage extends NamedRepository<Director> implements Dire
 
     @Override
     public Optional<Director> getDirectorById(int directorId) {
-        return findOne(SELECT_BY_ID, Map.of("directorId", directorId));
+        return findOne(FIND_ONE_BY_ID, Map.of("directorId", directorId));
     }
 
     @Override
@@ -81,5 +81,12 @@ public class DbDirectorStorage extends NamedRepository<Director> implements Dire
     @Override
     public void deleteDirector(Director director) {
         delete(DELETE_BY_ID, Map.of("directorId", director.getId()));
+    }
+
+    @Override
+    public List<Director> getById(List<Integer> directorIds) {
+        return this.getAllDirectors().stream()
+                .filter(director -> directorIds.contains(director.getId()))
+                .toList();
     }
 }

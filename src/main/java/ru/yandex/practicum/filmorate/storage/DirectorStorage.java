@@ -13,4 +13,6 @@ public interface DirectorStorage {
     Director saveDirector(Director director);
 
     void deleteDirector(Director director);
+
+    List<Director> getById(List<Integer> directorIds);
 }

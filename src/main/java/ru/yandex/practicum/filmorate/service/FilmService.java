@@ -11,9 +11,11 @@ import ru.yandex.practicum.filmorate.dto.UpdateFilmRequest;
 import ru.yandex.practicum.filmorate.exceptions.BadRequestException;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.mapper.FilmMapper;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.FilmGenre;
 import ru.yandex.practicum.filmorate.model.FilmMpa;
+import ru.yandex.practicum.filmorate.storage.DirectorStorage;
 import ru.yandex.practicum.filmorate.storage.FilmGenreStorage;
 import ru.yandex.practicum.filmorate.storage.FilmMpaStorage;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
@@ -28,15 +30,18 @@ public class FilmService {
     private final FilmStorage filmStorage;
     private final FilmMpaStorage filmMpaStorage;
     private final FilmGenreStorage filmGenreStorage;
+    private final DirectorStorage directorStorage;
 
     public FilmService(
             @Qualifier("db") FilmStorage filmStorage,
             @Qualifier("db") FilmMpaStorage filmMpaStorage,
-            @Qualifier("db") FilmGenreStorage filmGenreStorage) {
+            @Qualifier("db") FilmGenreStorage filmGenreStorage,
+            @Qualifier("db") DirectorStorage directorStorage) {
 
         this.filmStorage = filmStorage;
         this.filmMpaStorage = filmMpaStorage;
         this.filmGenreStorage = filmGenreStorage;
+        this.directorStorage = directorStorage;
     }
 
     public Film createFilm(@Valid NewFilmRequest newFilmRequest) {
@@ -47,11 +52,26 @@ public class FilmService {
         film.setMpa(getFilmMpa(newFilmRequest));
 
         if (newFilmRequest.getGenres() != null) {
-            List<FilmGenre> genres = getFilmGenres(newFilmRequest);
-            if (genres.isEmpty()) {
-                throw new BadRequestException("неуспешный запрос", "пустой список жанров");
+                List<FilmGenre> genres = getFilmGenres(newFilmRequest);
+                if (genres.isEmpty()) {
+                    throw new BadRequestException("неуспешный запрос", "пустой список жанров");
+                }
+                film.setGenres(genres);
+        }
+
+        if (newFilmRequest.getDirectors() != null) {
+            if (newFilmRequest.getDirectors().size() > 0) {
+                List<Director> directors = getFilmDirectors(newFilmRequest);
+                if (directors.isEmpty()) {
+                    throw  new BadRequestException("неуспешный запрос", "пустой список режиссеров");
+                }
+                if (directors.size() != newFilmRequest.getDirectors().size()) {
+                    throw  new BadRequestException("неуспешный запрос", "В запросе режиссер, которого нет в списке БД");
+                }
+                film.setDirectors(directors);
+            } else {
+                log.debug("В запросе пришёл пустой список режиссеров");
             }
-            film.setGenres(genres);
         }
 
         log.info("saving film {}", film);
@@ -79,9 +99,19 @@ public class FilmService {
         return filmGenreStorage.getById(ids);
     }
 
+    private List<Director> getFilmDirectors(NewFilmRequest newFilmRequest) {
+        List<Integer> directorIds = newFilmRequest.getDirectors().stream().map(Director::getId).toList();
+        return directorStorage.getById(directorIds);
+    }
+
     private List<FilmGenre> getFilmGenres(UpdateFilmRequest updateFilmRequest) {
         List<Integer> ids = updateFilmRequest.getGenres().stream().map(FilmGenreDto::getId).toList();
         return filmGenreStorage.getById(ids);
+    }
+
+    private List<Director> getFilmDirectors(UpdateFilmRequest updateFilmRequest) {
+        List<Integer> directorIds = updateFilmRequest.getDirectors().stream().map(Director::getId).toList();
+        return directorStorage.getById(directorIds);
     }
 
     public List<Film> getAllFilms() {
@@ -130,6 +160,14 @@ public class FilmService {
                 throw new BadRequestException("неуспешный запрос", "пустой список жанров");
             }
             film.setGenres(genres);
+        }
+
+        if (updateFilmRequest.getDirectors() != null) {
+            List<Director> directors = getFilmDirectors(updateFilmRequest);
+            if (directors.isEmpty()) {
+                throw new BadRequestException("неуспешный запрос", "пустой список режиссеров");
+            }
+            film.setDirectors(directors);
         }
 
         log.debug("updating film {}", film);

@@ -11,6 +11,7 @@ import lombok.Setter;
 import lombok.ToString;
 import ru.yandex.practicum.filmorate.mapper.FilmGenreMapper;
 import ru.yandex.practicum.filmorate.mapper.FilmMpaMapper;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.validators.After;
 
@@ -46,6 +47,7 @@ public class UpdateFilmRequest {
     private FilmMpaDto mpa;
 
     private List<FilmGenreDto> genres;
+    private List<Director> directors;
 
     public static UpdateFilmRequest.UpdateFilmRequestBuilder from(Film film) {
         return builder()

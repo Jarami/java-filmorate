@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.validators.After;
 
 import java.time.LocalDate;
@@ -38,4 +39,5 @@ public class NewFilmRequest {
     private FilmMpaDto mpa;
 
     private List<FilmGenreDto> genres;
+    private List<Director> directors;
 }

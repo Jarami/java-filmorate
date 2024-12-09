@@ -7,8 +7,10 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.exceptions.FailedToCreateEntity;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.FilmGenre;
+import ru.yandex.practicum.filmorate.storage.mapper.DirectorRowMapper;
 import ru.yandex.practicum.filmorate.storage.mapper.FilmRowMapper;
 
 import java.util.List;
@@ -72,6 +74,13 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
         INNER JOIN films_genres_relation r ON g.genre_id = r.genre_id
         WHERE r.film_id = :filmId""";
 
+    private static final String FIND_FILM_DIRECTORS_QUERY = """
+        SELECT d.director_id as "director_id",
+               d.name as "name"
+        FROM directors d
+        INNER JOIN films_directors fd ON fd.director_id = d.director_id
+        WHERE fd.film_id = :filmId""";
+
     private static final String INSERT_QUERY = """
         INSERT INTO films(film_name, description, release_date, duration, mpa_id)
         VALUES (:name, :description, :releaseDate, :duration, :mpaId)""";
@@ -100,8 +109,18 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
         DELETE FROM films_genres_relation
         WHERE film_id = :filmId""";
 
-    public DbFilmStorage(NamedParameterJdbcTemplate namedTemplate, FilmRowMapper mapper) {
+    private static final String INSERT_FILM_DIRECTORS_QUERY = """
+        INSERT INTO films_directors (film_id, director_id)
+        VALUES (:filmId, :directorId)""";
+
+    private static final String DELETE_FILM_DIRECTORS_QUERY = """
+        DELETE FROM films_directors
+        WHERE film_id = :filmId""";
+    private final DirectorRowMapper directorRowMapper;
+
+    public DbFilmStorage(NamedParameterJdbcTemplate namedTemplate, FilmRowMapper mapper, DirectorRowMapper directorRowMapper) {
         super(namedTemplate, mapper);
+        this.directorRowMapper = directorRowMapper;
     }
 
     @Override
@@ -114,6 +133,11 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
             film.setGenres(genres);
         });
 
+        films.forEach(film -> {
+            List<Director> directors = findMany(FIND_FILM_DIRECTORS_QUERY,
+                    Map.of("filmId", film.getId()), directorRowMapper);
+            film.setDirectors(directors);
+        });
         return films;
     }
 
@@ -127,6 +151,12 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
             film.setGenres(genres);
         });
 
+        films.forEach(film -> {
+            List<Director> directors = findMany(FIND_FILM_DIRECTORS_QUERY,
+                    Map.of("filmId", film.getId()), new BeanPropertyRowMapper<>(Director.class));
+            film.setDirectors(directors);
+        });
+
         return films;
     }
 
@@ -138,6 +168,10 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
             List<FilmGenre> genres = namedTemplate.query(FIND_FILM_GENRES_QUERY,
                     Map.of("filmId", filmId), new BeanPropertyRowMapper<>(FilmGenre.class));
             f.setGenres(genres);
+
+            List<Director>  directors = namedTemplate.query(FIND_FILM_DIRECTORS_QUERY,
+                    Map.of("filmId", filmId), directorRowMapper);
+            f.setDirectors(directors);
         });
 
         return film;
@@ -167,7 +201,6 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
             }
 
         } else {
-
             update(
                     UPDATE_QUERY,
                     Map.of(
@@ -184,7 +217,11 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
             saveGenres(film);
         }
 
-        return film;
+        if (film.getDirectors() != null && !film.getDirectors().isEmpty()) {
+            saveDirectors(film);
+        }
+
+        return getById(film.getId()).get();
     }
 
     @Override
@@ -208,7 +245,21 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
         batchUpdate(INSERT_FILM_GENRE_REL_QUERY, batchValues);
     }
 
+    private void saveDirectors(Film film) {
+        delete(DELETE_FILM_DIRECTORS_QUERY, Map.of("filmId", film.getId()));
+
+        List<Map<String, Object>> batchValues = film.getDirectors().stream()
+                .map(director -> createDirectorMap(film, director))
+                .toList();
+
+        batchUpdate(INSERT_FILM_DIRECTORS_QUERY, batchValues);
+    }
+
     private Map<String, Object> createFilmGenreMap(Film film, FilmGenre genre) {
         return Map.of("filmId", film.getId(), "genreId", genre.getId());
+    }
+
+    private Map<String, Object> createDirectorMap(Film film, Director director) {
+        return Map.of("filmId", film.getId(), "directorId", director.getId());
     }
 }
