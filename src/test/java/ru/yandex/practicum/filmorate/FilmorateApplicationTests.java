@@ -2,10 +2,7 @@ package ru.yandex.practicum.filmorate;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -15,15 +12,15 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 import ru.yandex.practicum.filmorate.dto.*;
 import ru.yandex.practicum.filmorate.mapper.FilmGenreMapper;
+import ru.yandex.practicum.filmorate.mapper.FilmMapper;
 import ru.yandex.practicum.filmorate.mapper.FilmMpaMapper;
-import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.FilmGenre;
-import ru.yandex.practicum.filmorate.model.FilmMpa;
-import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.model.*;
+import ru.yandex.practicum.filmorate.util.TestUtil;
 
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static ru.yandex.practicum.filmorate.util.TestUtil.*;
@@ -38,18 +35,29 @@ class FilmorateApplicationTests {
 
 	private RestClient client;
 
+	private List<FilmGenre> allGenres;
+	private List<FilmMpa> allMpa;
 	private Map<String, FilmGenre> genreByName;
 	private Map<String, FilmMpa> mpaByName;
 
 	@BeforeEach
 	void init() {
 		client = RestClient.create("http://localhost:" + webServerAppCtxt.getWebServer().getPort());
-		List<FilmGenre> allGenres = getAllGenres();
-		List<FilmMpa> allMpa = getAllMpa();
+		allGenres = getAllGenres();
+		allMpa = getAllMpa();
+
 		genreByName = new HashMap<>();
 		allGenres.forEach(g -> genreByName.put(g.getName(), g));
+
 		mpaByName = new HashMap<>();
 		allMpa.forEach(m -> mpaByName.put(m.getName(), m));
+	}
+
+	@AfterEach
+	void shutdown() {
+		deleteAllReviews();
+		deleteAllFilms();
+		deleteAllUsers();
 	}
 
 	@Nested
@@ -745,6 +753,444 @@ class FilmorateApplicationTests {
 		}
 	}
 
+	@Nested
+	class FilmReviewTests {
+		List<User> users;
+		List<Film> films;
+
+		@BeforeEach
+		void setup() {
+
+			users = new ArrayList<>();
+			for (int i = 1; i <= 11; i++) {
+				NewUserRequest newUserRequest = NewUserRequest.builder()
+						.name("name" + i)
+						.login("login" + i)
+						.email("mail" + i + "@mail.com")
+						.birthday(LocalDate.parse("2000-01-01"))
+						.build();
+
+				users.add(createUser(newUserRequest));
+			}
+
+			films = new ArrayList<>();
+			for (int i = 1; i <= 11; i++) {
+				NewFilmRequest newFilmRequest = NewFilmRequest.builder()
+						.name("film name " + i)
+						.description("film desc " + i)
+						.releaseDate(LocalDate.parse("2010-01-01"))
+						.duration(10 * i + 10)
+						.mpa(mpaDto("G"))
+						.genres(genreDto("Комедия"))
+						.build();
+
+				films.add(createFilm(newFilmRequest));
+			}
+		}
+
+		@Test
+		@DisplayName("Сохранение отзывов")
+		void givenNewReview_whenSave_gotSaved() {
+			User user = createUser();
+			Film film = createFilm();
+			FilmReview review = createReview(film, user);
+
+			assertNotNull(review.getReviewId());
+
+			FilmReview actReview = getFilmReviewById(review.getReviewId());
+
+			assertReviewEquals(review, actReview);
+		}
+
+		@Test
+		@DisplayName("Попытка сохранить отзыв без содержимого вызывает ошибку 400 или 500")
+		void givenNewReviewWithoutContent_whenSave_gotError() {
+			User user = createUser();
+			Film film = createFilm();
+
+			Map<String, Object> request = Map.of("filmId", film.getId(), "userId", user.getId(),
+					"isPositive", true);
+
+			assertThrows(HttpClientErrorException.BadRequest.class,
+					() -> createReview(request));
+		}
+
+		@Test
+		@DisplayName("Попытка сохранить отзыв c несуществующим пользователем вызывает ошибку 404")
+		void givenNewReviewWithWrongUser_whenSave_gotError() {
+			Film film = createFilm();
+
+			Map<String, Object> request = Map.of("filmId", film.getId(), "userId", -1,
+					"content", "good movie", "isPositive", true);
+
+			assertThrows(HttpClientErrorException.NotFound.class,
+					() -> createReview(request));
+		}
+
+		@Test
+		@DisplayName("Попытка сохранить отзыв без пользователя вызывает ошибку 400 или 500")
+		void givenNewReviewWithoutUser_whenSave_gotError() {
+			Film film = createFilm();
+
+			Map<String, Object> request = Map.of("filmId", film.getId(), "content", "good movie",
+					"isPositive", true);
+
+			assertThrows(HttpClientErrorException.BadRequest.class,
+					() -> createReview(request));
+		}
+
+		@Test
+		@DisplayName("Попытка сохранить отзыв на несуществующий фильм вызывает ошибку 404")
+		void givenNewReviewWithWrongFilm_whenSave_gotError() {
+			User user = createUser();
+
+			Map<String, Object> request = Map.of("filmId", -1, "userId", user.getId(),
+					"content", "good movie", "isPositive", true);
+
+			assertThrows(HttpClientErrorException.NotFound.class,
+					() -> createReview(request));
+		}
+
+		@Test
+		@DisplayName("Попытка сохранить отзыв на несуществующий фильм вызывает ошибку 400 ли 500")
+		void givenNewReviewWithoutFilm_whenSave_gotError() {
+			User user = createUser();
+
+			Map<String, Object> request = Map.of("userId", user.getId(),
+					"content", "good movie", "isPositive", true);
+
+			assertThrows(HttpClientErrorException.BadRequest.class,
+					() -> createReview(request));
+		}
+
+		@Test
+		@DisplayName("Попытка сохранить отзыв без типа вызывает ошибку 400 или 500")
+		void givenNewReviewWithoutType_whenSave_gotError() {
+			User user = createUser();
+			Film film = createFilm();
+
+			Map<String, Object> request = Map.of("filmId", film.getId(), "userId", user.getId(),
+					"content", "good movie");
+
+			assertThrows(HttpClientErrorException.BadRequest.class,
+					() -> createReview(request));
+		}
+
+		@Test
+		@DisplayName("Обновление отзывов")
+		void givenExistingReview_whenSave_gotUpdated() {
+			User user = createUser();
+			Film film = createFilm();
+			FilmReview review = createReview(film, user);
+
+			FilmReview updatedReview = FilmReview.builder()
+					.reviewId(review.getReviewId())
+					.userId(review.getUserId())
+					.filmId(review.getFilmId())
+					.content("Some new content")
+					.isPositive(!review.isPositive())
+					.build();
+
+			updateReview(updatedReview);
+
+			FilmReview actReview = getFilmReviewById(review.getReviewId());
+
+			assertReviewEquals(updatedReview, actReview);
+		}
+
+		@Test
+		@DisplayName("Получение отзывов для определенного фильма")
+		void givenReviews_whenGetByFilmAndCount_gotIt() {
+			Film film1 = createFilm();
+			Film film2 = createFilm();
+
+			createReviews(4, film1, createUser());
+			createReviews(20, film2, createUser());
+
+			List<FilmReview> reviews = getFilmReviewsByCountAndFilm(3, film1);
+			assertEquals(3, reviews.size());
+
+			reviews.forEach(review ->
+					assertEquals(film1.getId(), review.getFilmId()));
+		}
+
+		@Test
+		@DisplayName("Получение отзывов")
+		void givenReviews_whenGetByCount_gotIt() {
+			Film film1 = createFilm();
+			Film film2 = createFilm();
+
+			createReviews(10, film1, createUser());
+			createReviews(10, film2, createUser());
+
+			List<FilmReview> filmReviews = getFilmReviewsByCount(15);
+			assertEquals(15, filmReviews.size());
+		}
+
+		@Test
+		@DisplayName("Удаление отзыва")
+		void givenExistingReviews_whenDeleteOne_gotDeleted() {
+			Film film1 = createFilm();
+			Film film2 = createFilm();
+
+			List<FilmReview> reviews1 = createReviews(2, film1, createUser());
+			List<FilmReview> reviews2 = createReviews(1, film2, createUser());
+
+			deleteFilmReviewById(reviews1.get(0).getReviewId());
+
+			List<FilmReview> actFilmReviews = getFilmReviewsByCount(10);
+			Set<Long> actReviewIds = actFilmReviews.stream().map(FilmReview::getReviewId).collect(Collectors.toSet());
+			Set<Long> expReviewIds = Set.of(reviews1.get(1).getReviewId(), reviews2.get(0).getReviewId());
+
+			assertEquals(expReviewIds, actReviewIds);
+		}
+
+		@Test
+		@DisplayName("Удаление всех отзывов")
+		void givenExistingReviews_whenDeleteAll_gotDeleted() {
+			createReviews(2, createFilm(), createUser());
+			createReviews(1, createFilm(), createUser());
+
+			int deleted = deleteAllReviews();
+
+			List<FilmReview> actFilmReviews = getFilmReviewsByCount(10);
+
+			assertEquals(3, deleted);
+			assertTrue(actFilmReviews.isEmpty());
+		}
+
+		@Test
+		@DisplayName("После удаления отзыва попытка его получить вызывает 404 ошибку")
+		void givenDeletedReview_whenRequestIt_gotNotFound() {
+			Film film1 = createFilm();
+			Film film2 = createFilm();
+
+			List<FilmReview> reviews1 = createReviews(2, film1, createUser());
+			List<FilmReview> reviews2 = createReviews(1, film2, createUser());
+
+			deleteFilmReviewById(reviews1.get(0).getReviewId());
+
+			assertThrows(HttpClientErrorException.NotFound.class, () -> {
+				getFilmReviewById(reviews1.get(0).getReviewId());
+			});
+		}
+
+		@Test
+		@DisplayName("Лайк увеличивает рейтинг отзыва на 1")
+		void givenReview_whenAddLike_gotRateIncreased() {
+			User reviewAuthor = createUser();
+			Film film = createFilm();
+			FilmReview filmReview1 = createReview(film, reviewAuthor);
+			FilmReview filmReview2 = createReview(film, reviewAuthor);
+
+			User user = createUser();
+
+			addLikeToReview(filmReview1, user);
+
+			FilmReview actFilmReview = getFilmReviewById(filmReview1.getReviewId());
+
+			assertEquals(1, actFilmReview.getRate());
+		}
+
+
+		@Test
+		@DisplayName("Повторный лайк от того же пользователя не изменяет рейтинг")
+		void givenReview_whenAddLikeAgain_gotNoRateChange() {
+			User reviewAuthor = createUser();
+			Film film = createFilm();
+			FilmReview filmReview = createReview(film, reviewAuthor);
+
+			User user = createUser();
+
+			addLikeToReview(filmReview, user);
+			addLikeToReview(filmReview, user);
+
+			FilmReview actFilmReview = getFilmReviewById(filmReview.getReviewId());
+
+			assertEquals(1, actFilmReview.getRate());
+		}
+
+		@Test
+		@DisplayName("Дизлайк уменьшает рейтинг отзыва на 1")
+		void givenLike_whenDeleteIt_gotRateDecreased() {
+			User reviewAuthor = createUser();
+			Film film = createFilm();
+			FilmReview filmReview1 = createReview(film, reviewAuthor);
+			FilmReview filmReview2 = createReview(film, reviewAuthor);
+
+			User user = createUser();
+
+			addLikeToReview(filmReview1, user);
+			deleteLikeToReview(filmReview1, user);
+
+			FilmReview actFilmReview = getFilmReviewById(filmReview1.getReviewId());
+
+			assertEquals(0, actFilmReview.getRate());
+		}
+
+		@Test
+		@DisplayName("Удаление несуществующего лайка не уменьшает рейтинг отзыва")
+		void givenNoLike_whenDelete_gotNoRateChange() {
+			User reviewAuthor = createUser();
+			Film film = createFilm();
+			FilmReview filmReview1 = createReview(film, reviewAuthor);
+			FilmReview filmReview2 = createReview(film, reviewAuthor);
+
+			User user1 = createUser();
+			User user2 = createUser();
+
+			addLikeToReview(filmReview1, user1);
+			deleteLikeToReview(filmReview1, user2);
+
+			FilmReview actFilmReview = getFilmReviewById(filmReview1.getReviewId());
+
+			assertEquals(1, actFilmReview.getRate());
+		}
+
+		@Test
+		@DisplayName("Дизлайк уменьшает рейтинг отзыва на 1")
+		void givenReview_whenDislike_gotRateDecreased() {
+			User reviewAuthor = createUser();
+			Film film = createFilm();
+			FilmReview filmReview1 = createReview(film, reviewAuthor);
+			FilmReview filmReview2 = createReview(film, reviewAuthor);
+
+			User user = createUser();
+
+			addDislikeToReview(filmReview1, user);
+
+			FilmReview actFilmReview = getFilmReviewById(filmReview1.getReviewId());
+
+			assertEquals(-1, actFilmReview.getRate());
+		}
+
+		@Test
+		@DisplayName("Повторный дизлайк от того же пользователя не изменяет рейтинг")
+		void givenReview_whenDislikeAgain_gotNoRateChange() {
+			User reviewAuthor = createUser();
+			Film film = createFilm();
+			FilmReview filmReview = createReview(film, reviewAuthor);
+
+			User user = createUser();
+
+			addDislikeToReview(filmReview, user);
+			addDislikeToReview(filmReview, user);
+
+			FilmReview actFilmReview = getFilmReviewById(filmReview.getReviewId());
+
+			assertEquals(-1, actFilmReview.getRate());
+		}
+
+		@Test
+		@DisplayName("Удаление дизлайка увеличивает рейтинг на 1")
+		void givenDislike_whenDeleteIt_gotRateIncreased() {
+			User reviewAuthor = createUser();
+			Film film = createFilm();
+			FilmReview filmReview1 = createReview(film, reviewAuthor);
+			FilmReview filmReview2 = createReview(film, reviewAuthor);
+
+			User user = createUser();
+
+			addDislikeToReview(filmReview1, user);
+			deleteDislikeToReview(filmReview1, user);
+
+			FilmReview actFilmReview = getFilmReviewById(filmReview1.getReviewId());
+
+			assertEquals(0, actFilmReview.getRate());
+		}
+
+		@Test
+		@DisplayName("Удаление несуществующего дизлайка не изменяет рейтинг отзыва")
+		void givenNoDislike_whenDelete_gotNoRateChange() {
+			User reviewAuthor = createUser();
+			Film film = createFilm();
+			FilmReview filmReview1 = createReview(film, reviewAuthor);
+			FilmReview filmReview2 = createReview(film, reviewAuthor);
+
+			User user1 = createUser();
+			User user2 = createUser();
+
+			addDislikeToReview(filmReview1, user1);
+			deleteDislikeToReview(filmReview1, user2);
+
+			FilmReview actFilmReview = getFilmReviewById(filmReview1.getReviewId());
+
+			assertEquals(-1, actFilmReview.getRate());
+		}
+
+		@Test
+		@DisplayName("Замена лайка на дизлайк уменьшает рейтинг отзыва на 2")
+		void givenLike_whenDislike_gotRateDecreasedByTwo() {
+			User reviewAuthor = createUser();
+			Film film = createFilm();
+			FilmReview filmReview = createReview(film, reviewAuthor);
+			User user = createUser();
+
+			addLikeToReview(filmReview, user); // рейтинг +1
+			addDislikeToReview(filmReview, user);
+
+			FilmReview actFilmReview = getFilmReviewById(filmReview.getReviewId());
+			assertEquals(-1, actFilmReview.getRate());
+		}
+
+		@Test
+		void givenLikedReviews_whenGet_gotReviewsRateOrdered() {
+			List<Film> films = createFilms(2);
+			List<User> users = createUsers(2);
+
+			FilmReview filmReview1 = createReview(films.get(0), users.get(0));
+			FilmReview filmReview2 = createReview(films.get(1), users.get(0));
+			FilmReview filmReview3 = createReview(films.get(0), users.get(1));
+
+			addLikeToReview(filmReview1, users.get(1));
+			addLikeToReview(filmReview2, users.get(0));
+			addLikeToReview(filmReview2, users.get(1));
+
+			List<FilmReview> filmReviews = getFilmReviewsByCount(5);
+
+			assertEquals(3, filmReviews.size());
+			assertEquals(filmReview2.getReviewId(), filmReviews.get(0).getReviewId());
+			assertEquals(filmReview1.getReviewId(), filmReviews.get(1).getReviewId());
+			assertEquals(filmReview3.getReviewId(), filmReviews.get(2).getReviewId());
+		}
+
+		@Test
+		void givenLikedReviews_whenGetByFilm_gotReviewsRateOrdered() {
+			List<Film> films = createFilms(2);
+			List<User> users = createUsers(2);
+
+			FilmReview filmReview1 = createReview(films.get(0), users.get(0));
+			FilmReview filmReview2 = createReview(films.get(1), users.get(0));
+			FilmReview filmReview3 = createReview(films.get(0), users.get(1));
+
+			addLikeToReview(filmReview1, users.get(1));
+			addLikeToReview(filmReview2, users.get(0));
+			addLikeToReview(filmReview2, users.get(1));
+
+			List<FilmReview> filmReviews = getFilmReviewsByCountAndFilm(5, films.get(0));
+
+			assertEquals(2, filmReviews.size());
+			assertEquals(filmReview1.getReviewId(), filmReviews.get(0).getReviewId());
+			assertEquals(filmReview3.getReviewId(), filmReviews.get(1).getReviewId());
+		}
+	}
+
+	private List<User> createUsers(int count) {
+		return IntStream.range(0, count).mapToObj(i -> createUser()).toList();
+	}
+
+	private User createUser() {
+		User user = TestUtil.getRandomUser();
+		NewUserRequest request = NewUserRequest.builder()
+				.name(user.getName())
+				.login(user.getLogin())
+				.email(user.getEmail())
+				.birthday(user.getBirthday())
+				.build();
+
+		return createUser(request);
+	}
+
 	private User createUser(String userString) {
 		NewUserRequest newUserRequest = parseNewUserRequest(userString);
 		return createUser(newUserRequest);
@@ -752,6 +1198,18 @@ class FilmorateApplicationTests {
 
 	private User createUser(NewUserRequest newUserRequest) {
 		return post("/users", newUserRequest, User.class).getBody();
+	}
+
+	private List<Film> createFilms(int count) {
+		return IntStream.range(0, count).mapToObj(i -> createFilm()).toList();
+	}
+
+	private Film createFilm() {
+		Film film = TestUtil.getRandomFilm();
+		film.setGenres(List.of(allGenres.get(0), allGenres.get(1)));
+		film.setMpa(allMpa.get(0));
+		NewFilmRequest newFilmRequest = FilmMapper.mapToNewFilmRequest(film);
+		return createFilm(newFilmRequest);
 	}
 
 	private Film createFilm(String filmString) {
@@ -781,18 +1239,6 @@ class FilmorateApplicationTests {
 				.genres(filmDto.getGenres())
 				.build();
 	}
-
-//	private Film createFilm(Film film) {
-//		return createFilmResp(film).getBody();
-//	}
-//
-//	private ResponseEntity<Film> createFilmResp(String filmString) {
-//		return createFilmResp(parseFilm(filmString));
-//	}
-
-//	private ResponseEntity<FilmDto> createFilmResp(NewFilmRequest newFilmRequest) {
-//		return post("/films", newFilmRequest, FilmDto.class);
-//	}
 
 	private List<FilmGenre> getAllGenres() {
 		return Arrays.stream(Objects.requireNonNull(get("/genres", FilmGenre[].class).getBody())).toList();
@@ -830,16 +1276,6 @@ class FilmorateApplicationTests {
 	private Film[] getPopularFilms(int count) {
 		return get("/films/popular?count=" + count, Film[].class).getBody();
 	}
-
-//	private User parseUser(String userString) {
-//		String[] chunks = userString.split(";");
-//		return new User(
-//				chunks[0],
-//				chunks[1].equals("NULL") ? null : chunks[1],
-//				chunks[2].equals("NULL") ? null : chunks[2],
-//				LocalDate.parse(chunks[3])
-//		);
-//	}
 
 	private NewUserRequest parseNewUserRequest(String userString) {
 
@@ -893,6 +1329,83 @@ class FilmorateApplicationTests {
 		return film.getGenres().stream().map(FilmGenre::getName).collect(Collectors.toSet());
 	}
 
+	private FilmReview createReview(Film film, User author) {
+		FilmReview review = TestUtil.getRandomReview(film, author);
+		NewFilmReviewRequest request = NewFilmReviewRequest.builder()
+				.filmId(review.getFilmId())
+				.userId(review.getUserId())
+				.content(review.getContent())
+				.isPositive(review.isPositive())
+				.build();
+
+		return createReview(request);
+	}
+
+	private FilmReview createReview(NewFilmReviewRequest request) {
+		return post("/reviews", request, FilmReview.class).getBody();
+	}
+
+	private FilmReview createReview(Map<String, Object> request) {
+		return post("/reviews", request, FilmReview.class).getBody();
+	}
+
+	private FilmReview updateReview(FilmReview review) {
+		UpdateFilmReviewRequest request = UpdateFilmReviewRequest.builder()
+				.reviewId(review.getReviewId())
+				.filmId(review.getFilmId())
+				.userId(review.getUserId())
+				.content(review.getContent())
+				.isPositive(review.isPositive())
+				.build();
+		return updateReview(request);
+	}
+
+	private FilmReview updateReview(UpdateFilmReviewRequest request) {
+		return put("/reviews", request, FilmReview.class).getBody();
+	}
+
+	private FilmReview getFilmReviewById(long id) {
+		return get("/reviews/" + id, FilmReview.class).getBody();
+	}
+
+	private Void deleteFilmReviewById(long id) {
+		return delete("/reviews/" + id).getBody();
+	}
+
+	private List<FilmReview> getFilmReviewsByCountAndFilm(int count, Film film) {
+		return Arrays.stream(get("/reviews?filmId=" + film.getId() + "&count=" + count, FilmReview[].class).getBody())
+				.toList();
+	}
+
+	private List<FilmReview> getFilmReviewsByCount(int count) {
+		return Arrays.stream(get("/reviews?&count=" + count, FilmReview[].class).getBody())
+				.toList();
+	}
+
+	private Integer deleteAllReviews() {
+		return delete("/reviews", Integer.class).getBody();
+	}
+
+	private List<FilmReview> createReviews(int count, Film film, User user) {
+		return IntStream.range(0, count).mapToObj(i -> createReview(film, user)).toList();
+	}
+
+	private void addLikeToReview(FilmReview review, User user) {
+		put("/reviews/" + review.getReviewId() + "/like/" + user.getId());
+	}
+
+	private void deleteLikeToReview(FilmReview review, User user) {
+		delete("/reviews/" + review.getReviewId() + "/like/" + user.getId());
+	}
+
+	private void addDislikeToReview(FilmReview review, User user) {
+		put("/reviews/" + review.getReviewId() + "/dislike/" + user.getId());
+	}
+
+	private void deleteDislikeToReview(FilmReview review, User user) {
+		delete("/reviews/" + review.getReviewId() + "/dislike/" + user.getId());
+	}
+
 	private <T> ResponseEntity<T> get(String uri, Class<T> clazz) {
 		log.info("get {}", uri);
 		return client.get().uri(uri).retrieve().toEntity(clazz);
@@ -911,6 +1424,11 @@ class FilmorateApplicationTests {
 	private <T> ResponseEntity<T> put(String uri, Class<T> clazz) {
 		log.info("put {}", uri);
 		return client.put().uri(uri).retrieve().toEntity(clazz);
+	}
+
+	private ResponseEntity<Void> put(String uri) {
+		log.info("put {}", uri);
+		return client.put().uri(uri).retrieve().toBodilessEntity();
 	}
 
 	private <T> ResponseEntity<T> delete(String uri, Class<T> clazz) {
