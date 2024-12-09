@@ -7,8 +7,9 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.dto.FilmDto;
 import ru.yandex.practicum.filmorate.dto.NewUserRequest;
 import ru.yandex.practicum.filmorate.dto.UpdateUserRequest;
-import ru.yandex.practicum.filmorate.mapper.FilmMapper;
+import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.EventService;
 import ru.yandex.practicum.filmorate.service.UserService;
 
 import java.util.List;
@@ -20,6 +21,7 @@ import java.util.List;
 public class UserController {
 
     private final UserService userService;
+    private EventService eventService;
 
     @GetMapping(value = {"", "/"})
     public List<User> getAllUsers() {
@@ -58,5 +60,10 @@ public class UserController {
     @DeleteMapping("/{id}")
     public void deleteUserById(@PathVariable long id) {
         userService.deleteUserById(id);
+    }
+
+    @GetMapping("/{id}/feed")
+    public List<Event> getFeed(@PathVariable  Long id) {
+        return eventService.findEventsByUserId(id);
     }
 }
