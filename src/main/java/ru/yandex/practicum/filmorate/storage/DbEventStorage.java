@@ -17,17 +17,17 @@ import java.util.Map;
 @Component
 public class DbEventStorage extends NamedRepository<Event> implements EventStorage {
     private static final String INSERT_QUERY = """
-        INSERT INTO films(film_name, description, release_date, duration, mpa_id)
-        VALUES (:name, :description, :releaseDate, :duration, :mpaId)""";  // @TODO: make for event
+        INSERT INTO events (event_timestamp, user_id, event, operation, entity_id)
+        VALUES (:event_timestamp, :user_id, :event, :operation, :entity_id)""";
 
     private static final String UPDATE_QUERY = """
-        UPDATE films
-        SET film_name = :name,
-            description = :description,
-            release_date = :releaseDate,
-            duration = :duration,
-            mpa_id = :mpaId
-        WHERE film_id = :filmId""";  // @TODO: make for event
+        UPDATE events
+        SET event_timestamp = :event_timestamp,
+            user_id = :user_id,
+            event = :event,
+            operation = :operation,
+            entity_id = :entity_id
+        WHERE event_id = :event_id""";
 
     private static final String FIND_EVENTS_BY_USER_ID_QUERY = "SELECT * FROM EVENTS WHERE USER_ID = :userId";
     @Autowired
@@ -41,12 +41,12 @@ public class DbEventStorage extends NamedRepository<Event> implements EventStora
             KeyHolder keyHolder = insert(
                     INSERT_QUERY,
                     Map.of(
-                            "EVENT_TIMESTAMP", event.getTimestamp(),
-                            "USER_ID", event.getUserId(),
-                            "EVENT_TYPE", event.getEventType().getTitle(),
-                            "OPERATION",event.getOperation().getTitle(),
-                            "ENTITY_ID", event.getEntityId()),
-                    new String[]{"EVENT_ID"}
+                            "event_timestamp", event.getTimestamp(),
+                            "user_id", event.getUserId(),
+                            "event", event.getEventType().getTitle(),
+                            "operation",event.getOperation().getTitle(),
+                            "entity_id", event.getEntityId()),
+                    new String[]{"event_id"}
             );
             Long id = keyHolder.getKeyAs(Long.class);
             if (id == null) {
@@ -59,74 +59,17 @@ public class DbEventStorage extends NamedRepository<Event> implements EventStora
             update(
                     UPDATE_QUERY,
                     Map.of(
-                            "EVENT_TIMESTAMP", event.getTimestamp(),
-                            "USER_ID", event.getUserId(),
-                            "EVENT_TYPE", event.getEventType().getTitle(),
-                            "OPERATION",event.getOperation().getTitle(),
-                            "ENTITY_ID", event.getEntityId())
+                            "event_timestamp", event.getTimestamp(),
+                            "user_id", event.getUserId(),
+                            "event", event.getEventType().getTitle(),
+                            "operation",event.getOperation().getTitle(),
+                            "entity_id", event.getEntityId(),
+                            "event_id", event.getId())
             );
         }
 
-//        SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(jdbcTemplate)
-//                .withTableName("EVENTS")
-//                .usingGeneratedKeyColumns("EVENT_ID");
-//
-//        Map<String, Object> values = new HashMap<>();
-//        values.put("EVENT_TIMESTAMP", event.getTimestamp());
-//        values.put("USER_ID", event.getUserId());
-//        String eventType = event.getEventType().getTitle();
-//        values.put("EVENT_TYPE", eventType);
-//        String operation = event.getOperation().getTitle();
-//        values.put("OPERATION", operation);
-//        values.put("ENTITY_ID", event.getEntityId());
-//
-//        event.setEventId(simpleJdbcInsert.executeAndReturnKey(values).longValue());
-//        return event;
-
         return event;
     }
-
-//    @Override
-//    public Film save(Film film) {
-//        if (film.getId() == null) {
-//            KeyHolder keyHolder = insert(
-//                    INSERT_QUERY,
-//                    Map.of(
-//                            "name", film.getName(),
-//                            "description", film.getDescription(),
-//                            "releaseDate", film.getReleaseDate(),
-//                            "duration", film.getDuration(),
-//                            "mpaId", film.getMpa().getId()),
-//                    new String[]{"film_id"}
-//            );
-//            Long id = keyHolder.getKeyAs(Long.class);
-//            if (id == null) {
-//                throw new FailedToCreateEntity("не удалось создать фильм " + film);
-//            } else {
-//                film.setId(id);
-//                log.debug("Фильм {} сохранен с id = {}", film.getName(), film.getId());
-//            }
-//
-//        } else {
-//
-//            update(
-//                    UPDATE_QUERY,
-//                    Map.of(
-//                            "name", film.getName(),
-//                            "description", film.getDescription(),
-//                            "releaseDate", film.getReleaseDate(),
-//                            "duration", film.getDuration(),
-//                            "mpaId", film.getMpa().getId(),
-//                            "filmId", film.getId())
-//            );
-//        }
-//
-//        if (film.getGenres() != null && !film.getGenres().isEmpty()) {
-//            saveGenres(film);
-//        }
-//
-//        return film;
-//    }
 
     @Override
     public List<Event> findEventsByUserID(Long id) {
