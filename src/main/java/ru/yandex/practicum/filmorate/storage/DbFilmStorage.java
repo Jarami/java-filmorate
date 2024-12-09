@@ -116,6 +116,45 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
     private static final String DELETE_FILM_DIRECTORS_QUERY = """
         DELETE FROM films_directors
         WHERE film_id = :filmId""";
+
+    private static final String SELECT_SORTED_DIRECTOR_FILM_BY_RATE = """
+             SELECT f.film_id as film_id,
+             		f.film_name as film_name,
+            		f.description as description,
+            		f.release_date as "release_date",
+            		f.duration as duration,
+            		fr.mpa_id as mpa_id,
+            		fr.mpa_name as mpa_name,
+            		count(fl.film_id) as "rate"
+            FROM films f
+            INNER JOIN film_mpa fr ON f.mpa_id = fr.mpa_id
+            LEFT JOIN film_likes fl ON fl.film_id = f.film_id
+            WHERE f.FILM_ID IN (
+            	SELECT fd.FILM_ID FROM FILMS_DIRECTORS fd
+            	WHERE fd.DIRECTOR_ID = :directorId
+            )
+            GROUP BY f.film_id, fr.mpa_id
+            ORDER BY count(fl.film_id) DESC;""";
+
+    private static final String SELECT_SORTED_DIRECTOR_FILM_BY_YEAR = """
+             SELECT f.film_id as film_id,
+             		f.film_name as film_name,
+            		f.description as description,
+            		f.release_date as "release_date",
+            		f.duration as duration,
+            		fr.mpa_id as mpa_id,
+            		fr.mpa_name as mpa_name,
+            		count(fl.film_id) as "rate"
+            FROM films f
+            INNER JOIN film_mpa fr ON f.mpa_id = fr.mpa_id
+            LEFT JOIN film_likes fl ON fl.film_id = f.film_id
+            WHERE f.FILM_ID IN (
+            	SELECT fd.FILM_ID FROM FILMS_DIRECTORS fd
+            	WHERE fd.DIRECTOR_ID = :directorId
+            )
+            GROUP BY f.film_id, fr.mpa_id
+            ORDER BY EXTRACT(YEAR FROM f.release_date) ASC;""";
+
     private final DirectorRowMapper directorRowMapper;
 
     public DbFilmStorage(NamedParameterJdbcTemplate namedTemplate, FilmRowMapper mapper, DirectorRowMapper directorRowMapper) {
@@ -153,7 +192,34 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
 
         films.forEach(film -> {
             List<Director> directors = findMany(FIND_FILM_DIRECTORS_QUERY,
-                    Map.of("filmId", film.getId()), new BeanPropertyRowMapper<>(Director.class));
+                    Map.of("filmId", film.getId()), directorRowMapper);
+            film.setDirectors(directors);
+        });
+
+        return films;
+    }
+
+    @Override
+    public List<Film> getSortedFilmsByDirector(Director director, String sortBy) {
+
+        String sqlQuery;
+        if (sortBy.equalsIgnoreCase("year")) {
+            sqlQuery = SELECT_SORTED_DIRECTOR_FILM_BY_YEAR;
+        } else {
+            sqlQuery = SELECT_SORTED_DIRECTOR_FILM_BY_RATE;
+        }
+
+        List<Film> films = findMany(sqlQuery, Map.of("directorId", director.getId()));
+
+        films.forEach(film -> {
+            List<FilmGenre> genres = findMany(FIND_FILM_GENRES_QUERY,
+                    Map.of("filmId", film.getId()), new BeanPropertyRowMapper<>(FilmGenre.class));
+            film.setGenres(genres);
+        });
+
+        films.forEach(film -> {
+            List<Director> directors = findMany(FIND_FILM_DIRECTORS_QUERY,
+                    Map.of("filmId", film.getId()), directorRowMapper);
             film.setDirectors(directors);
         });
 

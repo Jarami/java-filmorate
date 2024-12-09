@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.dto.FilmDto;
 import ru.yandex.practicum.filmorate.dto.NewFilmRequest;
 import ru.yandex.practicum.filmorate.dto.UpdateFilmRequest;
+import ru.yandex.practicum.filmorate.exceptions.BadRequestException;
 import ru.yandex.practicum.filmorate.mapper.FilmMapper;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
@@ -36,6 +37,19 @@ public class FilmController {
         Film film = filmService.getFilmById(id);
         log.info("getting film {}", film);
         return FilmMapper.mapToDto(film);
+    }
+
+    @GetMapping("/director/{directorId}")
+    public List<FilmDto> getSortedFilmsByDirector(@PathVariable int directorId,
+                                                  @RequestParam(required = true) String sortBy) {
+
+        if (!sortBy.equalsIgnoreCase("year") && !sortBy.equalsIgnoreCase("likes")) {
+            throw new BadRequestException("Некорректный режим сортировки", "Нет сортировки для sortBy={}" + sortBy);
+        }
+
+        return filmService.getSortedFilmsByDirector(directorId, sortBy).stream()
+                .map(FilmMapper::mapToDto)
+                .toList();
     }
 
     @PostMapping(value = {"", "/"})

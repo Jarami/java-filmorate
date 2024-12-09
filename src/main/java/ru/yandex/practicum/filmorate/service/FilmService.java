@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
+import ru.yandex.practicum.filmorate.dto.FilmDto;
 import ru.yandex.practicum.filmorate.dto.FilmGenreDto;
 import ru.yandex.practicum.filmorate.dto.NewFilmRequest;
 import ru.yandex.practicum.filmorate.dto.UpdateFilmRequest;
@@ -183,5 +184,12 @@ public class FilmService {
 
     public int deleteAllFilms() {
         return filmStorage.deleteAll();
+    }
+
+    public List<Film> getSortedFilmsByDirector(int directorId, String sortBy) {
+        Director director = directorStorage.getDirectorById(directorId)
+                .orElseThrow(() -> new NotFoundException("не найден режиссер", "нет режиссера с id={}"+directorId));
+
+        return filmStorage.getSortedFilmsByDirector(director, sortBy);
     }
 }
