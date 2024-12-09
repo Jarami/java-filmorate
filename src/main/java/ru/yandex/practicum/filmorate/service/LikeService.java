@@ -16,13 +16,16 @@ public class LikeService {
     private final UserService userService;
 
     private final FilmLikeStorage filmLikeStorage;
+    private final EventService eventService;
 
     public LikeService(FilmService filmService, UserService userService,
-                       @Qualifier("db") FilmLikeStorage filmLikeStorage) {
+                       @Qualifier("db") FilmLikeStorage filmLikeStorage,
+                       EventService eventService) {
 
         this.filmService = filmService;
         this.userService = userService;
         this.filmLikeStorage = filmLikeStorage;
+        this.eventService = eventService;
 
     }
 
@@ -36,7 +39,9 @@ public class LikeService {
         boolean result = filmLikeStorage.like(film, user);
         if (result) {
             film.setRate(film.getRate() + 1);
+            eventService.createAddLikeEvent(userId, filmId);
         }
+
         return result;
     }
 
@@ -51,6 +56,7 @@ public class LikeService {
         boolean result = filmLikeStorage.dislike(film, user);
         if (result) {
             film.setRate(film.getRate() - 1);
+            eventService.createRemoveLikeEvent(userId, filmId);
         }
         return result;
     }

@@ -9,9 +9,7 @@ import ru.yandex.practicum.filmorate.dto.NewUserRequest;
 import ru.yandex.practicum.filmorate.dto.UpdateUserRequest;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.mapper.UserMapper;
-import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.FriendshipStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
@@ -24,15 +22,16 @@ public class UserService {
 
     private final UserStorage userStorage;
     private final FriendshipStorage friendshipStorage;
-    private final FilmStorage filmStorage;
+    private final EventService eventService;
 
     public UserService(
             @Qualifier("db") UserStorage userStorage,
             @Qualifier("db") FriendshipStorage friendshipStorage,
-            @Qualifier("db") FilmStorage filmStorage) {
+            EventService eventService) {
+
         this.userStorage = userStorage;
         this.friendshipStorage = friendshipStorage;
-        this.filmStorage = filmStorage;
+        this.eventService = eventService;
     }
 
     public User createUser(@Valid NewUserRequest newUserRequest) {
@@ -86,9 +85,6 @@ public class UserService {
     }
 
     public void deleteUserById(long userId) {
-
-        log.info("удаляем пользователя {}", userId);
-
         User user = userStorage.getById(userId)
                 .orElseThrow(() ->
                         new NotFoundException("не найден пользователь", "не найден пользователь с id = " + userId));
@@ -120,15 +116,17 @@ public class UserService {
         User friend = getById(friendId);
 
         log.debug("making friends: {} and {}", user.getLogin(), friend.getLogin());
+        eventService.createAddFriendEvent(userId, friendId);
 
         return friendshipStorage.addFriend(user, friend);
     }
 
-    public boolean removeFromFriends(long userId1, long userId2) {
-        User user1 = getById(userId1);
-        User user2 = getById(userId2);
+    public boolean removeFromFriends(long userId, long friendId) {
+        User user = getById(userId);
+        User friend = getById(friendId);
 
-        return friendshipStorage.removeFriend(user1, user2);
+        eventService.createRemoveFriendEvent(userId, friendId);
+        return friendshipStorage.removeFriend(user, friend);
     }
 
     private void setNameIfAbsent(NewUserRequest user) {
