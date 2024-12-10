@@ -1,7 +1,7 @@
 package ru.yandex.practicum.filmorate.model;
 
 public enum Operation {
-    REMOVE("REMOVE"), ADD("ADD"), UPDATE("UPDATE");
+    REMOVE("remove"), ADD("add"), UPDATE("update");
     private final String title;
 
     Operation(String title) {
