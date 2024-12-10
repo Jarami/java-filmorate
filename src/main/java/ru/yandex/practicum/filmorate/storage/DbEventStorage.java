@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.KeyHolder;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.exceptions.FailedToCreateEntity;
 import ru.yandex.practicum.filmorate.model.Event;
@@ -33,6 +32,7 @@ public class DbEventStorage extends NamedRepository<Event> implements EventStora
         WHERE event_id = :event_id""";
 
     private static final String FIND_EVENTS_BY_USER_ID_QUERY = "SELECT * FROM EVENTS WHERE USER_ID = :userId";
+
     @Autowired
     public DbEventStorage(NamedParameterJdbcTemplate namedTemplate, EventRowMapper mapper) {
         super(namedTemplate, mapper);
