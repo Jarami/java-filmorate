@@ -7,6 +7,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.exceptions.FailedToCreateEntity;
+import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.FilmGenre;
 import ru.yandex.practicum.filmorate.storage.mapper.FilmRowMapper;
@@ -128,6 +129,61 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
         INNER JOIN films_genres_relation r ON g.genre_id = r.genre_id
         WHERE r.film_id = :filmId
         ORDER BY g.genre_id""";
+
+    private static final String FIND_FILMS_BY_TITLE_QUERY = """
+        SELECT f.film_id as "film_id",
+                f.film_name as "film_name",
+                f.description as "description",
+                f.release_date as "release_date",
+                f.duration as "duration",
+                fr.mpa_id as "mpa_id",
+                fr.mpa_name as "mpa_name",
+                COUNT(DISTINCT fl.film_id) as "rate"
+         FROM films AS f
+         LEFT OUTER JOIN film_likes AS fl ON fl.film_id = f.film_id
+         LEFT OUTER JOIN film_mpa AS fr ON f.mpa_id = fr.mpa_id
+         WHERE LOWER(f.film_name) LIKE :name
+         GROUP BY f.film_id, fr.mpa_id
+         ORDER BY COUNT(DISTINCT fl.film_id)
+        """;
+
+    private static final String FIND_FILMS_BY_DIRECTOR_QUERY = """
+        SELECT f.film_id as "film_id",
+                f.film_name as "film_name",
+                f.description as "description",
+                f.release_date as "release_date",
+                f.duration as "duration",
+                fr.mpa_id as "mpa_id",
+                fr.mpa_name as "mpa_name",
+                COUNT(DISTINCT fl.film_id) as "rate"
+         FROM films AS f
+         LEFT OUTER JOIN film_likes AS fl ON fl.film_id = f.film_id
+         LEFT OUTER JOIN film_mpa AS fr ON f.mpa_id = fr.mpa_id
+         LEFT OUTER JOIN films_directors AS fd ON f.film_id = fd.film_id
+         LEFT OUTER JOIN directors AS d ON fd.director_id = d.director_id
+         WHERE LOWER(d.name) LIKE :name
+         GROUP BY f.film_id, fr.mpa_id
+         ORDER BY COUNT(DISTINCT fl.film_id)
+        """;
+
+    private static final String FIND_FILMS_BY_FILM_AND_DIRECTOR_QUERY = """
+         SELECT f.film_id as "film_id",
+                f.film_name as "film_name",
+                f.description as "description",
+                f.release_date as "release_date",
+                f.duration as "duration",
+                fr.mpa_id as "mpa_id",
+                fr.mpa_name as "mpa_name",
+                COUNT(DISTINCT fl.film_id) as "rate"
+         FROM films AS f
+         LEFT OUTER JOIN film_likes AS fl ON fl.film_id = f.film_id
+         LEFT OUTER JOIN film_mpa AS fr ON f.mpa_id = fr.mpa_id
+         LEFT OUTER JOIN films_directors AS fd ON f.film_id = fd.film_id
+         LEFT OUTER JOIN directors AS d ON fd.director_id = d.director_id
+         WHERE LOWER(d.name) LIKE :name OR LOWER(f.film_name) LIKE :name
+         GROUP BY f.film_id, fr.mpa_id
+         ORDER BY COUNT(DISTINCT fl.film_id)
+        """;
 
     private static final String INSERT_QUERY = """
         INSERT INTO films(film_name, description, release_date, duration, mpa_id)
@@ -293,5 +349,27 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
 
     private Map<String, Object> createFilmGenreMap(Film film, FilmGenre genre) {
         return Map.of("filmId", film.getId(), "genreId", genre.getId());
+    }
+
+    @Override
+    public List<Film> searchBy(String queryString, String searchBy) {
+        String sqlQuery = switch (searchBy) {
+            case "title" -> FIND_FILMS_BY_TITLE_QUERY;
+            case "director" -> FIND_FILMS_BY_DIRECTOR_QUERY;
+            case "title,director", "director,title" -> FIND_FILMS_BY_FILM_AND_DIRECTOR_QUERY;
+            default -> throw new NotFoundException("Неизвестный критерий сортировки",
+                    "корректные критерии: title, director и оба");
+        };
+
+        List<Film> films = namedTemplate.query(sqlQuery, Map.of("name", "%" + queryString.toLowerCase() + "%"),
+                new FilmRowMapper());
+
+        films.forEach(film -> {
+            List<FilmGenre> genres = findMany(FIND_FILM_GENRES_QUERY,
+                    Map.of("filmId", film.getId()), new BeanPropertyRowMapper<>(FilmGenre.class));
+            film.setGenres(genres);
+        });
+
+        return films;
     }
 }
