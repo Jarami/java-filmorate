@@ -60,4 +60,8 @@ public class DirectorService {
             throw new BadRequestException("неуспешный запрос", "В запросе режиссер, которого нет в списке БД");
         }
     }
+
+    public void deleteAll() {
+        directorStorage.deleteAllDirectors();
+    }
 }

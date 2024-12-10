@@ -43,4 +43,9 @@ public class DirectorController {
     public void deleteFilmById(@PathVariable int id) {
         directorService.deleteDirectorId(id);
     }
+
+    @DeleteMapping()
+    public void deleteAllDirectors() {
+        directorService.deleteAll();
+    }
 }

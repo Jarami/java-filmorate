@@ -23,6 +23,9 @@ public class DbDirectorStorage extends NamedRepository<Director> implements Dire
             		name
             FROM DIRECTORS""";
 
+    private static final String DELETE_ALL = """
+            DELETE FROM DIRECTORS""";
+
     private static final String FIND_ONE_BY_ID = """
             SELECT  director_id,
             		name
@@ -80,6 +83,11 @@ public class DbDirectorStorage extends NamedRepository<Director> implements Dire
     @Override
     public void deleteDirector(Director director) {
         delete(DELETE_BY_ID, Map.of("directorId", director.getId()));
+    }
+
+    @Override
+    public void deleteAllDirectors() {
+        delete(DELETE_ALL);
     }
 
     @Override
