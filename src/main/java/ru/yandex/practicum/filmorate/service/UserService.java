@@ -24,14 +24,18 @@ public class UserService {
 
     private final UserStorage userStorage;
     private final FriendshipStorage friendshipStorage;
+    private final EventService eventService;
     private final FilmStorage filmStorage;
 
     public UserService(
             @Qualifier("db") UserStorage userStorage,
             @Qualifier("db") FriendshipStorage friendshipStorage,
-            @Qualifier("db") FilmStorage filmStorage) {
+            @Qualifier("db") FilmStorage filmStorage,
+            EventService eventService) {
+
         this.userStorage = userStorage;
         this.friendshipStorage = friendshipStorage;
+        this.eventService = eventService;
         this.filmStorage = filmStorage;
     }
 
@@ -86,9 +90,6 @@ public class UserService {
     }
 
     public void deleteUserById(long userId) {
-
-        log.info("удаляем пользователя {}", userId);
-
         User user = userStorage.getById(userId)
                 .orElseThrow(() ->
                         new NotFoundException("не найден пользователь", "не найден пользователь с id = " + userId));
@@ -120,15 +121,17 @@ public class UserService {
         User friend = getById(friendId);
 
         log.debug("making friends: {} and {}", user.getLogin(), friend.getLogin());
+        eventService.createAddFriendEvent(userId, friendId);
 
         return friendshipStorage.addFriend(user, friend);
     }
 
-    public boolean removeFromFriends(long userId1, long userId2) {
-        User user1 = getById(userId1);
-        User user2 = getById(userId2);
+    public boolean removeFromFriends(long userId, long friendId) {
+        User user = getById(userId);
+        User friend = getById(friendId);
 
-        return friendshipStorage.removeFriend(user1, user2);
+        eventService.createRemoveFriendEvent(userId, friendId);
+        return friendshipStorage.removeFriend(user, friend);
     }
 
     private void setNameIfAbsent(NewUserRequest user) {

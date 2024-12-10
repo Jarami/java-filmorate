@@ -11,6 +11,7 @@ import ru.yandex.practicum.filmorate.exceptions.BadRequestException;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.FilmReview;
+import ru.yandex.practicum.filmorate.model.Operation;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.FilmReviewStorage;
 
@@ -25,14 +26,18 @@ public class FilmReviewService {
     private final FilmService filmService;
     private final FilmReviewStorage reviewStorage;
 
+    private final EventService eventService;
+
     public FilmReviewService(
             UserService userService,
             FilmService filmService,
-            @Qualifier("db") FilmReviewStorage reviewStorage) {
+            @Qualifier("db") FilmReviewStorage reviewStorage,
+            EventService eventService) {
 
         this.userService = userService;
         this.filmService = filmService;
         this.reviewStorage = reviewStorage;
+        this.eventService = eventService;
     }
 
     public FilmReview getById(long id) {
@@ -54,6 +59,8 @@ public class FilmReviewService {
                 .isPositive(request.getIsPositive())
                 .build();
 
+        eventService.createReviewEvent(review.getUserId(), Operation.ADD, review.getReviewId());
+
         return reviewStorage.save(review);
     }
 
@@ -73,6 +80,9 @@ public class FilmReviewService {
             review.setPositive(request.getIsPositive());
         }
 
+        FilmReview oldReview = getById(review.getReviewId());
+        eventService.createReviewEvent(oldReview.getUserId(), Operation.UPDATE, review.getReviewId());
+
         return reviewStorage.save(review);
     }
 
@@ -80,6 +90,8 @@ public class FilmReviewService {
         FilmReview review = reviewStorage.getById(id)
                 .orElseThrow(() ->
                         new NotFoundException("не найден отзыв", "не найден отзыв с id = " + id));
+
+        eventService.createReviewEvent(review.getUserId(), Operation.REMOVE, review.getReviewId());
 
         reviewStorage.delete(review);
     }
