@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.dto.NewDirectorRequest;
 import ru.yandex.practicum.filmorate.dto.UpdateDirectorRequest;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.service.DirectorService;
@@ -29,8 +30,8 @@ public class DirectorController {
 
     @PostMapping("")
     @ResponseStatus(HttpStatus.CREATED)
-    public Director createDirector(@RequestBody Director newDirector) {
-        return directorService.createDirector(newDirector);
+    public Director createDirector(@Valid @RequestBody NewDirectorRequest newDirectorRequest) {
+        return directorService.createDirector(newDirectorRequest);
     }
 
     @PutMapping("")

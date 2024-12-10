@@ -31,20 +31,19 @@ public class FilmService {
     private final FilmMpaStorage filmMpaStorage;
     private final FilmGenreStorage filmGenreStorage;
     private final UserService userService;
-    private final DirectorStorage directorStorage;
+    private final DirectorService directorService;
 
     public FilmService(
             @Qualifier("db") FilmStorage filmStorage,
             @Qualifier("db") FilmMpaStorage filmMpaStorage,
             @Qualifier("db") FilmGenreStorage filmGenreStorage,
-            UserService userService,
-            @Qualifier("db") DirectorStorage directorStorage) {
+            UserService userService, DirectorService directorService) {
 
         this.filmStorage = filmStorage;
         this.filmMpaStorage = filmMpaStorage;
         this.filmGenreStorage = filmGenreStorage;
         this.userService = userService;
-        this.directorStorage = directorStorage;
+        this.directorService = directorService;
     }
 
     public Film createFilm(@Valid NewFilmRequest newFilmRequest) {
@@ -63,14 +62,9 @@ public class FilmService {
         }
 
         if (newFilmRequest.getDirectors() != null) {
-            if (newFilmRequest.getDirectors().size() > 0) {
+            if (!newFilmRequest.getDirectors().isEmpty()) {
                 List<Director> directors = getFilmDirectors(newFilmRequest);
-                if (directors.isEmpty()) {
-                    throw new BadRequestException("неуспешный запрос", "пустой список режиссеров");
-                }
-                if (directors.size() != newFilmRequest.getDirectors().size()) {
-                    throw new BadRequestException("неуспешный запрос", "В запросе режиссер, которого нет в списке БД");
-                }
+                directorService.validateDirectorsCreateAndUpdate(directors, newFilmRequest.getDirectors().size());
                 film.setDirectors(directors);
             } else {
                 log.debug("В запросе пришёл пустой список режиссеров");
@@ -104,7 +98,7 @@ public class FilmService {
 
     private List<Director> getFilmDirectors(NewFilmRequest newFilmRequest) {
         List<Integer> directorIds = newFilmRequest.getDirectors().stream().map(Director::getId).toList();
-        return directorStorage.getById(directorIds);
+        return directorService.getById(directorIds);
     }
 
     private List<FilmGenre> getFilmGenres(UpdateFilmRequest updateFilmRequest) {
@@ -114,7 +108,7 @@ public class FilmService {
 
     private List<Director> getFilmDirectors(UpdateFilmRequest updateFilmRequest) {
         List<Integer> directorIds = updateFilmRequest.getDirectors().stream().map(Director::getId).toList();
-        return directorStorage.getById(directorIds);
+        return directorService.getById(directorIds);
     }
 
     public List<Film> getAllFilms() {
@@ -176,9 +170,7 @@ public class FilmService {
 
         if (updateFilmRequest.getDirectors() != null) {
             List<Director> directors = getFilmDirectors(updateFilmRequest);
-            if (directors.isEmpty()) {
-                throw new BadRequestException("неуспешный запрос", "пустой список режиссеров");
-            }
+            directorService.validateDirectorsCreateAndUpdate(directors, updateFilmRequest.getDirectors().size());
             film.setDirectors(directors);
         }
 
@@ -201,9 +193,7 @@ public class FilmService {
     }
 
     public List<Film> getSortedFilmsByDirector(int directorId, String sortBy) {
-        Director director = directorStorage.getDirectorById(directorId)
-                .orElseThrow(() -> new NotFoundException("не найден режиссер", "нет режиссера с id={}" + directorId));
-
+        Director director = directorService.getById(directorId);
         return filmStorage.getSortedFilmsByDirector(director, sortBy);
     }
 }
