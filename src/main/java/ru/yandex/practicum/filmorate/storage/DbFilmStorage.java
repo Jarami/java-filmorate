@@ -335,7 +335,7 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
             saveDirectors(film);
         }
 
-        return getById(film.getId()).get();
+        return film;
     }
 
     @Override

@@ -19,6 +19,7 @@ import ru.yandex.practicum.filmorate.storage.FilmGenreStorage;
 import ru.yandex.practicum.filmorate.storage.FilmMpaStorage;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -67,6 +68,7 @@ public class FilmService {
                 film.setDirectors(directors);
             } else {
                 log.debug("В запросе пришёл пустой список режиссеров");
+                film.setDirectors(new ArrayList<>());
             }
         }
 
