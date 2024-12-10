@@ -527,7 +527,16 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
             default -> throw new NotFoundException("Неизвестный критерий сортировки",
                     "корректные критерии: title, director и оба");
         };
-        return namedTemplate.query(sqlQuery, Map.of("name", "%" + queryString.toLowerCase() + "%"),
+
+        List<Film> films = namedTemplate.query(sqlQuery, Map.of("name", "%" + queryString.toLowerCase() + "%"),
                 new FilmRowMapper());
+
+        films.forEach(film -> {
+            List<FilmGenre> genres = findMany(FIND_FILM_GENRES_QUERY,
+                    Map.of("filmId", film.getId()), new BeanPropertyRowMapper<>(FilmGenre.class));
+            film.setGenres(genres);
+        });
+
+        return films;
     }
 }
