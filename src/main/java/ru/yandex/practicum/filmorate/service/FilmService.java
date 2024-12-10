@@ -37,8 +37,7 @@ public class FilmService {
             @Qualifier("db") FilmStorage filmStorage,
             @Qualifier("db") FilmMpaStorage filmMpaStorage,
             @Qualifier("db") FilmGenreStorage filmGenreStorage,
-            UserService userService) {
-            @Qualifier("db") FilmGenreStorage filmGenreStorage,
+            UserService userService,
             @Qualifier("db") DirectorStorage directorStorage) {
 
         this.filmStorage = filmStorage;
