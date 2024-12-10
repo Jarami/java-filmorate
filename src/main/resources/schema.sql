@@ -1,5 +1,3 @@
-DROP TYPE IF EXISTS event_type;
-DROP TYPE IF EXISTS operation_type;
 DROP TABLE IF EXISTS events;
 DROP TABLE IF EXISTS film_likes;
 DROP TABLE IF EXISTS friendship;
@@ -8,6 +6,8 @@ DROP TABLE IF EXISTS films_genres_relation;
 DROP TABLE IF EXISTS film_genres;
 DROP TABLE IF EXISTS films;
 DROP TABLE IF EXISTS film_mpa;
+DROP TYPE IF EXISTS event_type;
+DROP TYPE IF EXISTS operation_type;
 
 CREATE TABLE IF NOT EXISTS film_mpa (
     mpa_id SERIAL PRIMARY KEY,
