@@ -30,17 +30,21 @@ public class FilmService {
     private final FilmStorage filmStorage;
     private final FilmMpaStorage filmMpaStorage;
     private final FilmGenreStorage filmGenreStorage;
+    private final UserService userService;
     private final DirectorStorage directorStorage;
 
     public FilmService(
             @Qualifier("db") FilmStorage filmStorage,
             @Qualifier("db") FilmMpaStorage filmMpaStorage,
             @Qualifier("db") FilmGenreStorage filmGenreStorage,
+            UserService userService) {
+            @Qualifier("db") FilmGenreStorage filmGenreStorage,
             @Qualifier("db") DirectorStorage directorStorage) {
 
         this.filmStorage = filmStorage;
         this.filmMpaStorage = filmMpaStorage;
         this.filmGenreStorage = filmGenreStorage;
+        this.userService = userService;
         this.directorStorage = directorStorage;
     }
 
@@ -122,6 +126,15 @@ public class FilmService {
         return filmStorage.getPopularFilms(count);
     }
 
+    public List<Film> getCommonFilms(Long userId, Long friendId) {
+        if (userId == null || friendId == null) {
+            throw new BadRequestException("плохой запрос", "некорректные id пользователей");
+        }
+        userService.getUserById(userId);
+        userService.getUserById(friendId);
+        return filmStorage.getCommonFilms(userId, friendId);
+    }
+
     public Film getFilmById(long id) {
         return filmStorage.getById(id)
                 .orElseThrow(() -> new NotFoundException("не найден фильм", "не найден фильм с id = " + id));
@@ -175,6 +188,9 @@ public class FilmService {
     }
 
     public void deleteFilmById(long filmId) {
+
+        log.info("удаляем фильм {}", filmId);
+
         Film film = filmStorage.getById(filmId)
                 .orElseThrow(() -> new NotFoundException("не найден фильм", "не найден фильм по id = " + filmId));
 

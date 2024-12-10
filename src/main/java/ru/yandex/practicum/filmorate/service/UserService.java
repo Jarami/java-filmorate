@@ -9,7 +9,9 @@ import ru.yandex.practicum.filmorate.dto.NewUserRequest;
 import ru.yandex.practicum.filmorate.dto.UpdateUserRequest;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.mapper.UserMapper;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.FriendshipStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
@@ -22,13 +24,15 @@ public class UserService {
 
     private final UserStorage userStorage;
     private final FriendshipStorage friendshipStorage;
+    private final FilmStorage filmStorage;
 
     public UserService(
             @Qualifier("db") UserStorage userStorage,
-            @Qualifier("db") FriendshipStorage friendshipStorage) {
-
+            @Qualifier("db") FriendshipStorage friendshipStorage,
+            @Qualifier("db") FilmStorage filmStorage) {
         this.userStorage = userStorage;
         this.friendshipStorage = friendshipStorage;
+        this.filmStorage = filmStorage;
     }
 
     public User createUser(@Valid NewUserRequest newUserRequest) {
@@ -82,6 +86,9 @@ public class UserService {
     }
 
     public void deleteUserById(long userId) {
+
+        log.info("удаляем пользователя {}", userId);
+
         User user = userStorage.getById(userId)
                 .orElseThrow(() ->
                         new NotFoundException("не найден пользователь", "не найден пользователь с id = " + userId));
@@ -101,6 +108,10 @@ public class UserService {
 
         return friendshipStorage.getCommonFriends(user, otherUser).stream()
                 .map(this::getUserById).toList();
+    }
+
+    public List<Film> getRecommendations(long userId) {
+        return filmStorage.getRecommendations(userId);
     }
 
     public boolean addFriend(long userId, long friendId) {
