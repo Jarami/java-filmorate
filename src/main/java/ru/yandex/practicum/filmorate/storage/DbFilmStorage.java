@@ -554,9 +554,9 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
             film.setGenres(genres);
         });
         films.forEach(film -> {
-            List<FilmGenre> genres = findMany(FIND_FILM_DIRECTORS_QUERY,
-                    Map.of("filmId", film.getId()), new BeanPropertyRowMapper<>(FilmGenre.class));
-            film.setGenres(genres);
+            List<Director> directors = findMany(FIND_FILM_DIRECTORS_QUERY,
+                    Map.of("filmId", film.getId()), new BeanPropertyRowMapper<>(Director.class));
+            film.setDirectors(directors);
         });
 
         return films;
