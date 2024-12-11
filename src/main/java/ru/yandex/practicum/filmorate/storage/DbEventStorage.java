@@ -10,6 +10,8 @@ import ru.yandex.practicum.filmorate.exceptions.FailedToCreateEntity;
 import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.storage.mapper.EventRowMapper;
 
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -34,7 +36,7 @@ public class DbEventStorage extends NamedRepository<Event> implements EventStora
             KeyHolder keyHolder = insert(
                     INSERT_QUERY,
                     Map.of(
-                            "event_timestamp", event.getTimestamp(),
+                            "event_timestamp", Timestamp.from(Instant.ofEpochMilli(event.getTimestamp())),
                             "user_id", event.getUserId(),
                             "event", event.getEventType().getTitle(),
                             "operation",event.getOperation().getTitle(),
