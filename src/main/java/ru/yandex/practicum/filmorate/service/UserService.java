@@ -121,17 +121,23 @@ public class UserService {
         User friend = getById(friendId);
 
         log.debug("making friends: {} and {}", user.getLogin(), friend.getLogin());
-        eventService.createAddFriendEvent(userId, friendId);
 
-        return friendshipStorage.addFriend(user, friend);
+        boolean result = friendshipStorage.addFriend(user, friend);
+        if (result) {
+            eventService.createAddFriendEvent(userId, friendId);
+        }
+        return result;
     }
 
     public boolean removeFromFriends(long userId, long friendId) {
         User user = getById(userId);
         User friend = getById(friendId);
 
-        eventService.createRemoveFriendEvent(userId, friendId);
-        return friendshipStorage.removeFriend(user, friend);
+        boolean result = friendshipStorage.removeFriend(user, friend);
+        if (result) {
+            eventService.createRemoveFriendEvent(userId, friendId);
+        }
+        return result;
     }
 
     private void setNameIfAbsent(NewUserRequest user) {

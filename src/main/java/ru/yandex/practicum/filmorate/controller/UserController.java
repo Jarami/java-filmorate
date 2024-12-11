@@ -22,7 +22,7 @@ import java.util.List;
 public class UserController {
 
     private final UserService userService;
-    private EventService eventService;
+    private final EventService eventService;
 
     @GetMapping(value = {"", "/"})
     public List<User> getAllUsers() {

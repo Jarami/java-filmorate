@@ -59,9 +59,9 @@ public class FilmReviewService {
                 .isPositive(request.getIsPositive())
                 .build();
 
-        eventService.createReviewEvent(review.getUserId(), Operation.ADD, review.getReviewId());
-
-        return reviewStorage.save(review);
+        FilmReview r = reviewStorage.save(review);
+        eventService.createReviewEvent(r.getUserId(), Operation.ADD, r.getReviewId());
+        return r;
     }
 
     public FilmReview updateReview(@Valid UpdateFilmReviewRequest request) {
@@ -80,10 +80,9 @@ public class FilmReviewService {
             review.setPositive(request.getIsPositive());
         }
 
-        FilmReview oldReview = getById(review.getReviewId());
-        eventService.createReviewEvent(oldReview.getUserId(), Operation.UPDATE, review.getReviewId());
-
-        return reviewStorage.save(review);
+        FilmReview r = reviewStorage.save(review);
+        eventService.createReviewEvent(review.getUserId(), Operation.UPDATE, review.getReviewId());
+        return r;
     }
 
     public void deleteById(long id) {
@@ -91,9 +90,8 @@ public class FilmReviewService {
                 .orElseThrow(() ->
                         new NotFoundException("не найден отзыв", "не найден отзыв с id = " + id));
 
-        eventService.createReviewEvent(review.getUserId(), Operation.REMOVE, review.getReviewId());
-
         reviewStorage.delete(review);
+        eventService.createReviewEvent(review.getUserId(), Operation.REMOVE, review.getReviewId());
     }
 
     public List<FilmReview> getByFilmAndCount(Integer count, Long filmId) {

@@ -19,12 +19,4 @@ public class Event {
     private Operation operation;
     private Long entityId;
     private Long id;
-
-    public Long getEventId() {
-        return getId();
-    }
-
-    public void setEventId(Long eventId) {
-        setId(eventId);
-    }
 }

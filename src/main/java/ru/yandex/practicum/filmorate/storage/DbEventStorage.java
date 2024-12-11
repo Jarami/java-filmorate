@@ -22,15 +22,6 @@ public class DbEventStorage extends NamedRepository<Event> implements EventStora
         INSERT INTO events (event_timestamp, user_id, event, operation, entity_id)
         VALUES (:event_timestamp, :user_id, :event, :operation, :entity_id)""";
 
-    private static final String UPDATE_QUERY = """
-        UPDATE events
-        SET event_timestamp = :event_timestamp,
-            user_id = :user_id,
-            event = :event,
-            operation = :operation,
-            entity_id = :entity_id
-        WHERE event_id = :event_id""";
-
     private static final String FIND_EVENTS_BY_USER_ID_QUERY = "SELECT * FROM EVENTS WHERE USER_ID = :userId";
 
     @Autowired
@@ -40,7 +31,7 @@ public class DbEventStorage extends NamedRepository<Event> implements EventStora
 
     @Override
     public Event createEvent(Event event) {
-        if (event.getEventId() == null) {
+        if (event.getId() == null) {
             KeyHolder keyHolder = insert(
                     INSERT_QUERY,
                     Map.of(
@@ -58,17 +49,6 @@ public class DbEventStorage extends NamedRepository<Event> implements EventStora
                 event.setId(id);
                 log.debug("Событие типа {} сохранено с id = {}", event.getClass(), event.getId());
             }
-        } else {
-            update(
-                    UPDATE_QUERY,
-                    Map.of(
-                            "event_timestamp", event.getTimestamp(),
-                            "user_id", event.getUserId(),
-                            "event", event.getEventType().getTitle(),
-                            "operation",event.getOperation().getTitle(),
-                            "entity_id", event.getEntityId(),
-                            "event_id", event.getId())
-            );
         }
 
         return event;
@@ -76,7 +56,6 @@ public class DbEventStorage extends NamedRepository<Event> implements EventStora
 
     @Override
     public List<Event> findEventsByUserID(Long id) {
-        return findMany(FIND_EVENTS_BY_USER_ID_QUERY,
-                Map.of("userId", id), new BeanPropertyRowMapper<>(Event.class));
+        return findMany(FIND_EVENTS_BY_USER_ID_QUERY, Map.of("userId", id));
     }
 }
