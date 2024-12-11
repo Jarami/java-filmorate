@@ -19,4 +19,6 @@ public interface FilmStorage extends AbstractStorage<Long, Film> {
     List<Film> getPopularFilmsByYearGenre(int count, int year, int genre);
 
     List<Film> getSortedFilmsByDirector(Director director, String sortBy);
+
+    List<Film> searchBy(String queryString, String searchBy);
 }
