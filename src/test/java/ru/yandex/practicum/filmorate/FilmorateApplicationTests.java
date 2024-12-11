@@ -643,14 +643,23 @@ class FilmorateApplicationTests {
 			}
 
 			films = new ArrayList<>();
+
+
+
 			for (int i = 1; i <= 11; i++) {
+				String genre = "Комедия";
+				int year = 2010;
+				if (i % 2 == 0) {
+					year = 2020;
+					genre = "Боевик";
+				}
 				NewFilmRequest newFilmRequest = NewFilmRequest.builder()
 						.name("film name " + i)
 						.description("film desc " + i)
-						.releaseDate(LocalDate.parse("2010-01-01"))
+						.releaseDate(LocalDate.of(year, 1, 1))
 						.duration(10 * i + 10)
 						.mpa(mpaDto("G"))
-						.genres(genreDto("Комедия"))
+						.genres(genreDto(genre))
 						.build();
 
 				films.add(createFilm(newFilmRequest));
@@ -750,6 +759,40 @@ class FilmorateApplicationTests {
 			assertEquals(2, films[7].getRate());
 			assertEquals(1, films[8].getRate());
 			assertEquals(0, films[9].getRate());
+		}
+
+		@Test
+		void givenPopularFilmsByYearOrGenre_getPopularByGenreOrYear() {
+			// комедия (жарн 1) год 2010 (четные) 0 2 4 6 8 10
+			// боевик (жанр 6) год 2020 (нечетные) 1 3 5 7 9
+			// Лайкаем только фильмы 2010 года с жарном 1 (четные)
+			for (int j = 9; j > 0; j--) {
+				for (int i = 0; i <= j; i++) {
+					if (j % 2 == 0) {
+						like(films.get(j), users.get(i));
+					}
+				}
+			}
+
+			Film[] filmsByYear = getPopularFilmsByYear(10, 2010);
+			Set<Integer> filmYears = new HashSet<>();
+			Arrays.stream(filmsByYear).forEach(film -> {
+				filmYears.add(film.getReleaseDate().getYear());
+			});
+
+			assertEquals(1, filmYears.size(), "В выборку попали фильмы другого года");
+			assertEquals(2010, filmYears.iterator().next()); // и только 2010
+			assertEquals(9, filmsByYear[0].getRate());
+
+			//Берем ту же самую выборку фильмов, но по Жанрам
+			Film[] filmsByGenres = getPopularFilmsByGenre(10, 1);
+			assertEquals(filmsByYear.length, filmsByGenres.length, "Выборка по году отличается от " +
+					"выборки по жарну");
+
+			//Берем выборку по фильму И по году
+			Film[] filmsByYearAndGenres = getPopularFilmsByYearAndGenre(10, 2010, 1);
+			assertEquals(filmsByYear.length, filmsByYearAndGenres.length, "Выборка по году отличается от " +
+					"выборки по году И жанру");
 		}
 	}
 
@@ -1175,6 +1218,143 @@ class FilmorateApplicationTests {
 		}
 	}
 
+	@Nested
+	class FilmDirectorsTest {
+		Director director;
+		Director director2;
+
+		@BeforeEach
+		void setUp() {
+			director = Director.builder().name(TestUtil.randomString(15)).build();
+			director2 = Director.builder().name(TestUtil.randomString(25)).build();
+		}
+
+		@AfterEach
+		void shutdown() {
+			delete("/directors");
+		}
+
+		@Test
+		void givenNewDirector_whenSave_gotSuccess() {
+			director = createDirector(director);
+			director2 = selectDirector(director.getId());
+			assertEquals(director.getId(), director2.getId());
+		}
+
+		@Test
+		void givenNewDirectorWithNoName_whenSave_gotBadRequestError() {
+			director.setName(" ");
+			assertThrows(HttpClientErrorException.BadRequest.class,
+					() -> createDirector(director));
+		}
+
+		@Test
+		void givenNewDirectorWithToLongName_whenSave_gotBadRequestError() {
+			director.setName(TestUtil.randomString(51));
+			assertThrows(HttpClientErrorException.BadRequest.class,
+					() -> createDirector(director));
+		}
+
+		@Test
+		void givenNewDirectorName_whenUpdate_gotSuccess() {
+			director = createDirector(director);
+			director.setName("UpdatedName");
+			Director selectDirector = updateDirector(director);
+
+			assertEquals(director.getName(), selectDirector.getName());
+		}
+
+		@Test
+		void givenCorrectDirector_whenUpdate_gotSuccess() {
+			director = createDirector(director);
+			director2 = createDirector(director2);
+			delete("/directors/" + director2.getId(), Director.class).getBody();
+
+			assertThrows(HttpClientErrorException.NotFound.class,
+					() -> selectDirector(director2.getId()));
+
+			assertEquals(director.getId(), selectDirector(director.getId()).getId());
+		}
+
+		@Test
+		void givenIncorrectDirector_whenUpdate_gotNotFound() {
+			assertThrows(HttpClientErrorException.NotFound.class,
+					() -> selectDirector(Integer.MAX_VALUE));
+		}
+
+		@Test
+		void givenFilmWithDirector_whenCreate_gotSuccess() {
+			director = createDirector(director);
+			List<Director> directors = List.of(director);
+
+			NewFilmRequest filmRequest = parseNewFilmRequest("name;desc;2024-01-01;120;G;Комедия,Драма");
+			filmRequest.setDirectors(directors);
+
+			Film film = createFilm(filmRequest);
+
+			assertEquals(film.getDirectors().get(0).getName(), directors.get(0).getName());
+
+		}
+
+		@Test
+		void givenFilmWithDirectorNotInBd_whenCreate_gotBadRequest() {
+
+			Director failedDirector = Director.builder()
+					.id(Integer.MAX_VALUE / 2)
+					.build();
+			List<Director> directors = List.of(failedDirector);
+
+			NewFilmRequest filmRequest = parseNewFilmRequest("FailedDirectorFilm;desc;2024-01-01;120;G;Комедия,Драма");
+			filmRequest.setDirectors(directors);
+
+			assertThrows(HttpClientErrorException.BadRequest.class,
+					() -> createFilm(filmRequest));
+		}
+
+		@Test
+		void givenFilmWithDirector_whenUpdate_gotSuccess() {
+			director = createDirector(director);
+			director2 = createDirector(director2);
+
+			NewFilmRequest filmRequest = parseNewFilmRequest("name;desc;2024-01-01;120;G;Комедия,Драма");
+			Film film = createFilm(filmRequest);
+
+			UpdateFilmRequest updateFilmRequest = UpdateFilmRequest.builder()
+					.id(film.getId())
+					.name("UpdateFilm")
+					.description(film.getDescription())
+					.mpa(mpaDto("PG"))
+					.genres(genreDto("Комедия,Триллер"))
+					.releaseDate(LocalDate.parse("2024-05-01"))
+					.directors(List.of(director, director2))
+					.build();
+
+			updateFilm(updateFilmRequest);
+
+			Film updatedFilm = getFilmById(film.getId());
+
+
+			assertEquals(updateFilmRequest.getDirectors().get(0).getId(), updatedFilm.getDirectors().get(0).getId());
+			assertEquals(updateFilmRequest.getDirectors().get(1).getId(), updatedFilm.getDirectors().get(1).getId());
+		}
+
+		private Director selectDirector(int id) {
+			return get("/directors/" + id, Director.class).getBody();
+		}
+
+		private Director createDirector(Director director) {
+			return post("/directors", director, Director.class).getBody();
+		}
+
+		private Director updateDirector(Director director) {
+			return put("/directors", director, Director.class).getBody();
+		}
+
+		private ResponseEntity<Film> updateFilm(UpdateFilmRequest updateFilmRequest) {
+			return put("/films", updateFilmRequest, Film.class);
+		}
+	}
+
 	private List<User> createUsers(int count) {
 		return IntStream.range(0, count).mapToObj(i -> createUser()).toList();
 	}
@@ -1237,6 +1417,7 @@ class FilmorateApplicationTests {
 				.rate(filmDto.getRate())
 				.mpa(filmDto.getMpa())
 				.genres(filmDto.getGenres())
+				.directors(filmDto.getDirectors())
 				.build();
 	}
 
@@ -1271,6 +1452,18 @@ class FilmorateApplicationTests {
 
 	private Film[] getPopularFilms() {
 		return get("/films/popular", Film[].class).getBody();
+	}
+
+	private Film[] getPopularFilmsByYear(int count, int year) {
+		return get("/films/popular?count=" + count + "&year=" + year, Film[].class).getBody();
+	}
+
+	private Film[] getPopularFilmsByGenre(int count, int genreId) {
+		return get("/films/popular?count=" + count + "&genreId=" + genreId, Film[].class).getBody();
+	}
+
+	private Film[] getPopularFilmsByYearAndGenre(int count, int year, int genreId) {
+		return get("/films/popular?count=" + count + "&year=" + year + "&genreId=" + genreId, Film[].class).getBody();
 	}
 
 	private Film[] getPopularFilms(int count) {
