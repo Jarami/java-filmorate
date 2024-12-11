@@ -643,14 +643,23 @@ class FilmorateApplicationTests {
 			}
 
 			films = new ArrayList<>();
+
+
+
 			for (int i = 1; i <= 11; i++) {
+				String genre = "Комедия";
+				int year = 2010;
+				if (i % 2 == 0) {
+					year = 2020;
+					genre = "Боевик";
+				}
 				NewFilmRequest newFilmRequest = NewFilmRequest.builder()
 						.name("film name " + i)
 						.description("film desc " + i)
-						.releaseDate(LocalDate.parse("2010-01-01"))
+						.releaseDate(LocalDate.of(year, 1, 1))
 						.duration(10 * i + 10)
 						.mpa(mpaDto("G"))
-						.genres(genreDto("Комедия"))
+						.genres(genreDto(genre))
 						.build();
 
 				films.add(createFilm(newFilmRequest));
@@ -750,6 +759,40 @@ class FilmorateApplicationTests {
 			assertEquals(2, films[7].getRate());
 			assertEquals(1, films[8].getRate());
 			assertEquals(0, films[9].getRate());
+		}
+
+		@Test
+		void givenPopularFilmsByYearOrGenre_getPopularByGenreOrYear() {
+			// комедия (жарн 1) год 2010 (четные) 0 2 4 6 8 10
+			// боевик (жанр 6) год 2020 (нечетные) 1 3 5 7 9
+			// Лайкаем только фильмы 2010 года с жарном 1 (четные)
+			for (int j = 9; j > 0; j--) {
+				for (int i = 0; i <= j; i++) {
+					if (j % 2 == 0) {
+						like(films.get(j), users.get(i));
+					}
+				}
+			}
+
+			Film[] filmsByYear = getPopularFilmsByYear(10, 2010);
+			Set<Integer> filmYears = new HashSet<>();
+			Arrays.stream(filmsByYear).forEach(film -> {
+				filmYears.add(film.getReleaseDate().getYear());
+			});
+
+			assertEquals(1, filmYears.size(), "В выборку попали фильмы другого года");
+			assertEquals(2010, filmYears.iterator().next()); // и только 2010
+			assertEquals(9, filmsByYear[0].getRate());
+
+			//Берем ту же самую выборку фильмов, но по Жанрам
+			Film[] filmsByGenres = getPopularFilmsByGenre(10, 1);
+			assertEquals(filmsByYear.length, filmsByGenres.length, "Выборка по году отличается от " +
+					"выборки по жарну");
+
+			//Берем выборку по фильму И по году
+			Film[] filmsByYearAndGenres = getPopularFilmsByYearAndGenre(10, 2010, 1);
+			assertEquals(filmsByYear.length, filmsByYearAndGenres.length, "Выборка по году отличается от " +
+					"выборки по году И жанру");
 		}
 	}
 
@@ -1409,6 +1452,18 @@ class FilmorateApplicationTests {
 
 	private Film[] getPopularFilms() {
 		return get("/films/popular", Film[].class).getBody();
+	}
+
+	private Film[] getPopularFilmsByYear(int count, int year) {
+		return get("/films/popular?count=" + count + "&year=" + year, Film[].class).getBody();
+	}
+
+	private Film[] getPopularFilmsByGenre(int count, int genreId) {
+		return get("/films/popular?count=" + count + "&genreId=" + genreId, Film[].class).getBody();
+	}
+
+	private Film[] getPopularFilmsByYearAndGenre(int count, int year, int genreId) {
+		return get("/films/popular?count=" + count + "&year=" + year + "&genreId=" + genreId, Film[].class).getBody();
 	}
 
 	private Film[] getPopularFilms(int count) {

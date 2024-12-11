@@ -129,6 +129,18 @@ public class FilmService {
         return filmStorage.getCommonFilms(userId, friendId);
     }
 
+    public List<Film> getPopularFilmsByYear(int count, int year) {
+        return filmStorage.getPopularFilmsByYear(count, year);
+    }
+
+    public List<Film> getPopularFilmsByGenre(int count, int genre) {
+        return filmStorage.getPopularFilmsByGenre(count, genre);
+    }
+
+    public List<Film> getPopularFilmsByYearAndGenre(int count, int year, int genreId) {
+        return filmStorage.getPopularFilmsByYearGenre(count, year, genreId);
+    }
+
     public Film getFilmById(long id) {
         return filmStorage.getById(id)
                 .orElseThrow(() -> new NotFoundException("не найден фильм", "не найден фильм с id = " + id));

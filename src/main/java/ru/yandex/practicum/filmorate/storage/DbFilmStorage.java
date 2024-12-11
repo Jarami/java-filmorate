@@ -108,6 +108,63 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
             ORDER BY count(fl.film_id) desc
             """;
 
+    private static final String FIND_TOP_YEAR = """
+            SELECT  f.film_id as film_id,
+                    f.film_name as film_name,
+                    f.description as description,
+                    f.release_date as release_date,
+                    f.duration as duration,
+                    fr.mpa_id as mpa_id,
+                    fr.mpa_name as mpa_name,
+                    count(fl.film_id) as rate
+            FROM films f
+            INNER JOIN film_mpa fr ON f.mpa_id = fr.mpa_id
+            LEFT JOIN film_likes fl ON fl.film_id = f.film_id
+            WHERE EXTRACT(YEAR FROM f.release_date) = :year
+            GROUP BY f.film_id, fr.mpa_id
+            ORDER BY count(fl.film_id) desc
+            LIMIT :count""";
+
+    private static final String FIND_TOP_GENRE = """
+            SELECT  f.film_id as film_id,
+                    f.film_name as film_name,
+                    f.description as description,
+                    f.release_date as release_date,
+                    f.duration as duration,
+                    fr.mpa_id as mpa_id,
+                    fr.mpa_name as mpa_name,
+                    COUNT(fl.film_id) as rate
+            FROM films f
+            INNER JOIN film_mpa fr ON f.mpa_id = fr.mpa_id
+            LEFT JOIN film_likes fl ON fl.film_id = f.film_id
+            WHERE f.film_id IN (
+                SELECT FILM_ID FROM FILMS_GENRES_RELATION fgr WHERE GENRE_ID = :genre_id
+                )
+            GROUP BY f.film_id, fr.mpa_id
+            ORDER BY count(fl.film_id) desc
+            LIMIT :count""";
+
+
+    private static final String FIND_TOP_YEAR_GENRE = """
+            SELECT  f.film_id as film_id,
+                    f.film_name as film_name,
+                    f.description as description,
+                    f.release_date as release_date,
+                    f.duration as duration,
+                    fr.mpa_id as mpa_id,
+                    fr.mpa_name as mpa_name,
+                    COUNT(fl.film_id) as rate
+            FROM films f
+            INNER JOIN film_mpa fr ON f.mpa_id = fr.mpa_id
+            LEFT JOIN film_likes fl ON fl.film_id = f.film_id
+            WHERE EXTRACT(YEAR FROM f.release_date) = :year
+            AND f.film_id IN (
+                SELECT FILM_ID FROM FILMS_GENRES_RELATION fgr WHERE GENRE_ID = :genre_id
+                )
+            GROUP BY f.film_id, fr.mpa_id
+            ORDER BY count(fl.film_id) desc
+            LIMIT :count""";
+
     private static final String FIND_BY_ID_QUERY = """
         SELECT f.film_id as "film_id",
                f.film_name as "film_name",
@@ -275,6 +332,26 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
     }
 
     @Override
+    public List<Film> getPopularFilmsByYear(int count, int year) {
+        List<Film> films = findMany(FIND_TOP_YEAR, Map.of("count", count, "year", year));
+        return addGenresToFilms(films);
+    }
+
+    @Override
+    public List<Film> getPopularFilmsByGenre(int count, int genre) {
+        List<Film> films = findMany(FIND_TOP_GENRE, Map.of("count", count, "genre_id", genre));
+        return addGenresToFilms(films);
+    }
+
+    @Override
+    public List<Film> getPopularFilmsByYearGenre(int count, int year, int genre) {
+        List<Film> films = findMany(FIND_TOP_YEAR_GENRE, Map.of("count", count,
+                "year", year,
+                "genre_id", genre));
+        return addGenresToFilms(films);
+    }
+
+    @Override
     public Optional<Film> getById(Long filmId) {
         Optional<Film> film = findOne(FIND_BY_ID_QUERY, Map.of("filmId", filmId));
 
@@ -386,6 +463,15 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
 
     private Map<String, Object> createFilmGenreMap(Film film, FilmGenre genre) {
         return Map.of("filmId", film.getId(), "genreId", genre.getId());
+    }
+
+    private List<Film> addGenresToFilms(List<Film> films) {
+        films.forEach(film -> {
+            List<FilmGenre> genres = findMany(FIND_FILM_GENRES_QUERY,
+                    Map.of("filmId", film.getId()), new BeanPropertyRowMapper<>(FilmGenre.class));
+            film.setGenres(genres);
+        });
+        return films;
     }
 
     private Map<String, Object> createDirectorMap(Film film, Director director) {
