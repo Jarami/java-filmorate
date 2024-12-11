@@ -7,8 +7,10 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.exceptions.FailedToCreateEntity;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.FilmGenre;
+import ru.yandex.practicum.filmorate.storage.mapper.DirectorRowMapper;
 import ru.yandex.practicum.filmorate.storage.mapper.FilmRowMapper;
 
 import java.util.List;
@@ -186,6 +188,13 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
         WHERE r.film_id = :filmId
         ORDER BY g.genre_id""";
 
+    private static final String FIND_FILM_DIRECTORS_QUERY = """
+        SELECT d.director_id as "director_id",
+               d.name as "name"
+        FROM directors d
+        INNER JOIN films_directors fd ON fd.director_id = d.director_id
+        WHERE fd.film_id = :filmId""";
+
     private static final String INSERT_QUERY = """
         INSERT INTO films(film_name, description, release_date, duration, mpa_id)
         VALUES (:name, :description, :releaseDate, :duration, :mpaId)""";
@@ -214,34 +223,86 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
         DELETE FROM films_genres_relation
         WHERE film_id = :filmId""";
 
-    public DbFilmStorage(NamedParameterJdbcTemplate namedTemplate, FilmRowMapper mapper) {
+    private static final String INSERT_FILM_DIRECTORS_QUERY = """
+        INSERT INTO films_directors (film_id, director_id)
+        VALUES (:filmId, :directorId)""";
+
+    private static final String DELETE_FILM_DIRECTORS_QUERY = """
+        DELETE FROM films_directors
+        WHERE film_id = :filmId""";
+
+    private static final String SELECT_SORTED_DIRECTOR_FILM_BY_RATE = """
+             SELECT f.film_id as film_id,
+             		f.film_name as film_name,
+            		f.description as description,
+            		f.release_date as "release_date",
+            		f.duration as duration,
+            		fr.mpa_id as mpa_id,
+            		fr.mpa_name as mpa_name,
+            		count(fl.film_id) as "rate"
+            FROM films f
+            INNER JOIN film_mpa fr ON f.mpa_id = fr.mpa_id
+            LEFT JOIN film_likes fl ON fl.film_id = f.film_id
+            WHERE f.FILM_ID IN (
+            	SELECT fd.FILM_ID FROM FILMS_DIRECTORS fd
+            	WHERE fd.DIRECTOR_ID = :directorId
+            )
+            GROUP BY f.film_id, fr.mpa_id
+            ORDER BY count(fl.film_id) DESC;""";
+
+    private static final String SELECT_SORTED_DIRECTOR_FILM_BY_YEAR = """
+             SELECT f.film_id as film_id,
+             		f.film_name as film_name,
+            		f.description as description,
+            		f.release_date as "release_date",
+            		f.duration as duration,
+            		fr.mpa_id as mpa_id,
+            		fr.mpa_name as mpa_name,
+            		count(fl.film_id) as "rate"
+            FROM films f
+            INNER JOIN film_mpa fr ON f.mpa_id = fr.mpa_id
+            LEFT JOIN film_likes fl ON fl.film_id = f.film_id
+            WHERE f.FILM_ID IN (
+            	SELECT fd.FILM_ID FROM FILMS_DIRECTORS fd
+            	WHERE fd.DIRECTOR_ID = :directorId
+            )
+            GROUP BY f.film_id, fr.mpa_id
+            ORDER BY EXTRACT(YEAR FROM f.release_date) ASC;""";
+
+    private final DirectorRowMapper directorRowMapper;
+
+    public DbFilmStorage(NamedParameterJdbcTemplate namedTemplate, FilmRowMapper mapper, DirectorRowMapper directorRowMapper) {
         super(namedTemplate, mapper);
+        this.directorRowMapper = directorRowMapper;
     }
 
     @Override
     public List<Film> getAll() {
         List<Film> films = getAll(FIND_ALL_QUERY);
 
-        films.forEach(film -> {
-            List<FilmGenre> genres = findMany(FIND_FILM_GENRES_QUERY,
-                    Map.of("filmId", film.getId()), new BeanPropertyRowMapper<>(FilmGenre.class));
-            film.setGenres(genres);
-        });
-
-        return films;
+        return fillFilmsGenresAndDirectors(films);
     }
 
     @Override
     public List<Film> getPopularFilms(int count) {
         List<Film> films = findMany(FIND_TOP_QUERY, Map.of("count", count));
 
-        films.forEach(film -> {
-            List<FilmGenre> genres = findMany(FIND_FILM_GENRES_QUERY,
-                    Map.of("filmId", film.getId()), new BeanPropertyRowMapper<>(FilmGenre.class));
-            film.setGenres(genres);
-        });
+        return fillFilmsGenresAndDirectors(films);
+    }
 
-        return films;
+    @Override
+    public List<Film> getSortedFilmsByDirector(Director director, String sortBy) {
+
+        String sqlQuery;
+        if (sortBy.equalsIgnoreCase("year")) {
+            sqlQuery = SELECT_SORTED_DIRECTOR_FILM_BY_YEAR;
+        } else {
+            sqlQuery = SELECT_SORTED_DIRECTOR_FILM_BY_RATE;
+        }
+
+        List<Film> films = findMany(sqlQuery, Map.of("directorId", director.getId()));
+
+        return fillFilmsGenresAndDirectors(films);
     }
 
     @Override
@@ -298,6 +359,10 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
             List<FilmGenre> genres = namedTemplate.query(FIND_FILM_GENRES_QUERY,
                     Map.of("filmId", filmId), new BeanPropertyRowMapper<>(FilmGenre.class));
             f.setGenres(genres);
+
+            List<Director>  directors = namedTemplate.query(FIND_FILM_DIRECTORS_QUERY,
+                    Map.of("filmId", filmId), directorRowMapper);
+            f.setDirectors(directors);
         });
 
         return film;
@@ -327,7 +392,6 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
             }
 
         } else {
-
             update(
                     UPDATE_QUERY,
                     Map.of(
@@ -344,6 +408,10 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
             saveGenres(film);
         }
 
+        if (film.getDirectors() != null && !film.getDirectors().isEmpty()) {
+            saveDirectors(film);
+        }
+
         return film;
     }
 
@@ -357,6 +425,21 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
         return delete(DELETE_ALL_QUERY);
     }
 
+    private List<Film> fillFilmsGenresAndDirectors(List<Film> films) {
+        films.forEach(film -> {
+            List<FilmGenre> genres = findMany(FIND_FILM_GENRES_QUERY,
+                    Map.of("filmId", film.getId()), new BeanPropertyRowMapper<>(FilmGenre.class));
+            film.setGenres(genres);
+        });
+
+        films.forEach(film -> {
+            List<Director> directors = findMany(FIND_FILM_DIRECTORS_QUERY,
+                    Map.of("filmId", film.getId()), directorRowMapper);
+            film.setDirectors(directors);
+        });
+        return films;
+    }
+
     private void saveGenres(Film film) {
 
         delete(DELETE_FILM_GENRE_REL_QUERY, Map.of("filmId", film.getId()));
@@ -366,6 +449,16 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
                 .toList();
 
         batchUpdate(INSERT_FILM_GENRE_REL_QUERY, batchValues);
+    }
+
+    private void saveDirectors(Film film) {
+        delete(DELETE_FILM_DIRECTORS_QUERY, Map.of("filmId", film.getId()));
+
+        List<Map<String, Object>> batchValues = film.getDirectors().stream()
+                .map(director -> createDirectorMap(film, director))
+                .toList();
+
+        batchUpdate(INSERT_FILM_DIRECTORS_QUERY, batchValues);
     }
 
     private Map<String, Object> createFilmGenreMap(Film film, FilmGenre genre) {
@@ -379,5 +472,9 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
             film.setGenres(genres);
         });
         return films;
+    }
+
+    private Map<String, Object> createDirectorMap(Film film, Director director) {
+        return Map.of("filmId", film.getId(), "directorId", director.getId());
     }
 }

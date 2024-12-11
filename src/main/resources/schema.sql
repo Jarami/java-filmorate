@@ -1,5 +1,7 @@
 DROP TABLE IF EXISTS film_review_rates;
 DROP TABLE IF EXISTS film_reviews;
+DROP TABLE IF EXISTS films_directors;
+DROP TABLE IF EXISTS directors;
 DROP TABLE IF EXISTS film_likes;
 DROP TABLE IF EXISTS friendship;
 DROP TABLE IF EXISTS users;
@@ -116,3 +118,20 @@ COMMENT ON TABLE film_review_rates IS 'Таблица отзывов';
 COMMENT ON COLUMN film_review_rates.review_id IS 'ID отзыва, которому поставлен лайк/дизлайк';
 COMMENT ON COLUMN film_review_rates.user_id IS 'ID пользователя, поставившего лайк/дизлайк';
 COMMENT ON COLUMN film_review_rates.rate IS 'рейтинг (+1 - если лайк, и -1 если дизлайк)';
+CREATE TABLE IF NOT EXISTS directors (
+    director_id SERIAL PRIMARY KEY,
+    name VARCHAR(50) NOT NULL
+);
+COMMENT ON TABLE directors IS 'Таблица режиссеров';
+COMMENT ON COLUMN directors.director_id IS 'Идентификатор режиссера';
+COMMENT ON COLUMN directors.name IS 'Имя режиссера';
+
+
+CREATE TABLE IF NOT EXISTS films_directors (
+    film_id BIGINT REFERENCES films (film_id) ON DELETE CASCADE,
+    director_id INTEGER REFERENCES directors (director_id) ON DELETE CASCADE,
+    PRIMARY KEY (film_id, director_id)
+);
+COMMENT ON TABLE films_directors IS 'Связь таблиц фильмов и режиссеров';
+COMMENT ON COLUMN films_directors.film_id IS 'Идентификатор фильма';
+COMMENT ON COLUMN films_directors.director_id IS 'Идентификатор режиссера';

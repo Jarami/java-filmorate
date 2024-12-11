@@ -1218,6 +1218,143 @@ class FilmorateApplicationTests {
 		}
 	}
 
+	@Nested
+	class FilmDirectorsTest {
+		Director director;
+		Director director2;
+
+		@BeforeEach
+		void setUp() {
+			director = Director.builder().name(TestUtil.randomString(15)).build();
+			director2 = Director.builder().name(TestUtil.randomString(25)).build();
+		}
+
+		@AfterEach
+		void shutdown() {
+			delete("/directors");
+		}
+
+		@Test
+		void givenNewDirector_whenSave_gotSuccess() {
+			director = createDirector(director);
+			director2 = selectDirector(director.getId());
+			assertEquals(director.getId(), director2.getId());
+		}
+
+		@Test
+		void givenNewDirectorWithNoName_whenSave_gotBadRequestError() {
+			director.setName(" ");
+			assertThrows(HttpClientErrorException.BadRequest.class,
+					() -> createDirector(director));
+		}
+
+		@Test
+		void givenNewDirectorWithToLongName_whenSave_gotBadRequestError() {
+			director.setName(TestUtil.randomString(51));
+			assertThrows(HttpClientErrorException.BadRequest.class,
+					() -> createDirector(director));
+		}
+
+		@Test
+		void givenNewDirectorName_whenUpdate_gotSuccess() {
+			director = createDirector(director);
+			director.setName("UpdatedName");
+			Director selectDirector = updateDirector(director);
+
+			assertEquals(director.getName(), selectDirector.getName());
+		}
+
+		@Test
+		void givenCorrectDirector_whenUpdate_gotSuccess() {
+			director = createDirector(director);
+			director2 = createDirector(director2);
+			delete("/directors/" + director2.getId(), Director.class).getBody();
+
+			assertThrows(HttpClientErrorException.NotFound.class,
+					() -> selectDirector(director2.getId()));
+
+			assertEquals(director.getId(), selectDirector(director.getId()).getId());
+		}
+
+		@Test
+		void givenIncorrectDirector_whenUpdate_gotNotFound() {
+			assertThrows(HttpClientErrorException.NotFound.class,
+					() -> selectDirector(Integer.MAX_VALUE));
+		}
+
+		@Test
+		void givenFilmWithDirector_whenCreate_gotSuccess() {
+			director = createDirector(director);
+			List<Director> directors = List.of(director);
+
+			NewFilmRequest filmRequest = parseNewFilmRequest("name;desc;2024-01-01;120;G;Комедия,Драма");
+			filmRequest.setDirectors(directors);
+
+			Film film = createFilm(filmRequest);
+
+			assertEquals(film.getDirectors().get(0).getName(), directors.get(0).getName());
+
+		}
+
+		@Test
+		void givenFilmWithDirectorNotInBd_whenCreate_gotBadRequest() {
+
+			Director failedDirector = Director.builder()
+					.id(Integer.MAX_VALUE / 2)
+					.build();
+			List<Director> directors = List.of(failedDirector);
+
+			NewFilmRequest filmRequest = parseNewFilmRequest("FailedDirectorFilm;desc;2024-01-01;120;G;Комедия,Драма");
+			filmRequest.setDirectors(directors);
+
+			assertThrows(HttpClientErrorException.BadRequest.class,
+					() -> createFilm(filmRequest));
+		}
+
+		@Test
+		void givenFilmWithDirector_whenUpdate_gotSuccess() {
+			director = createDirector(director);
+			director2 = createDirector(director2);
+
+			NewFilmRequest filmRequest = parseNewFilmRequest("name;desc;2024-01-01;120;G;Комедия,Драма");
+			Film film = createFilm(filmRequest);
+
+			UpdateFilmRequest updateFilmRequest = UpdateFilmRequest.builder()
+					.id(film.getId())
+					.name("UpdateFilm")
+					.description(film.getDescription())
+					.mpa(mpaDto("PG"))
+					.genres(genreDto("Комедия,Триллер"))
+					.releaseDate(LocalDate.parse("2024-05-01"))
+					.directors(List.of(director, director2))
+					.build();
+
+			updateFilm(updateFilmRequest);
+
+			Film updatedFilm = getFilmById(film.getId());
+
+
+			assertEquals(updateFilmRequest.getDirectors().get(0).getId(), updatedFilm.getDirectors().get(0).getId());
+			assertEquals(updateFilmRequest.getDirectors().get(1).getId(), updatedFilm.getDirectors().get(1).getId());
+		}
+
+		private Director selectDirector(int id) {
+			return get("/directors/" + id, Director.class).getBody();
+		}
+
+		private Director createDirector(Director director) {
+			return post("/directors", director, Director.class).getBody();
+		}
+
+		private Director updateDirector(Director director) {
+			return put("/directors", director, Director.class).getBody();
+		}
+
+		private ResponseEntity<Film> updateFilm(UpdateFilmRequest updateFilmRequest) {
+			return put("/films", updateFilmRequest, Film.class);
+		}
+	}
+
 	private List<User> createUsers(int count) {
 		return IntStream.range(0, count).mapToObj(i -> createUser()).toList();
 	}
@@ -1280,6 +1417,7 @@ class FilmorateApplicationTests {
 				.rate(filmDto.getRate())
 				.mpa(filmDto.getMpa())
 				.genres(filmDto.getGenres())
+				.directors(filmDto.getDirectors())
 				.build();
 	}
 

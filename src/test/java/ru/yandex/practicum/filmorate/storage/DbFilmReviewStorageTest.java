@@ -30,7 +30,8 @@ import static ru.yandex.practicum.filmorate.util.TestUtil.*;
         DbFilmStorage.class, FilmRowMapper.class,
         DbUserStorage.class, UserRowMapper.class,
         DbFilmReviewStorage.class, FilmReviewRowMapper.class,
-        DbFilmMpaStorage.class, FilmMpaRowMapper.class})
+        DbFilmMpaStorage.class, FilmMpaRowMapper.class,
+        DirectorRowMapper.class})
 public class DbFilmReviewStorageTest {
 
     private final DbFilmReviewStorage reviewStorage;

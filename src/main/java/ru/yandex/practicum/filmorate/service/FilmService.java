@@ -11,6 +11,7 @@ import ru.yandex.practicum.filmorate.dto.UpdateFilmRequest;
 import ru.yandex.practicum.filmorate.exceptions.BadRequestException;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.mapper.FilmMapper;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.FilmGenre;
 import ru.yandex.practicum.filmorate.model.FilmMpa;
@@ -18,6 +19,7 @@ import ru.yandex.practicum.filmorate.storage.FilmGenreStorage;
 import ru.yandex.practicum.filmorate.storage.FilmMpaStorage;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -29,17 +31,19 @@ public class FilmService {
     private final FilmMpaStorage filmMpaStorage;
     private final FilmGenreStorage filmGenreStorage;
     private final UserService userService;
+    private final DirectorService directorService;
 
     public FilmService(
             @Qualifier("db") FilmStorage filmStorage,
             @Qualifier("db") FilmMpaStorage filmMpaStorage,
             @Qualifier("db") FilmGenreStorage filmGenreStorage,
-            UserService userService) {
+            UserService userService, DirectorService directorService) {
 
         this.filmStorage = filmStorage;
         this.filmMpaStorage = filmMpaStorage;
         this.filmGenreStorage = filmGenreStorage;
         this.userService = userService;
+        this.directorService = directorService;
     }
 
     public Film createFilm(@Valid NewFilmRequest newFilmRequest) {
@@ -55,6 +59,17 @@ public class FilmService {
                 throw new BadRequestException("неуспешный запрос", "пустой список жанров");
             }
             film.setGenres(genres);
+        }
+
+        if (newFilmRequest.getDirectors() != null) {
+            if (!newFilmRequest.getDirectors().isEmpty()) {
+                List<Director> directors = getFilmDirectors(newFilmRequest);
+                directorService.validateDirectorsCreateAndUpdate(directors, newFilmRequest.getDirectors().size());
+                film.setDirectors(directors);
+            } else {
+                log.debug("В запросе пришёл пустой список режиссеров");
+                film.setDirectors(new ArrayList<>());
+            }
         }
 
         log.info("saving film {}", film);
@@ -82,9 +97,19 @@ public class FilmService {
         return filmGenreStorage.getById(ids);
     }
 
+    private List<Director> getFilmDirectors(NewFilmRequest newFilmRequest) {
+        List<Integer> directorIds = newFilmRequest.getDirectors().stream().map(Director::getId).toList();
+        return directorService.getById(directorIds);
+    }
+
     private List<FilmGenre> getFilmGenres(UpdateFilmRequest updateFilmRequest) {
         List<Integer> ids = updateFilmRequest.getGenres().stream().map(FilmGenreDto::getId).toList();
         return filmGenreStorage.getById(ids);
+    }
+
+    private List<Director> getFilmDirectors(UpdateFilmRequest updateFilmRequest) {
+        List<Integer> directorIds = updateFilmRequest.getDirectors().stream().map(Director::getId).toList();
+        return directorService.getById(directorIds);
     }
 
     public List<Film> getAllFilms() {
@@ -156,6 +181,12 @@ public class FilmService {
             film.setGenres(genres);
         }
 
+        if (updateFilmRequest.getDirectors() != null) {
+            List<Director> directors = getFilmDirectors(updateFilmRequest);
+            directorService.validateDirectorsCreateAndUpdate(directors, updateFilmRequest.getDirectors().size());
+            film.setDirectors(directors);
+        }
+
         log.debug("updating film {}", film);
         return filmStorage.save(film);
     }
@@ -174,4 +205,8 @@ public class FilmService {
         return filmStorage.deleteAll();
     }
 
+    public List<Film> getSortedFilmsByDirector(int directorId, String sortBy) {
+        Director director = directorService.getById(directorId);
+        return filmStorage.getSortedFilmsByDirector(director, sortBy);
+    }
 }
