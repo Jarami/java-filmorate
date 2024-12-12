@@ -11,6 +11,7 @@ import ru.yandex.practicum.filmorate.exceptions.BadRequestException;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.FilmReview;
+import ru.yandex.practicum.filmorate.model.Operation;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.FilmReviewStorage;
 
@@ -25,14 +26,18 @@ public class FilmReviewService {
     private final FilmService filmService;
     private final FilmReviewStorage reviewStorage;
 
+    private final EventService eventService;
+
     public FilmReviewService(
             UserService userService,
             FilmService filmService,
-            @Qualifier("db") FilmReviewStorage reviewStorage) {
+            @Qualifier("db") FilmReviewStorage reviewStorage,
+            EventService eventService) {
 
         this.userService = userService;
         this.filmService = filmService;
         this.reviewStorage = reviewStorage;
+        this.eventService = eventService;
     }
 
     public FilmReview getById(long id) {
@@ -54,7 +59,9 @@ public class FilmReviewService {
                 .isPositive(request.getIsPositive())
                 .build();
 
-        return reviewStorage.save(review);
+        FilmReview r = reviewStorage.save(review);
+        eventService.createReviewEvent(r.getUserId(), Operation.ADD, r.getReviewId());
+        return r;
     }
 
     public FilmReview updateReview(@Valid UpdateFilmReviewRequest request) {
@@ -73,7 +80,9 @@ public class FilmReviewService {
             review.setPositive(request.getIsPositive());
         }
 
-        return reviewStorage.save(review);
+        FilmReview r = reviewStorage.save(review);
+        eventService.createReviewEvent(review.getUserId(), Operation.UPDATE, review.getReviewId());
+        return r;
     }
 
     public void deleteById(long id) {
@@ -82,6 +91,7 @@ public class FilmReviewService {
                         new NotFoundException("не найден отзыв", "не найден отзыв с id = " + id));
 
         reviewStorage.delete(review);
+        eventService.createReviewEvent(review.getUserId(), Operation.REMOVE, review.getReviewId());
     }
 
     public List<FilmReview> getByFilmAndCount(Integer count, Long filmId) {
