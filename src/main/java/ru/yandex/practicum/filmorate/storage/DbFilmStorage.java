@@ -548,17 +548,6 @@ public class DbFilmStorage extends NamedRepository<Film> implements FilmStorage 
         List<Film> films = namedTemplate.query(sqlQuery, Map.of("name", "%" + queryString.toLowerCase() + "%"),
                 new FilmRowMapper());
 
-        films.forEach(film -> {
-            List<FilmGenre> genres = findMany(FIND_FILM_GENRES_QUERY,
-                    Map.of("filmId", film.getId()), new BeanPropertyRowMapper<>(FilmGenre.class));
-            film.setGenres(genres);
-        });
-        films.forEach(film -> {
-            List<Director> directors = findMany(FIND_FILM_DIRECTORS_QUERY,
-                    Map.of("filmId", film.getId()), new BeanPropertyRowMapper<>(Director.class));
-            film.setDirectors(directors);
-        });
-
-        return films;
+        return fillFilmsGenresAndDirectors(films);
     }
 }
