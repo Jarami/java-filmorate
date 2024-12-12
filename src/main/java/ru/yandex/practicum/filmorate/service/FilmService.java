@@ -180,16 +180,17 @@ public class FilmService {
 
         if (updateFilmRequest.getGenres() != null) {
             List<FilmGenre> genres = getFilmGenres(updateFilmRequest);
-            if (genres.isEmpty()) {
-                throw new BadRequestException("неуспешный запрос", "пустой список жанров");
-            }
             film.setGenres(genres);
+        } else {
+            film.setGenres(List.of());
         }
 
         if (updateFilmRequest.getDirectors() != null) {
             List<Director> directors = getFilmDirectors(updateFilmRequest);
             directorService.validateDirectorsCreateAndUpdate(directors, updateFilmRequest.getDirectors().size());
             film.setDirectors(directors);
+        } else {
+            film.setDirectors(List.of());
         }
 
         log.debug("updating film {}", film);

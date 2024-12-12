@@ -53,9 +53,6 @@ public class DirectorService {
     }
 
     public void validateDirectorsCreateAndUpdate(List<Director> directors, int requestDirectorsCount) {
-        if (directors.isEmpty()) {
-            throw new BadRequestException("неуспешный запрос", "пустой список режиссеров");
-        }
         if (directors.size() != requestDirectorsCount) {
             throw new BadRequestException("неуспешный запрос", "В запросе режиссер, которого нет в списке БД");
         }

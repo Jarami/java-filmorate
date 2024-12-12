@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 import org.springframework.validation.annotation.Validated;
 import ru.yandex.practicum.filmorate.model.EventType;
@@ -18,5 +19,7 @@ public class Event {
     private EventType eventType;
     private Operation operation;
     private Long entityId;
+
+    @JsonProperty("eventId")
     private Long id;
 }

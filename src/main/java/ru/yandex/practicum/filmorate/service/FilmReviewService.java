@@ -59,9 +59,9 @@ public class FilmReviewService {
                 .isPositive(request.getIsPositive())
                 .build();
 
-        FilmReview r = reviewStorage.save(review);
-        eventService.createReviewEvent(r.getUserId(), Operation.ADD, r.getReviewId());
-        return r;
+        reviewStorage.save(review);
+        eventService.createReviewEvent(review.getUserId(), Operation.ADD, review.getReviewId());
+        return review;
     }
 
     public FilmReview updateReview(@Valid UpdateFilmReviewRequest request) {
@@ -80,18 +80,21 @@ public class FilmReviewService {
             review.setPositive(request.getIsPositive());
         }
 
-        FilmReview r = reviewStorage.save(review);
+        reviewStorage.save(review);
         eventService.createReviewEvent(review.getUserId(), Operation.UPDATE, review.getReviewId());
-        return r;
+        return review;
     }
 
     public void deleteById(long id) {
+
+        log.info("deleting review {}", id);
+
         FilmReview review = reviewStorage.getById(id)
                 .orElseThrow(() ->
                         new NotFoundException("не найден отзыв", "не найден отзыв с id = " + id));
 
-        reviewStorage.delete(review);
         eventService.createReviewEvent(review.getUserId(), Operation.REMOVE, review.getReviewId());
+        reviewStorage.delete(review);
     }
 
     public List<FilmReview> getByFilmAndCount(Integer count, Long filmId) {
@@ -109,10 +112,15 @@ public class FilmReviewService {
     }
 
     public int deleteAllReviews() {
+
+        log.info("deleting all reviews");
         return reviewStorage.deleteAll();
     }
 
     public void addLikeToReview(long reviewId, long userId) {
+
+        log.info("add like to review {} by user {}", reviewId, userId);
+
         FilmReview review = getById(reviewId);
         User user = userService.getUserById(userId);
 
@@ -120,6 +128,9 @@ public class FilmReviewService {
     }
 
     public void addDislikeToReview(long reviewId, long userId) {
+
+        log.info("add dislike to review {} by user {}", reviewId, userId);
+
         FilmReview review = getById(reviewId);
         User user = userService.getUserById(userId);
 
@@ -127,6 +138,9 @@ public class FilmReviewService {
     }
 
     public void deleteLikeToReview(long reviewId, long userId) {
+
+        log.info("delete like to review {} by user {}", reviewId, userId);
+
         FilmReview review = getById(reviewId);
         User user = userService.getUserById(userId);
 
@@ -134,6 +148,9 @@ public class FilmReviewService {
     }
 
     public void deleteDislikeToReview(long reviewId, long userId) {
+
+        log.info("add dislike to review {} by user {}", reviewId, userId);
+
         FilmReview review = getById(reviewId);
         User user = userService.getUserById(userId);
 

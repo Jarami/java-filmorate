@@ -36,13 +36,9 @@ public class LikeService {
         Film film = filmService.getFilmById(filmId);
         User user = userService.getUserById(userId);
 
-        boolean result = filmLikeStorage.like(film, user);
-        if (result) {
-            film.setRate(film.getRate() + 1);
-            eventService.createAddLikeEvent(userId, filmId);
-        }
+        eventService.createAddLikeEvent(userId, filmId);
 
-        return result;
+        return filmLikeStorage.like(film, user);
     }
 
     public boolean dislike(long filmId, long userId) {
@@ -53,12 +49,9 @@ public class LikeService {
         Film film = filmService.getFilmById(filmId);
         User user = userService.getUserById(userId);
 
-        boolean result = filmLikeStorage.dislike(film, user);
-        if (result) {
-            film.setRate(film.getRate() - 1);
-            eventService.createRemoveLikeEvent(userId, filmId);
-        }
-        return result;
+        eventService.createRemoveLikeEvent(userId, filmId);
+
+        return filmLikeStorage.dislike(film, user);
     }
 
     public List<Film> getPopularFilms(int count) {

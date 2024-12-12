@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.EventType;
 import ru.yandex.practicum.filmorate.model.Operation;
+import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.EventStorage;
 
 import java.time.Instant;
@@ -19,8 +20,8 @@ public class EventService {
         this.eventStorage = eventStorage;
     }
 
-    public List<Event> findEventsByUserId(Long id) {
-        return eventStorage.findEventsByUserID(id);
+    public List<Event> findEventsByUser(User user) {
+        return eventStorage.findEventsByUserID(user.getId());
     }
 
     private Event createEvent(Long userID, EventType eventType, Operation operation, Long entityId) {

@@ -43,7 +43,7 @@ public class DbFilmReviewStorage extends NamedRepository<FilmReview> implements 
         LEFT JOIN film_review_rates rr ON rr.review_id = r.review_id
         WHERE r.review_id = :reviewId
         GROUP BY r.review_id
-        ORDER BY SUM(rr.rate) DESC""";
+        ORDER BY CASE WHEN rate IS NULL THEN 0 ELSE rate END DESC""";
 
     private static final String FIND_BY_FILM_ID_WITH_LIMIT_QUERY = """
         SELECT r.review_id as "review_id",
@@ -56,7 +56,7 @@ public class DbFilmReviewStorage extends NamedRepository<FilmReview> implements 
         LEFT JOIN film_review_rates rr ON rr.review_id = r.review_id
         WHERE r.film_id = :filmId
         GROUP BY r.review_id
-        ORDER BY SUM(rr.rate) DESC
+        ORDER BY CASE WHEN rate IS NULL THEN 0 ELSE rate END DESC
         LIMIT :count""";
 
     private static final String FIND_WITH_LIMIT_QUERY = """
@@ -69,7 +69,7 @@ public class DbFilmReviewStorage extends NamedRepository<FilmReview> implements 
         FROM film_reviews r
         LEFT JOIN film_review_rates rr ON rr.review_id = r.review_id
         GROUP BY r.review_id
-        ORDER BY SUM(rr.rate) DESC
+        ORDER BY CASE WHEN rate IS NULL THEN 0 ELSE rate END DESC
         LIMIT :count""";
 
     private static final String DELETE_QUERY = """

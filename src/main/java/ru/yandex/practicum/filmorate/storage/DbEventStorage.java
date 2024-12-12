@@ -48,7 +48,7 @@ public class DbEventStorage extends NamedRepository<Event> implements EventStora
                 throw new FailedToCreateEntity("не удалось создать событие " + event);
             } else {
                 event.setId(id);
-                log.debug("Событие типа {} сохранено с id = {}", event.getClass(), event.getId());
+                log.debug("Сохранено событие {}", event);
             }
         }
 
