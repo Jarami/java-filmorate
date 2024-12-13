@@ -33,14 +33,14 @@ public class DirectorController {
         return DirectorMapper.mapToDto(director);
     }
 
-    @PostMapping("")
+    @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public DirectorDto createDirector(@Valid @RequestBody NewDirectorRequest newDirectorRequest) {
         Director director = directorService.createDirector(newDirectorRequest);
         return DirectorMapper.mapToDto(director);
     }
 
-    @PutMapping("")
+    @PutMapping
     public DirectorDto updateDirector(@Valid @RequestBody UpdateDirectorRequest updateDirectorRequest) {
         Director director = directorService.updateDirector(updateDirectorRequest);
         return DirectorMapper.mapToDto(director);
