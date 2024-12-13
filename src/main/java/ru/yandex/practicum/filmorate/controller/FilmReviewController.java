@@ -4,8 +4,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.dto.FilmReviewDto;
 import ru.yandex.practicum.filmorate.dto.NewFilmReviewRequest;
 import ru.yandex.practicum.filmorate.dto.UpdateFilmReviewRequest;
+import ru.yandex.practicum.filmorate.mapper.FilmReviewMapper;
 import ru.yandex.practicum.filmorate.model.FilmReview;
 import ru.yandex.practicum.filmorate.service.FilmReviewService;
 
@@ -21,13 +23,15 @@ public class FilmReviewController {
 
     @PostMapping(value = {"", "/"})
     @ResponseStatus(HttpStatus.CREATED)
-    public FilmReview createFilmReview(@RequestBody NewFilmReviewRequest request) {
-        return reviewService.createReview(request);
+    public FilmReviewDto createFilmReview(@RequestBody NewFilmReviewRequest request) {
+        FilmReview review = reviewService.createReview(request);
+        return FilmReviewMapper.mapToDto(review);
     }
 
     @PutMapping(value = {"", "/"})
-    public FilmReview updateFilmReview(@RequestBody UpdateFilmReviewRequest request) {
-        return reviewService.updateReview(request);
+    public FilmReviewDto updateFilmReview(@RequestBody UpdateFilmReviewRequest request) {
+        FilmReview review = reviewService.updateReview(request);
+        return FilmReviewMapper.mapToDto(review);
     }
 
     @DeleteMapping("/{id}")
@@ -36,15 +40,18 @@ public class FilmReviewController {
     }
 
     @GetMapping("/{id}")
-    public FilmReview getFilmReviewById(@PathVariable Long id) {
-        return reviewService.getById(id);
+    public FilmReviewDto getFilmReviewById(@PathVariable Long id) {
+        FilmReview review = reviewService.getById(id);
+        return FilmReviewMapper.mapToDto(review);
     }
 
     @GetMapping(value = {"", "/"})
-    public List<FilmReview> getByFilmAndCount(@RequestParam(required = false, defaultValue = "10") Integer count,
+    public List<FilmReviewDto> getByFilmAndCount(@RequestParam(required = false, defaultValue = "10") Integer count,
                                               @RequestParam(required = false) Long filmId) {
 
-        return reviewService.getByFilmAndCount(count, filmId);
+        return reviewService.getByFilmAndCount(count, filmId).stream()
+                .map(FilmReviewMapper::mapToDto)
+                .toList();
     }
 
     @DeleteMapping(value = {"", "/"})

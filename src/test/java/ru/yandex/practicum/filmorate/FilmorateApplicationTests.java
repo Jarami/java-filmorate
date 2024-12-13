@@ -14,6 +14,7 @@ import ru.yandex.practicum.filmorate.dto.*;
 import ru.yandex.practicum.filmorate.mapper.FilmGenreMapper;
 import ru.yandex.practicum.filmorate.mapper.FilmMapper;
 import ru.yandex.practicum.filmorate.mapper.FilmMpaMapper;
+import ru.yandex.practicum.filmorate.mapper.FilmReviewMapper;
 import ru.yandex.practicum.filmorate.model.*;
 import ru.yandex.practicum.filmorate.util.TestUtil;
 
@@ -1524,22 +1525,22 @@ class FilmorateApplicationTests {
 
 	private FilmReview createReview(Film film, User author) {
 		FilmReview review = TestUtil.getRandomReview(film, author);
-		NewFilmReviewRequest request = NewFilmReviewRequest.builder()
-				.filmId(review.getFilmId())
-				.userId(review.getUserId())
-				.content(review.getContent())
-				.isPositive(review.isPositive())
-				.build();
+//		NewFilmReviewRequest request = NewFilmReviewRequest.builder()
+//				.filmId(review.getFilmId())
+//				.userId(review.getUserId())
+//				.content(review.getContent())
+//				.isPositive(review.isPositive())
+//				.build();
+
+		Map<String, Object> request = Map.of("filmId", review.getFilmId(), "userId", review.getUserId(),
+				"content", review.getContent(), "isPositive", review.isPositive());
 
 		return createReview(request);
 	}
 
-	private FilmReview createReview(NewFilmReviewRequest request) {
-		return post("/reviews", request, FilmReview.class).getBody();
-	}
-
 	private FilmReview createReview(Map<String, Object> request) {
-		return post("/reviews", request, FilmReview.class).getBody();
+		FilmReviewDto dto = post("/reviews", request, FilmReviewDto.class).getBody();
+		return FilmReviewMapper.mapToReview(dto);
 	}
 
 	private FilmReview updateReview(FilmReview review) {
@@ -1554,11 +1555,13 @@ class FilmorateApplicationTests {
 	}
 
 	private FilmReview updateReview(UpdateFilmReviewRequest request) {
-		return put("/reviews", request, FilmReview.class).getBody();
+		FilmReviewDto dto = put("/reviews", request, FilmReviewDto.class).getBody();
+		return FilmReviewMapper.mapToReview(dto);
 	}
 
 	private FilmReview getFilmReviewById(long id) {
-		return get("/reviews/" + id, FilmReview.class).getBody();
+		FilmReviewDto dto = get("/reviews/" + id, FilmReviewDto.class).getBody();
+		return FilmReviewMapper.mapToReview(dto);
 	}
 
 	private Void deleteFilmReviewById(long id) {
@@ -1566,12 +1569,16 @@ class FilmorateApplicationTests {
 	}
 
 	private List<FilmReview> getFilmReviewsByCountAndFilm(int count, Film film) {
-		return Arrays.stream(get("/reviews?filmId=" + film.getId() + "&count=" + count, FilmReview[].class).getBody())
+		FilmReviewDto[] dtos = get("/reviews?filmId=" + film.getId() + "&count=" + count, FilmReviewDto[].class).getBody();
+		return Arrays.stream(dtos)
+				.map(FilmReviewMapper::mapToReview)
 				.toList();
 	}
 
 	private List<FilmReview> getFilmReviewsByCount(int count) {
-		return Arrays.stream(get("/reviews?&count=" + count, FilmReview[].class).getBody())
+		FilmReviewDto[] dtos = get("/reviews?&count=" + count, FilmReviewDto[].class).getBody();
+		return Arrays.stream(dtos)
+				.map(FilmReviewMapper::mapToReview)
 				.toList();
 	}
 
