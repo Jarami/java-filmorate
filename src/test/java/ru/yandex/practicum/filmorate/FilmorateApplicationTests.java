@@ -11,10 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 import ru.yandex.practicum.filmorate.dto.*;
-import ru.yandex.practicum.filmorate.mapper.FilmGenreMapper;
-import ru.yandex.practicum.filmorate.mapper.FilmMapper;
-import ru.yandex.practicum.filmorate.mapper.FilmMpaMapper;
-import ru.yandex.practicum.filmorate.mapper.FilmReviewMapper;
+import ru.yandex.practicum.filmorate.mapper.*;
 import ru.yandex.practicum.filmorate.model.*;
 import ru.yandex.practicum.filmorate.util.TestUtil;
 
@@ -205,9 +202,8 @@ class FilmorateApplicationTests {
 			void givenNoLogin_whenSave_getBadRequest() {
 				User user = createUser("my@email.com;login;name;2024-01-01");
 
-				UpdateUserRequest updateUserRequest = UpdateUserRequest.from(user)
-						.login(null)
-						.build();
+				UpdateUserRequest updateUserRequest = userToUpdateUserRequest(user);
+				updateUserRequest.setLogin(null);
 
 				assertThrows(HttpClientErrorException.BadRequest.class,
 						() -> updateUser(updateUserRequest));
@@ -217,9 +213,8 @@ class FilmorateApplicationTests {
 			void givenUserWithSpaceInLogin_whenCreate_getBadRequest() {
 				User user = createUser("my@email.com;login;name;2024-01-01");
 
-				UpdateUserRequest updateUserRequest = UpdateUserRequest.from(user)
-						.login("space in login")
-						.build();
+				UpdateUserRequest updateUserRequest = userToUpdateUserRequest(user);
+				updateUserRequest.setLogin("space in login");
 
 				assertThrows(HttpClientErrorException.BadRequest.class,
 						() -> updateUser(updateUserRequest));
@@ -229,9 +224,8 @@ class FilmorateApplicationTests {
 			void givenLoginWithWrongEmail_whenCreate_getBadRequest() {
 				User user = createUser("my@email.com;login;name;2024-01-01");
 
-				UpdateUserRequest updateUserRequest = UpdateUserRequest.from(user)
-						.email("@email.com")
-						.build();
+				UpdateUserRequest updateUserRequest = userToUpdateUserRequest(user);
+				updateUserRequest.setEmail("@email.com");
 
 				assertThrows(HttpClientErrorException.BadRequest.class,
 						() -> updateUser(updateUserRequest));
@@ -242,9 +236,8 @@ class FilmorateApplicationTests {
 				User user = createUser("my@email.com;login;name;2024-01-01");
 				user.setBirthday(LocalDate.parse("2946-08-20"));
 
-				UpdateUserRequest updateUserRequest = UpdateUserRequest.from(user)
-						.birthday(LocalDate.parse("2946-08-20"))
-						.build();
+				UpdateUserRequest updateUserRequest = userToUpdateUserRequest(user);
+				updateUserRequest.setBirthday(LocalDate.parse("2946-08-20"));
 
 				assertThrows(HttpClientErrorException.BadRequest.class,
 						() -> updateUser(updateUserRequest));
@@ -296,8 +289,8 @@ class FilmorateApplicationTests {
 
 				addFriend(user1.getId(), user2.getId());
 
-				List<User> user1friends = Arrays.asList(getFriends(user1));
-				List<User> user2friends = Arrays.asList(getFriends(user2));
+				List<User> user1friends = getFriends(user1);
+				List<User> user2friends = getFriends(user2);
 
 				assertTrue(user1friends.contains(user2));
 				assertFalse(user2friends.contains(user1));
@@ -322,7 +315,7 @@ class FilmorateApplicationTests {
 
 				removeFromFriends(user1, user2);
 
-				List<User> user1friends = Arrays.asList(getFriends(user1));
+				List<User> user1friends = getFriends(user1);
 
 				assertFalse(user1friends.contains(user2));
 			}
@@ -338,7 +331,7 @@ class FilmorateApplicationTests {
 				addFriend(user2.getId(), user1.getId());
 				addFriend(user2.getId(), user3.getId());
 
-				List<User> commonFriends = Arrays.asList(getCommonFriends(user1, user2));
+				List<User> commonFriends = getCommonFriends(user1, user2);
 
 				assertEquals(1, commonFriends.size());
 				assertEquals(user3.getId(), commonFriends.get(0).getId());
@@ -354,31 +347,35 @@ class FilmorateApplicationTests {
 		}
 
 		private User updateUser(UpdateUserRequest updateUserRequest) {
-			return put("/users", updateUserRequest, User.class).getBody();
+			UserDto dto = put("/users", updateUserRequest, UserDto.class).getBody();
+			return UserMapper.mapToUser(dto);
 		}
 
 		private Void deleteUser(long id) {
 			return delete("/users/" + id).getBody();
 		}
 
-		private User addFriend(User user, User friend) {
-			return put("/users/" + user.getId() + "/friends/" + friend.getId(), User.class).getBody();
+		private void addFriend(User user, User friend) {
+			put("/users/" + user.getId() + "/friends/" + friend.getId(), ResponseDto.class);
 		}
 
-		private User addFriend(Long userId, Long friendId) {
-			return put("/users/" + userId + "/friends/" + friendId, User.class).getBody();
+		private void addFriend(Long userId, Long friendId) {
+			put("/users/" + userId + "/friends/" + friendId, ResponseDto.class);
 		}
 
-		private User[] getFriends(User user) {
-			return get("/users/" + user.getId() + "/friends", User[].class).getBody();
+		private List<User> getFriends(User user) {
+			UserDto[] dtos = get("/users/" + user.getId() + "/friends", UserDto[].class).getBody();
+			return Arrays.stream(dtos).map(UserMapper::mapToUser).toList();
 		}
 
 		private Void removeFromFriends(User user, User friend) {
 			return delete("/users/" + user.getId() + "/friends/" + friend.getId()).getBody();
 		}
 
-		private User[] getCommonFriends(User user1, User user2) {
-			return get("/users/" + user1.getId() + "/friends/common/" + user2.getId(), User[].class).getBody();
+		private List<User> getCommonFriends(User user1, User user2) {
+			UserDto[] dtos = get("/users/" + user1.getId() + "/friends/common/" + user2.getId(),
+					UserDto[].class).getBody();
+			return Arrays.stream(dtos).map(UserMapper::mapToUser).toList();
 		}
 	}
 
@@ -528,9 +525,8 @@ class FilmorateApplicationTests {
 			void givenFilmWithoutName_whenUpdate_getBadRequest() {
 				Film film = createFilm("name1;desc1;2024-01-01;120;G;Комедия,Драма");
 
-				UpdateFilmRequest updateFilmRequest = UpdateFilmRequest.from(film)
-					.name(null)
-					.build();
+				UpdateFilmRequest updateFilmRequest = FilmMapper.mapToUpdateFilmRequest(film);
+				updateFilmRequest.setName(null);
 
 				assertThrows(HttpClientErrorException.BadRequest.class,
 						() -> updateFilm(updateFilmRequest));
@@ -540,9 +536,8 @@ class FilmorateApplicationTests {
 			void givenFilmWithEmptyName_whenSave_getBadRequest() {
 				Film film = createFilm("name1;desc1;2024-01-01;120;G;Комедия,Драма");
 
-				UpdateFilmRequest updateFilmRequest = UpdateFilmRequest.from(film)
-						.name("")
-						.build();
+				UpdateFilmRequest updateFilmRequest = FilmMapper.mapToUpdateFilmRequest(film);
+				updateFilmRequest.setName("");
 
 				assertThrows(HttpClientErrorException.BadRequest.class,
 						() -> updateFilm(updateFilmRequest));
@@ -552,9 +547,8 @@ class FilmorateApplicationTests {
 			void givenFilmWithTooLongDesc_whenSave_getBadRequest() {
 				Film film = createFilm("name1;desc1;2024-01-01;120;G;Комедия,Драма");
 
-				UpdateFilmRequest updateFilmRequest = UpdateFilmRequest.from(film)
-						.description("d".repeat(201))
-						.build();
+				UpdateFilmRequest updateFilmRequest = FilmMapper.mapToUpdateFilmRequest(film);
+				updateFilmRequest.setDescription("d".repeat(201));
 
 				assertThrows(HttpClientErrorException.BadRequest.class,
 						() -> updateFilm(updateFilmRequest));
@@ -564,9 +558,8 @@ class FilmorateApplicationTests {
 			void givenFilmWithNegativeDuration_whenSave_getBadRequest() {
 				Film film = createFilm("name1;desc1;2024-01-01;120;G;Комедия,Драма");
 
-				UpdateFilmRequest updateFilmRequest = UpdateFilmRequest.from(film)
-						.duration(-1)
-						.build();
+				UpdateFilmRequest updateFilmRequest = FilmMapper.mapToUpdateFilmRequest(film);
+				updateFilmRequest.setDuration(-1);
 
 				assertThrows(HttpClientErrorException.BadRequest.class,
 						() -> updateFilm(updateFilmRequest));
@@ -726,18 +719,18 @@ class FilmorateApplicationTests {
 
 		@Test
 		void givenNoLikesAtAll_whenAskDefaultPopular_getTenRandomFilms() {
-			Film[] films = getPopularFilms();
+			List<Film> films = getPopularFilms();
 
 			assertNotNull(films);
-			assertEquals(10, films.length);
+			assertEquals(10, films.size());
 		}
 
 		@Test
 		void givenNoLikesAtAll_whenAskPopularFive_getFiveRandomFilms() {
-			Film[] films = getPopularFilms(5);
+			List<Film> films = getPopularFilms(5);
 
 			assertNotNull(films);
-			assertEquals(5, films.length);
+			assertEquals(5, films.size());
 		}
 
 		@Test
@@ -749,17 +742,17 @@ class FilmorateApplicationTests {
 				}
 			}
 
-			Film[] films = getPopularFilms(10);
-			assertEquals(9, films[0].getRate());
-			assertEquals(8, films[1].getRate());
-			assertEquals(7, films[2].getRate());
-			assertEquals(6, films[3].getRate());
-			assertEquals(5, films[4].getRate());
-			assertEquals(4, films[5].getRate());
-			assertEquals(3, films[6].getRate());
-			assertEquals(2, films[7].getRate());
-			assertEquals(1, films[8].getRate());
-			assertEquals(0, films[9].getRate());
+			List<Film> films = getPopularFilms(10);
+			assertEquals(9, films.get(0).getRate());
+			assertEquals(8, films.get(1).getRate());
+			assertEquals(7, films.get(2).getRate());
+			assertEquals(6, films.get(3).getRate());
+			assertEquals(5, films.get(4).getRate());
+			assertEquals(4, films.get(5).getRate());
+			assertEquals(3, films.get(6).getRate());
+			assertEquals(2, films.get(7).getRate());
+			assertEquals(1, films.get(8).getRate());
+			assertEquals(0, films.get(9).getRate());
 		}
 
 		@Test
@@ -775,24 +768,24 @@ class FilmorateApplicationTests {
 				}
 			}
 
-			Film[] filmsByYear = getPopularFilmsByYear(10, 2010);
+			List<Film> filmsByYear = getPopularFilmsByYear(10, 2010);
 			Set<Integer> filmYears = new HashSet<>();
-			Arrays.stream(filmsByYear).forEach(film -> {
+			filmsByYear.forEach(film -> {
 				filmYears.add(film.getReleaseDate().getYear());
 			});
 
 			assertEquals(1, filmYears.size(), "В выборку попали фильмы другого года");
 			assertEquals(2010, filmYears.iterator().next()); // и только 2010
-			assertEquals(9, filmsByYear[0].getRate());
+			assertEquals(9, filmsByYear.get(0).getRate());
 
 			//Берем ту же самую выборку фильмов, но по Жанрам
-			Film[] filmsByGenres = getPopularFilmsByGenre(10, 1);
-			assertEquals(filmsByYear.length, filmsByGenres.length, "Выборка по году отличается от " +
+			List<Film> filmsByGenres = getPopularFilmsByGenre(10, 1);
+			assertEquals(filmsByYear.size(), filmsByGenres.size(), "Выборка по году отличается от " +
 					"выборки по жарну");
 
 			//Берем выборку по фильму И по году
-			Film[] filmsByYearAndGenres = getPopularFilmsByYearAndGenre(10, 2010, 1);
-			assertEquals(filmsByYear.length, filmsByYearAndGenres.length, "Выборка по году отличается от " +
+			List<Film> filmsByYearAndGenres = getPopularFilmsByYearAndGenre(10, 2010, 1);
+			assertEquals(filmsByYear.size(), filmsByYearAndGenres.size(), "Выборка по году отличается от " +
 					"выборки по году И жанру");
 		}
 	}
@@ -1289,7 +1282,7 @@ class FilmorateApplicationTests {
 			List<Director> directors = List.of(director);
 
 			NewFilmRequest filmRequest = parseNewFilmRequest("name;desc;2024-01-01;120;G;Комедия,Драма");
-			filmRequest.setDirectors(directors);
+			filmRequest.setDirectors(DirectorMapper.mapToDto(directors));
 
 			Film film = createFilm(filmRequest);
 
@@ -1306,7 +1299,7 @@ class FilmorateApplicationTests {
 			List<Director> directors = List.of(failedDirector);
 
 			NewFilmRequest filmRequest = parseNewFilmRequest("FailedDirectorFilm;desc;2024-01-01;120;G;Комедия,Драма");
-			filmRequest.setDirectors(directors);
+			filmRequest.setDirectors(DirectorMapper.mapToDto(directors));
 
 			assertThrows(HttpClientErrorException.BadRequest.class,
 					() -> createFilm(filmRequest));
@@ -1327,7 +1320,7 @@ class FilmorateApplicationTests {
 					.mpa(mpaDto("PG"))
 					.genres(genreDto("Комедия,Триллер"))
 					.releaseDate(LocalDate.parse("2024-05-01"))
-					.directors(List.of(director, director2))
+					.directors(DirectorMapper.mapToDto(List.of(director, director2)))
 					.build();
 
 			updateFilm(updateFilmRequest);
@@ -1356,6 +1349,16 @@ class FilmorateApplicationTests {
 		}
 	}
 
+	private UpdateUserRequest userToUpdateUserRequest(User user) {
+		return UpdateUserRequest.builder()
+				.id(user.getId())
+				.email(user.getEmail())
+				.login(user.getLogin())
+				.name(user.getName())
+				.birthday(user.getBirthday())
+				.build();
+	}
+
 	private List<User> createUsers(int count) {
 		return IntStream.range(0, count).mapToObj(i -> createUser()).toList();
 	}
@@ -1378,7 +1381,8 @@ class FilmorateApplicationTests {
 	}
 
 	private User createUser(NewUserRequest newUserRequest) {
-		return post("/users", newUserRequest, User.class).getBody();
+		UserDto dto = post("/users", newUserRequest, UserDto.class).getBody();
+		return UserMapper.mapToUser(dto);
 	}
 
 	private List<Film> createFilms(int count) {
@@ -1400,39 +1404,22 @@ class FilmorateApplicationTests {
 
 	private Film createFilm(NewFilmRequest newFilmRequest) {
 		FilmDto filmDto = post("/films", newFilmRequest, FilmDto.class).getBody();
-		return toFilm(filmDto);
-	}
-
-	private Film toFilm(FilmDto filmDto) {
-
-		if (filmDto == null) {
-			return null;
-		}
-
-		return Film.builder()
-				.id(filmDto.getId())
-				.name(filmDto.getName())
-				.description((filmDto.getDescription()))
-				.releaseDate(filmDto.getReleaseDate())
-				.duration(filmDto.getDuration())
-				.rate(filmDto.getRate())
-				.mpa(filmDto.getMpa())
-				.genres(filmDto.getGenres())
-				.directors(filmDto.getDirectors())
-				.build();
+		return FilmMapper.mapToFilm(filmDto);
 	}
 
 	private List<FilmGenre> getAllGenres() {
-		return Arrays.stream(Objects.requireNonNull(get("/genres", FilmGenre[].class).getBody())).toList();
+		FilmGenreDto[] dtos = get("/genres", FilmGenreDto[].class).getBody();
+		return Arrays.stream(Objects.requireNonNull(dtos)).map(FilmGenreMapper::mapToGenre).toList();
 	}
 
 	private List<FilmMpa> getAllMpa() {
-		return Arrays.stream(Objects.requireNonNull(get("/mpa", FilmMpa[].class).getBody())).toList();
+		FilmMpaDto[] dtos = get("/mpa", FilmMpaDto[].class).getBody();
+		return Arrays.stream(Objects.requireNonNull(dtos)).map(FilmMpaMapper::mapToMpa).toList();
 	}
 
 	private Film getFilmById(long id) {
 		FilmDto filmDto = get("/films/" + id, FilmDto.class).getBody();
-		return toFilm(filmDto);
+		return FilmMapper.mapToFilm(filmDto);
 	}
 
 	private Integer deleteAllUsers() {
@@ -1451,24 +1438,30 @@ class FilmorateApplicationTests {
 		return delete("/films/" + film.getId() + "/like/" + user.getId(), ResponseDto.class).getBody();
 	}
 
-	private Film[] getPopularFilms() {
-		return get("/films/popular", Film[].class).getBody();
+	private List<Film> getPopularFilms() {
+		FilmDto[] dtos = get("/films/popular", FilmDto[].class).getBody();
+		return Arrays.stream(dtos).map(FilmMapper::mapToFilm).toList();
 	}
 
-	private Film[] getPopularFilmsByYear(int count, int year) {
-		return get("/films/popular?count=" + count + "&year=" + year, Film[].class).getBody();
+	private List<Film> getPopularFilmsByYear(int count, int year) {
+		FilmDto[] dtos = get("/films/popular?count=" + count + "&year=" + year, FilmDto[].class).getBody();
+		return Arrays.stream(dtos).map(FilmMapper::mapToFilm).toList();
 	}
 
-	private Film[] getPopularFilmsByGenre(int count, int genreId) {
-		return get("/films/popular?count=" + count + "&genreId=" + genreId, Film[].class).getBody();
+	private List<Film> getPopularFilmsByGenre(int count, int genreId) {
+		FilmDto[] dtos = get("/films/popular?count=" + count + "&genreId=" + genreId, FilmDto[].class).getBody();
+		return Arrays.stream(dtos).map(FilmMapper::mapToFilm).toList();
 	}
 
-	private Film[] getPopularFilmsByYearAndGenre(int count, int year, int genreId) {
-		return get("/films/popular?count=" + count + "&year=" + year + "&genreId=" + genreId, Film[].class).getBody();
+	private List<Film> getPopularFilmsByYearAndGenre(int count, int year, int genreId) {
+		FilmDto[] dtos = get("/films/popular?count=" + count + "&year=" + year + "&genreId=" + genreId,
+				FilmDto[].class).getBody();
+		return Arrays.stream(dtos).map(FilmMapper::mapToFilm).toList();
 	}
 
-	private Film[] getPopularFilms(int count) {
-		return get("/films/popular?count=" + count, Film[].class).getBody();
+	private List<Film> getPopularFilms(int count) {
+		FilmDto[] dtos = get("/films/popular?count=" + count, FilmDto[].class).getBody();
+		return Arrays.stream(dtos).map(FilmMapper::mapToFilm).toList();
 	}
 
 	private NewUserRequest parseNewUserRequest(String userString) {
@@ -1525,12 +1518,6 @@ class FilmorateApplicationTests {
 
 	private FilmReview createReview(Film film, User author) {
 		FilmReview review = TestUtil.getRandomReview(film, author);
-//		NewFilmReviewRequest request = NewFilmReviewRequest.builder()
-//				.filmId(review.getFilmId())
-//				.userId(review.getUserId())
-//				.content(review.getContent())
-//				.isPositive(review.isPositive())
-//				.build();
 
 		Map<String, Object> request = Map.of("filmId", review.getFilmId(), "userId", review.getUserId(),
 				"content", review.getContent(), "isPositive", review.isPositive());

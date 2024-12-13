@@ -11,11 +11,26 @@ import java.util.List;
 public class FilmGenreMapper {
 
     public static FilmGenreDto mapToDto(FilmGenre genre) {
-        return new FilmGenreDto(genre.getId(), genre.getName());
+        return FilmGenreDto.builder()
+                .id(genre.getId())
+                .name(genre.getName())
+                .build();
     }
 
     public static List<FilmGenreDto> mapToDto(List<FilmGenre> genres) {
-        return genres.stream().map(FilmGenreMapper::mapToDto).toList();
+        return genres.stream()
+                .map(FilmGenreMapper::mapToDto)
+                .toList();
     }
 
+    public static FilmGenre mapToGenre(FilmGenreDto dto) {
+        return FilmGenre.builder()
+                .id(dto.getId())
+                .name(dto.getName())
+                .build();
+    }
+
+    public static List<FilmGenre> mapToGenre(List<FilmGenreDto> dtos) {
+        return dtos.stream().map(FilmGenreMapper::mapToGenre).toList();
+    }
 }

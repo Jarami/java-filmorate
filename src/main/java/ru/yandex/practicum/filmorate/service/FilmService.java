@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
+import ru.yandex.practicum.filmorate.dto.DirectorDto;
 import ru.yandex.practicum.filmorate.dto.FilmGenreDto;
 import ru.yandex.practicum.filmorate.dto.NewFilmRequest;
 import ru.yandex.practicum.filmorate.dto.UpdateFilmRequest;
@@ -98,7 +99,7 @@ public class FilmService {
     }
 
     private List<Director> getFilmDirectors(NewFilmRequest newFilmRequest) {
-        List<Integer> directorIds = newFilmRequest.getDirectors().stream().map(Director::getId).toList();
+        List<Integer> directorIds = newFilmRequest.getDirectors().stream().map(DirectorDto::getId).toList();
         return directorService.getById(directorIds);
     }
 
@@ -108,7 +109,7 @@ public class FilmService {
     }
 
     private List<Director> getFilmDirectors(UpdateFilmRequest updateFilmRequest) {
-        List<Integer> directorIds = updateFilmRequest.getDirectors().stream().map(Director::getId).toList();
+        List<Integer> directorIds = updateFilmRequest.getDirectors().stream().map(DirectorDto::getId).toList();
         return directorService.getById(directorIds);
     }
 

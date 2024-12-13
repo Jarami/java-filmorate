@@ -4,8 +4,10 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.dto.DirectorDto;
 import ru.yandex.practicum.filmorate.dto.NewDirectorRequest;
 import ru.yandex.practicum.filmorate.dto.UpdateDirectorRequest;
+import ru.yandex.practicum.filmorate.mapper.DirectorMapper;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.service.DirectorService;
 
@@ -19,24 +21,29 @@ public class DirectorController {
     private final DirectorService directorService;
 
     @GetMapping
-    public List<Director> getAll() {
-        return directorService.getAll();
+    public List<DirectorDto> getAll() {
+        return directorService.getAll().stream()
+                .map(DirectorMapper::mapToDto)
+                .toList();
     }
 
     @GetMapping("/{id}")
-    public Director getDirectorById(@PathVariable Integer id) {
-        return directorService.getById(id);
+    public DirectorDto getDirectorById(@PathVariable Integer id) {
+        Director director = directorService.getById(id);
+        return DirectorMapper.mapToDto(director);
     }
 
     @PostMapping("")
     @ResponseStatus(HttpStatus.CREATED)
-    public Director createDirector(@Valid @RequestBody NewDirectorRequest newDirectorRequest) {
-        return directorService.createDirector(newDirectorRequest);
+    public DirectorDto createDirector(@Valid @RequestBody NewDirectorRequest newDirectorRequest) {
+        Director director = directorService.createDirector(newDirectorRequest);
+        return DirectorMapper.mapToDto(director);
     }
 
     @PutMapping("")
-    public Director updateDirector(@Valid @RequestBody UpdateDirectorRequest updateDirectorRequest) {
-        return directorService.updateDirector(updateDirectorRequest);
+    public DirectorDto updateDirector(@Valid @RequestBody UpdateDirectorRequest updateDirectorRequest) {
+        Director director = directorService.updateDirector(updateDirectorRequest);
+        return DirectorMapper.mapToDto(director);
     }
 
     @DeleteMapping("/{id}")

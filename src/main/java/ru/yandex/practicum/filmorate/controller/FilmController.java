@@ -24,8 +24,6 @@ public class FilmController {
 
     @GetMapping(value = {"", "/"})
     public List<FilmDto> getAllFilms() {
-        filmService.getAllFilms().forEach(film ->
-                log.info("film = {}", film));
 
         return filmService.getAllFilms().stream()
                 .map(FilmMapper::mapToDto)
@@ -35,15 +33,14 @@ public class FilmController {
     @GetMapping("/{id}")
     public FilmDto getFilmById(@PathVariable Integer id) {
         Film film = filmService.getFilmById(id);
-        log.info("getting film {}", film);
         return FilmMapper.mapToDto(film);
     }
 
     @GetMapping("/search")
     public List<FilmDto> searchFilms(@RequestParam(required = false) String query,
                                      @RequestParam(required = false) String by) {
+
         List<Film> films = filmService.searchFilms(query, by);
-        films.forEach(film -> log.info("getting film {}", film));
 
         return films.stream()
                 .map(FilmMapper::mapToDto)
@@ -53,8 +50,8 @@ public class FilmController {
     @GetMapping(value = "/common")
     public List<FilmDto> getCommonFilms(@RequestParam Long userId,
                                         @RequestParam Long friendId) {
+
         return filmService.getCommonFilms(userId, friendId).stream()
-                .peek(film -> log.info("film = {}", film))
                 .map(FilmMapper::mapToDto)
                 .toList();
     }

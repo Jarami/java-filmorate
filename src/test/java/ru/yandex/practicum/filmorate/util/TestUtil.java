@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Random;
 
@@ -97,6 +98,8 @@ public class TestUtil {
             .description(randomString(50))
             .releaseDate(LocalDate.of(year, month, day))
             .duration(duration)
+            .genres(new ArrayList<>())
+            .directors(new ArrayList<>())
             .build();
     }
 

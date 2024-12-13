@@ -4,11 +4,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.dto.FilmDto;
-import ru.yandex.practicum.filmorate.dto.NewUserRequest;
-import ru.yandex.practicum.filmorate.dto.UpdateUserRequest;
+import ru.yandex.practicum.filmorate.dto.*;
+import ru.yandex.practicum.filmorate.mapper.EventMapper;
 import ru.yandex.practicum.filmorate.mapper.FilmMapper;
-import ru.yandex.practicum.filmorate.model.Event;
+import ru.yandex.practicum.filmorate.mapper.UserMapper;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.EventService;
 import ru.yandex.practicum.filmorate.service.UserService;
@@ -25,13 +24,16 @@ public class UserController {
     private final EventService eventService;
 
     @GetMapping(value = {"", "/"})
-    public List<User> getAllUsers() {
-        return userService.getAllUsers();
+    public List<UserDto> getAllUsers() {
+        return userService.getAllUsers().stream()
+                .map(UserMapper::mapToDto)
+                .toList();
     }
 
     @GetMapping("/{id}")
-    public User getUserById(@PathVariable Long id) {
-        return userService.getUserById(id);
+    public UserDto getUserById(@PathVariable Long id) {
+        User user = userService.getUserById(id);
+        return UserMapper.mapToDto(user);
     }
 
     @GetMapping("/{id}/recommendations")
@@ -44,13 +46,15 @@ public class UserController {
 
     @PostMapping(value = {"", "/"})
     @ResponseStatus(HttpStatus.CREATED)
-    public User createUser(@RequestBody NewUserRequest newUserRequest) {
-        return userService.createUser(newUserRequest);
+    public UserDto createUser(@RequestBody NewUserRequest newUserRequest) {
+        User user = userService.createUser(newUserRequest);
+        return UserMapper.mapToDto(user);
     }
 
     @PutMapping(value = {"", "/"})
-    public User updateUser(@RequestBody UpdateUserRequest updateUserRequest) {
-        return userService.updateUser(updateUserRequest);
+    public UserDto updateUser(@RequestBody UpdateUserRequest updateUserRequest) {
+        User user = userService.updateUser(updateUserRequest);
+        return UserMapper.mapToDto(user);
     }
 
     @DeleteMapping(value = {"", "/"})
@@ -64,8 +68,10 @@ public class UserController {
     }
 
     @GetMapping("/{id}/feed")
-    public List<Event> getFeed(@PathVariable  Long id) {
+    public List<EventDto> getFeed(@PathVariable  Long id) {
         User user = userService.getUserById(id);
-        return eventService.findEventsByUser(user);
+        return eventService.findEventsByUser(user).stream()
+                .map(EventMapper::mapToDto)
+                .toList();
     }
 }

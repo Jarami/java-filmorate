@@ -4,9 +4,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import ru.yandex.practicum.filmorate.model.Director;
-import ru.yandex.practicum.filmorate.model.FilmGenre;
-import ru.yandex.practicum.filmorate.model.FilmMpa;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -21,8 +18,8 @@ public class FilmDto {
     private String description;
     private LocalDate releaseDate;
     private int duration;
-    private FilmMpa mpa;
-    private List<FilmGenre> genres;
-    private List<Director> directors;
+    private FilmMpaDto mpa;
+    private List<FilmGenreDto> genres;
+    private List<DirectorDto> directors;
     private int rate;
 }

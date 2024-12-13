@@ -1,10 +1,9 @@
 package ru.yandex.practicum.filmorate.model;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 import org.springframework.validation.annotation.Validated;
-import ru.yandex.practicum.filmorate.model.EventType;
-import ru.yandex.practicum.filmorate.model.Operation;
+
+import java.time.Instant;
 
 @Getter
 @Setter
@@ -14,12 +13,10 @@ import ru.yandex.practicum.filmorate.model.Operation;
 @AllArgsConstructor
 @Builder
 public class Event {
-    private Long timestamp;
+    private Instant timestamp;
     private Long userId;
     private EventType eventType;
     private Operation operation;
     private Long entityId;
-
-    @JsonProperty("eventId")
     private Long id;
 }

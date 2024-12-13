@@ -10,7 +10,6 @@ import lombok.Data;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
-import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.validators.UserLogin;
 
 import java.time.LocalDate;
@@ -37,13 +36,4 @@ public class UpdateUserRequest {
 
     @Past
     private LocalDate birthday;
-
-    public static UpdateUserRequest.UpdateUserRequestBuilder from(User user) {
-        return builder()
-                .id(user.getId())
-                .name(user.getName())
-                .login(user.getLogin())
-                .email(user.getEmail())
-                .birthday(user.getBirthday());
-    }
 }

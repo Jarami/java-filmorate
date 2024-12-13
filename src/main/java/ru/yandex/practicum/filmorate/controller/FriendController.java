@@ -3,7 +3,8 @@ package ru.yandex.practicum.filmorate.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.dto.ResponseDto;
-import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.dto.UserDto;
+import ru.yandex.practicum.filmorate.mapper.UserMapper;
 import ru.yandex.practicum.filmorate.service.UserService;
 
 import java.util.List;
@@ -16,13 +17,17 @@ public class FriendController {
     private final UserService userService;
 
     @GetMapping(value = {"", "/"})
-    public List<User> getFriends(@PathVariable Long id) {
-        return userService.getFriends(id);
+    public List<UserDto> getFriends(@PathVariable Long id) {
+        return userService.getFriends(id).stream()
+                .map(UserMapper::mapToDto)
+                .toList();
     }
 
     @GetMapping("/common/{otherId}")
-    public List<User> getCommonFriends(@PathVariable Long id, @PathVariable Long otherId) {
-        return userService.getCommonFriends(id, otherId);
+    public List<UserDto> getCommonFriends(@PathVariable Long id, @PathVariable Long otherId) {
+        return userService.getCommonFriends(id, otherId).stream()
+                .map(UserMapper::mapToDto)
+                .toList();
     }
 
     @PutMapping("/{friendId}")
