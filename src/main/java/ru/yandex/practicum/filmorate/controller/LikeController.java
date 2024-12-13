@@ -32,13 +32,13 @@ public class LikeController {
     }
 
     @PutMapping("/{filmId}/like/{userId}")
-    public ResponseDto like(@PathVariable long filmId, @PathVariable long userId) {
+    public ResponseDto like(@PathVariable Long filmId, @PathVariable Long userId) {
         boolean result = likeService.like(filmId, userId);
         return new ResponseDto(result);
     }
 
     @DeleteMapping("/{filmId}/like/{userId}")
-    public ResponseDto dislike(@PathVariable long filmId, @PathVariable long userId) {
+    public ResponseDto dislike(@PathVariable Long filmId, @PathVariable Long userId) {
         boolean result = likeService.dislike(filmId, userId);
         return new ResponseDto(result);
     }

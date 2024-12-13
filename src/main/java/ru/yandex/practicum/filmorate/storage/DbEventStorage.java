@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate.storage;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.KeyHolder;
@@ -25,7 +24,6 @@ public class DbEventStorage extends NamedRepository<Event> implements EventStora
 
     private static final String FIND_EVENTS_BY_USER_ID_QUERY = "SELECT * FROM EVENTS WHERE USER_ID = :userId";
 
-    @Autowired
     public DbEventStorage(NamedParameterJdbcTemplate namedTemplate, EventRowMapper mapper) {
         super(namedTemplate, mapper);
     }

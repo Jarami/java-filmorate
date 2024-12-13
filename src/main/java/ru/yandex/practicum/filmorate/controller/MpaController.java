@@ -23,7 +23,7 @@ public class MpaController {
     }
 
     @GetMapping("/{id}")
-    public FilmMpa getFilmById(@PathVariable int id) {
+    public FilmMpa getFilmById(@PathVariable Integer id) {
         return mpaService.getById(id);
     }
 }

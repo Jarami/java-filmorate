@@ -30,12 +30,12 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public User getUserById(@PathVariable long id) {
+    public User getUserById(@PathVariable Long id) {
         return userService.getUserById(id);
     }
 
     @GetMapping("/{id}/recommendations")
-    public List<FilmDto> getRecommendations(@PathVariable long id) {
+    public List<FilmDto> getRecommendations(@PathVariable Long id) {
         return userService.getRecommendations(id)
                 .stream()
                 .map(FilmMapper::mapToDto)
@@ -59,7 +59,7 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
-    public void deleteUserById(@PathVariable long id) {
+    public void deleteUserById(@PathVariable Long id) {
         userService.deleteUserById(id);
     }
 

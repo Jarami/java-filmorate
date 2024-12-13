@@ -33,7 +33,7 @@ public class FilmController {
     }
 
     @GetMapping("/{id}")
-    public FilmDto getFilmById(@PathVariable int id) {
+    public FilmDto getFilmById(@PathVariable Integer id) {
         Film film = filmService.getFilmById(id);
         log.info("getting film {}", film);
         return FilmMapper.mapToDto(film);
@@ -60,8 +60,8 @@ public class FilmController {
     }
 
     @GetMapping("/director/{directorId}")
-    public List<FilmDto> getSortedFilmsByDirector(@PathVariable int directorId,
-                                                  @RequestParam(required = true) String sortBy) {
+    public List<FilmDto> getSortedFilmsByDirector(@PathVariable Integer directorId,
+                                                  @RequestParam String sortBy) {
 
         if (!sortBy.equalsIgnoreCase("year") && !sortBy.equalsIgnoreCase("likes")) {
             throw new BadRequestException("Некорректный режим сортировки", "Нет сортировки для sortBy={}" + sortBy);
@@ -80,8 +80,9 @@ public class FilmController {
     }
 
     @PutMapping(value = {"", "/"})
-    public Film updateFilm(@RequestBody UpdateFilmRequest updateFilmRequest) {
-        return filmService.updateFilm(updateFilmRequest);
+    public FilmDto updateFilm(@RequestBody UpdateFilmRequest updateFilmRequest) {
+        Film film = filmService.updateFilm(updateFilmRequest);
+        return FilmMapper.mapToDto(film);
     }
 
     @DeleteMapping(value = {"", "/"})
@@ -90,7 +91,7 @@ public class FilmController {
     }
 
     @DeleteMapping("/{id}")
-    public void deleteFilmById(@PathVariable long id) {
+    public void deleteFilmById(@PathVariable Long id) {
         filmService.deleteFilmById(id);
     }
 }

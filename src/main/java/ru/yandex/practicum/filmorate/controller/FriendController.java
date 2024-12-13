@@ -16,26 +16,26 @@ public class FriendController {
     private final UserService userService;
 
     @GetMapping(value = {"", "/"})
-    public List<User> getFriends(@PathVariable long id) {
+    public List<User> getFriends(@PathVariable Long id) {
         return userService.getFriends(id);
     }
 
     @GetMapping("/common/{otherId}")
-    public List<User> getCommonFriends(@PathVariable long id, @PathVariable long otherId) {
+    public List<User> getCommonFriends(@PathVariable Long id, @PathVariable Long otherId) {
         return userService.getCommonFriends(id, otherId);
     }
 
     @PutMapping("/{friendId}")
-    public ResponseDto addFriend(@PathVariable(value = "id") long userId,
-                                 @PathVariable(value = "friendId") long friendId) {
+    public ResponseDto addFriend(@PathVariable(value = "id") Long userId,
+                                 @PathVariable(value = "friendId") Long friendId) {
 
         boolean result = userService.addFriend(userId, friendId);
         return new ResponseDto(result);
     }
 
     @DeleteMapping("/{friendId}")
-    public ResponseDto removeFriend(@PathVariable(value = "id") long userId1,
-                               @PathVariable(value = "friendId") long userId2) {
+    public ResponseDto removeFriend(@PathVariable(value = "id") Long userId1,
+                               @PathVariable(value = "friendId") Long userId2) {
 
         boolean result = userService.removeFromFriends(userId1, userId2);
         return new ResponseDto(result);

@@ -1,7 +1,8 @@
 package ru.yandex.practicum.filmorate.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.mapper.EventMapper;
 import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.EventType;
 import ru.yandex.practicum.filmorate.model.Operation;
@@ -12,27 +13,16 @@ import java.time.Instant;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class EventService {
     private final EventStorage eventStorage;
-
-    @Autowired
-    public EventService(EventStorage eventStorage) {
-        this.eventStorage = eventStorage;
-    }
 
     public List<Event> findEventsByUser(User user) {
         return eventStorage.findEventsByUserID(user.getId());
     }
 
     private Event createEvent(Long userID, EventType eventType, Operation operation, Long entityId) {
-        Event event = Event.builder()
-                    .timestamp(Instant.now().toEpochMilli())
-                    .eventType(eventType)
-                    .operation(operation)
-                    .userId(userID)
-                    .entityId(entityId)
-                    .build();
-
+        Event event = EventMapper.mapToEvent(userID, eventType, operation, entityId, Instant.now());
         return eventStorage.createEvent(event);
     }
 

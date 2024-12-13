@@ -18,13 +18,13 @@ public class DirectorController {
 
     private final DirectorService directorService;
 
-    @GetMapping("")
+    @GetMapping
     public List<Director> getAll() {
         return directorService.getAll();
     }
 
     @GetMapping("/{id}")
-    public Director getDirectorById(@PathVariable int id) {
+    public Director getDirectorById(@PathVariable Integer id) {
         return directorService.getById(id);
     }
 
@@ -40,7 +40,7 @@ public class DirectorController {
     }
 
     @DeleteMapping("/{id}")
-    public void deleteFilmById(@PathVariable int id) {
+    public void deleteFilmById(@PathVariable Integer id) {
         directorService.deleteDirectorId(id);
     }
 
