@@ -11,7 +11,7 @@ import java.util.List;
 public class FilmGenreMapper {
 
     public static FilmGenreDto mapToDto(FilmGenre genre) {
-        return new FilmGenreDto(genre.getId());
+        return new FilmGenreDto(genre.getId(), genre.getName());
     }
 
     public static List<FilmGenreDto> mapToDto(List<FilmGenre> genres) {

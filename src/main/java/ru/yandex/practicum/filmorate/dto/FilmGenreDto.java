@@ -9,4 +9,5 @@ import lombok.*;
 @AllArgsConstructor
 public class FilmGenreDto {
     private int id;
+    private String name;
 }
