@@ -22,10 +22,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.FilmGenre;
 import ru.yandex.practicum.filmorate.model.FilmMpa;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.mapper.FilmGenreRowMapper;
-import ru.yandex.practicum.filmorate.storage.mapper.FilmMpaRowMapper;
-import ru.yandex.practicum.filmorate.storage.mapper.FilmRowMapper;
-import ru.yandex.practicum.filmorate.storage.mapper.UserRowMapper;
+import ru.yandex.practicum.filmorate.storage.mapper.*;
 import ru.yandex.practicum.filmorate.util.TestUtil;
 
 @Slf4j
@@ -36,7 +33,8 @@ import ru.yandex.practicum.filmorate.util.TestUtil;
         DbFilmGenreStorage.class, FilmGenreRowMapper.class,
         DbFilmStorage.class, FilmRowMapper.class,
         DbUserStorage.class, UserRowMapper.class,
-        DbFilmMpaStorage.class, FilmMpaRowMapper.class })
+        DbFilmMpaStorage.class, FilmMpaRowMapper.class,
+        DirectorRowMapper.class})
 public class DbFilmStorageTest {
 
     private final DbFilmGenreStorage filmGenreStorage;
@@ -145,6 +143,36 @@ public class DbFilmStorageTest {
         assertEquals(10, actFilm.getDuration());
         assertEquals("NC-17", actFilm.getMpa().getName());
         assertEquals(Set.of("Мультфильм", "Триллер"), getGenresNames(actFilm));
+    }
+
+    @Test
+    void givenUserWithRecommendations_whenGetRecommendations_gotCorrectFilm() {
+        filmLikeStorage.like(film1, user1);
+        filmLikeStorage.like(film2, user1);
+        filmLikeStorage.like(film2, user2);
+        filmLikeStorage.like(film3, user2);
+
+        List<Film> recommendedFilms = filmStorage.getRecommendations(user1.getId());
+
+        assertEquals(1, recommendedFilms.size());
+        assertEquals(film3.getId(), recommendedFilms.get(0).getId());
+    }
+
+    @Test
+    void givenUserWithoutRecommendations_whenGetRecommendations_gotEmptyList() {
+        filmLikeStorage.like(film1, user1);
+        filmLikeStorage.like(film2, user2);
+
+        List<Film> recommendedFilms = filmStorage.getRecommendations(user1.getId());
+
+        assertEquals(0, recommendedFilms.size());
+    }
+
+    @Test
+    void givenNoLikes_whenGetRecommendations_gotEmptyList() {
+        List<Film> recommendedFilms = filmStorage.getRecommendations(user1.getId());
+
+        assertEquals(0, recommendedFilms.size());
     }
 
     private Set<String> getFilmNames(List<Film> films) {

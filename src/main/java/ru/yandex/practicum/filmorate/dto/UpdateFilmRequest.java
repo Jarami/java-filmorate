@@ -9,9 +9,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import ru.yandex.practicum.filmorate.mapper.FilmGenreMapper;
-import ru.yandex.practicum.filmorate.mapper.FilmMpaMapper;
-import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.validators.After;
 
 import java.time.LocalDate;
@@ -46,16 +43,5 @@ public class UpdateFilmRequest {
     private FilmMpaDto mpa;
 
     private List<FilmGenreDto> genres;
-
-    public static UpdateFilmRequest.UpdateFilmRequestBuilder from(Film film) {
-        return builder()
-                .id(film.getId())
-                .name(film.getName())
-                .description(film.getDescription())
-                .releaseDate(film.getReleaseDate())
-                .duration(film.getDuration())
-                .mpa(FilmMpaMapper.mapToDto(film.getMpa()))
-                .genres(FilmGenreMapper.mapToDto(film.getGenres()));
-
-    }
+    private List<DirectorDto> directors;
 }

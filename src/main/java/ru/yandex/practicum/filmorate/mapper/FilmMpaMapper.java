@@ -9,6 +9,16 @@ import ru.yandex.practicum.filmorate.model.FilmMpa;
 public class FilmMpaMapper {
 
     public static FilmMpaDto mapToDto(FilmMpa mpa) {
-        return new FilmMpaDto(mpa.getId());
+        return FilmMpaDto.builder()
+                .id(mpa.getId())
+                .name(mpa.getName())
+                .build();
+    }
+
+    public static FilmMpa mapToMpa(FilmMpaDto dto) {
+        return FilmMpa.builder()
+                .id(dto.getId())
+                .name(dto.getName())
+                .build();
     }
 }

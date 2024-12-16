@@ -16,13 +16,16 @@ public class LikeService {
     private final UserService userService;
 
     private final FilmLikeStorage filmLikeStorage;
+    private final EventService eventService;
 
     public LikeService(FilmService filmService, UserService userService,
-                       @Qualifier("db") FilmLikeStorage filmLikeStorage) {
+                       @Qualifier("db") FilmLikeStorage filmLikeStorage,
+                       EventService eventService) {
 
         this.filmService = filmService;
         this.userService = userService;
         this.filmLikeStorage = filmLikeStorage;
+        this.eventService = eventService;
 
     }
 
@@ -33,11 +36,9 @@ public class LikeService {
         Film film = filmService.getFilmById(filmId);
         User user = userService.getUserById(userId);
 
-        boolean result = filmLikeStorage.like(film, user);
-        if (result) {
-            film.setRate(film.getRate() + 1);
-        }
-        return result;
+        eventService.createAddLikeEvent(userId, filmId);
+
+        return filmLikeStorage.like(film, user);
     }
 
     public boolean dislike(long filmId, long userId) {
@@ -48,15 +49,25 @@ public class LikeService {
         Film film = filmService.getFilmById(filmId);
         User user = userService.getUserById(userId);
 
-        boolean result = filmLikeStorage.dislike(film, user);
-        if (result) {
-            film.setRate(film.getRate() - 1);
-        }
-        return result;
+        eventService.createRemoveLikeEvent(userId, filmId);
+
+        return filmLikeStorage.dislike(film, user);
     }
 
     public List<Film> getPopularFilms(int count) {
         return filmService.getPopularFilms(count);
+    }
+
+    public List<Film> getPopularFilmsByYear(int count, int year) {
+        return filmService.getPopularFilmsByYear(count, year);
+    }
+
+    public List<Film> getPopularFilmsByGenre(int count, int genreId) {
+        return filmService.getPopularFilmsByGenre(count, genreId);
+    }
+
+    public List<Film> getPopularFilmsByYearAndGenre(int count, int year, int genreId) {
+        return filmService.getPopularFilmsByYearAndGenre(count, year, genreId);
     }
 
     private void checkFilmId(Long filmId) {
